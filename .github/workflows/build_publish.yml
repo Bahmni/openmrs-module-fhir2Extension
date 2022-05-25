@@ -1,7 +1,7 @@
 name: Build and Publish package
 on:
   push:
-    branches: [ BAH-1811 ]
+    branches: [ main ]
 
 jobs:
   build-publish-package:
