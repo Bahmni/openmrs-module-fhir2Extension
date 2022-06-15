@@ -21,13 +21,16 @@ import org.openmrs.module.fhir2.api.search.param.SearchParameterMap;
 import org.openmrs.module.fhir2.api.translators.OpenmrsFhirTranslator;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
 import org.openmrs.module.fhirExtension.translators.ObsBasedDiagnosticReportTranslator;
+import org.openmrs.module.fhirExtension.validators.DiagnosticReportBasedOnValidator;
 import org.openmrs.module.fhirExtension.validators.DiagnosticReportObsValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,19 +51,22 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	private ObsService obsService;
 	
 	@Autowired
-	private DiagnosticReportObsValidator validator;
+	private DiagnosticReportObsValidator diagnosticReportObsValidator;
+
+	@Autowired
+	private DiagnosticReportBasedOnValidator diagnosticReportBasedOnValidator;
 	
 	@Autowired
 	private SearchQuery<FhirDiagnosticReport, DiagnosticReport, FhirDiagnosticReportDao, ObsBasedDiagnosticReportTranslator, SearchQueryInclude<DiagnosticReport>> searchQuery;
 	
 	@Autowired
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
-	
 	@Override
 	public DiagnosticReport create(@Nonnull DiagnosticReport diagnosticReport) {
 		try {
 			FhirDiagnosticReport fhirDiagnosticReport = obsBasedDiagnosticReportTranslator.toOpenmrsType(diagnosticReport);
-			validator.validate(fhirDiagnosticReport);
+			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
+			diagnosticReportBasedOnValidator.validate(fhirDiagnosticReport, diagnosticReport);
 			Set<Obs> createdObs = createObs(fhirDiagnosticReport.getResults());
 			fhirDiagnosticReport.setResults(createdObs);
 			FhirDiagnosticReport createdFhirDiagnosticReport = fhirDiagnosticReportDao.createOrUpdate(fhirDiagnosticReport);
