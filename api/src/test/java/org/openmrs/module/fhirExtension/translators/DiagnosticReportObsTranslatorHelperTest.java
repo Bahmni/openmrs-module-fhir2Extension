@@ -10,11 +10,13 @@ import org.openmrs.api.ConceptService;
 import org.openmrs.module.fhirExtension.domain.observation.LabResult;
 import org.openmrs.module.fhirExtension.translators.impl.DiagnosticReportObsTranslatorHelper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Locale.ENGLISH;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +38,7 @@ public class DiagnosticReportObsTranslatorHelperTest {
 	private final DiagnosticReportObsTranslatorHelper diagnosticReportObsResultTranslatorHelper = new DiagnosticReportObsTranslatorHelper();
 	
 	@Test
-    public void shouldTranslateToObsWhenTestReportIsUploadedWithLabNotesForSingleTestWithoutAnyOrder() {
+    public void givenSingleTest_WhenTestReportIsUploadedWithNotes_ShouldTranslateToObs() {
         Concept testConcept = new Concept();
         Patient patient = new Patient();
         patient.setId(PATIENT_ID);
@@ -141,22 +143,20 @@ public class DiagnosticReportObsTranslatorHelperTest {
         Set<Obs> obsGroupMembersTopLevel = obsModel.getGroupMembers();
         assertEquals(2, obsGroupMembersTopLevel.size());
 
-        List<Obs> obsGroupMembersTopLevelList = new ArrayList<>();
-
-
-        for (int topLevelIndex = 0; topLevelIndex < obsGroupMembersTopLevelList.size(); topLevelIndex++) {
-            Obs obsModelSecondLevel = obsGroupMembersTopLevelList.get(topLevelIndex);
+        List<Obs> obsGroupMembersTopLevelList = new ArrayList<>(obsGroupMembersTopLevel);
+        for (int obsGroupIndex = 0; obsGroupIndex < obsGroupMembersTopLevelList.size(); obsGroupIndex++) {
+            Obs obsModelSecondLevel = obsGroupMembersTopLevelList.get(obsGroupIndex);
             assertPatientAndObservationDate(testDate, obsModelSecondLevel);
 
             Set<Obs> obsGroupMembersSecondLevel = obsModelSecondLevel.getGroupMembers();
             assertEquals(1, obsGroupMembersSecondLevel.size());
+            assertTrue(testsConcepts.get(obsGroupIndex).getConcept().equals(obsModelSecondLevel.getConcept()));
 
             Obs obsModelThirdLevel = obsGroupMembersSecondLevel.iterator().next();
             assertPatientAndObservationDate(testDate, obsModelThirdLevel);
             Set<Obs> obsGroupMembersThirdLevel = obsModelThirdLevel.getGroupMembers();
             assertEquals(3, obsGroupMembersThirdLevel.size());
 
-            assertEquals(testsConcepts.get(topLevelIndex), obsModelThirdLevel.getConcept());
             obsGroupMembersThirdLevel.forEach(obsModelChildLevel -> {
                 assertPatientAndObservationDate(testDate, obsModelChildLevel);
                 String obsChildConceptName = obsModelChildLevel.getConcept().getPreferredName(ENGLISH).getName();
