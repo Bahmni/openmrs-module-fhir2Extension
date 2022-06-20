@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.Locale.ENGLISH;
 import static org.junit.Assert.*;
@@ -83,7 +84,7 @@ public class DiagnosticReportObsTranslatorHelperTest {
     }
 	
 	@Test
-	public void shouldTranslateToObsWhenOnlyLabNotesAreAvailableForSingleTestWithoutAnyOrder() {
+	public void shouldTranslateToObsWhenOnlyLabNotesAreAvailableForSingleTest() {
 		Concept testConcept = new Concept();
 		Patient patient = new Patient();
 		patient.setId(PATIENT_ID);
@@ -135,6 +136,7 @@ public class DiagnosticReportObsTranslatorHelperTest {
         labResult.setLabReportNotes(LAB_TEST_NOTES);
         mockConceptServiceGetConceptByName();
 
+        List<Concept> conceptList = testsConcepts.stream().map(ConceptSet::getConcept).collect(Collectors.toList());
 
         Obs obsModel = diagnosticReportObsResultTranslatorHelper.createObs(labResult);
 
@@ -143,14 +145,12 @@ public class DiagnosticReportObsTranslatorHelperTest {
         Set<Obs> obsGroupMembersTopLevel = obsModel.getGroupMembers();
         assertEquals(2, obsGroupMembersTopLevel.size());
 
-        List<Obs> obsGroupMembersTopLevelList = new ArrayList<>(obsGroupMembersTopLevel);
-        for (int obsGroupIndex = 0; obsGroupIndex < obsGroupMembersTopLevelList.size(); obsGroupIndex++) {
-            Obs obsModelSecondLevel = obsGroupMembersTopLevelList.get(obsGroupIndex);
+        obsGroupMembersTopLevel.forEach(obsModelSecondLevel ->{
             assertPatientAndObservationDate(testDate, obsModelSecondLevel);
 
             Set<Obs> obsGroupMembersSecondLevel = obsModelSecondLevel.getGroupMembers();
             assertEquals(1, obsGroupMembersSecondLevel.size());
-            assertTrue(testsConcepts.get(obsGroupIndex).getConcept().equals(obsModelSecondLevel.getConcept()));
+            assertTrue(conceptList.contains(obsModelSecondLevel.getConcept()));
 
             Obs obsModelThirdLevel = obsGroupMembersSecondLevel.iterator().next();
             assertPatientAndObservationDate(testDate, obsModelThirdLevel);
@@ -173,11 +173,11 @@ public class DiagnosticReportObsTranslatorHelperTest {
                 }
 
             });
-        }
+        });
     }
 	
 	@Test
-	public void shouldNotTranslateToObsWhenBothTestReportAndNotesAreNotPresentForSingleTestWithoutAnyOrder() {
+	public void shouldNotTranslateToObsWhenBothTestReportAndNotesAreNotPresentForSingleTest() {
 		Concept testConcept = new Concept();
 		Patient patient = new Patient();
 		patient.setId(PATIENT_ID);
