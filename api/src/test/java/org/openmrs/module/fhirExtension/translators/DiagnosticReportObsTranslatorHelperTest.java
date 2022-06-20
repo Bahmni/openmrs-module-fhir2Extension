@@ -38,7 +38,7 @@ public class DiagnosticReportObsTranslatorHelperTest {
 	private final DiagnosticReportObsTranslatorHelper diagnosticReportObsResultTranslatorHelper = new DiagnosticReportObsTranslatorHelper();
 	
 	@Test
-    public void givenSingleTest_WhenTestReportIsUploadedWithNotes_ShouldTranslateToObs() {
+    public void givenLabTest_WhenTestReportIsUploadedWithNotes_ShouldTranslateToObs() {
         Concept testConcept = new Concept();
         Patient patient = new Patient();
         patient.setId(PATIENT_ID);
@@ -115,7 +115,7 @@ public class DiagnosticReportObsTranslatorHelperTest {
 	}
 	
 	@Test
-    public void shouldTranslateToObsWhenTestReportIsUploadedWithLabNotesForPanelWithoutAnyOrder() {
+    public void shouldTranslateToObsWhenTestReportIsUploadedWithLabNotesForPanel() {
         Concept testConcept1 = new Concept();
         Concept testConcept2 = new Concept();
         Concept panel = new Concept();
