@@ -16,7 +16,7 @@ import org.openmrs.Patient;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -26,13 +26,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DiagnosticReportBasedOnValidatorTest {
+public class DiagnosticReportRequestValidatorTest {
 	
 	@Mock
 	private OrderService orderService;
 	
 	@InjectMocks
-	private final DiagnosticReportBasedOnValidator diagnosticReportBasedOnValidator = new DiagnosticReportBasedOnValidator();
+	private final DiagnosticReportRequestValidator diagnosticReportRequestValidator = new DiagnosticReportRequestValidator();
 	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -42,7 +42,7 @@ public class DiagnosticReportBasedOnValidatorTest {
 		DiagnosticReport diagnosticReportToCreate = new DiagnosticReport();
 		Reference reference = new Reference("ServiceRequest");
 		reference.setDisplay("Platelet Count");
-		List<Reference> basedOn = Arrays.asList(reference);
+		List<Reference> basedOn = Collections.singletonList(reference);
 		diagnosticReportToCreate.setBasedOn(basedOn);
 
 		FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
@@ -52,8 +52,8 @@ public class DiagnosticReportBasedOnValidatorTest {
         fhirDiagnosticReport.setSubject(new Patient());
         fhirDiagnosticReport.setResults(new HashSet<>(singletonList(new Obs())));
 
-		when(orderService.getAllOrdersByPatient(any())).thenReturn(Arrays.asList());
+		when(orderService.getAllOrdersByPatient(any())).thenReturn(Collections.emptyList());
 
-		diagnosticReportBasedOnValidator.validate(fhirDiagnosticReport,diagnosticReportToCreate);
+		diagnosticReportRequestValidator.validate(fhirDiagnosticReport);
     }
 }

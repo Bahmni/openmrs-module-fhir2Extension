@@ -21,7 +21,7 @@ import org.openmrs.module.fhir2.api.search.param.SearchParameterMap;
 import org.openmrs.module.fhir2.api.translators.OpenmrsFhirTranslator;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
 import org.openmrs.module.fhirExtension.translators.ObsBasedDiagnosticReportTranslator;
-import org.openmrs.module.fhirExtension.validators.DiagnosticReportBasedOnValidator;
+import org.openmrs.module.fhirExtension.validators.DiagnosticReportRequestValidator;
 import org.openmrs.module.fhirExtension.validators.DiagnosticReportObsValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -54,7 +54,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	private DiagnosticReportObsValidator diagnosticReportObsValidator;
 
 	@Autowired
-	private DiagnosticReportBasedOnValidator diagnosticReportBasedOnValidator;
+	private DiagnosticReportRequestValidator diagnosticReportRequestValidator;
 	
 	@Autowired
 	private SearchQuery<FhirDiagnosticReport, DiagnosticReport, FhirDiagnosticReportDao, ObsBasedDiagnosticReportTranslator, SearchQueryInclude<DiagnosticReport>> searchQuery;
@@ -66,7 +66,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		try {
 			FhirDiagnosticReport fhirDiagnosticReport = obsBasedDiagnosticReportTranslator.toOpenmrsType(diagnosticReport);
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
-			diagnosticReportBasedOnValidator.validate(fhirDiagnosticReport, diagnosticReport);
+			if (diagnosticReport.getBasedOn().size() > 0 && diagnosticReport.getBasedOn().get(0).getReference() != null)
+				diagnosticReportRequestValidator.validate(fhirDiagnosticReport);
 			Set<Obs> createdObs = createObs(fhirDiagnosticReport.getResults());
 			fhirDiagnosticReport.setResults(createdObs);
 			FhirDiagnosticReport createdFhirDiagnosticReport = fhirDiagnosticReportDao.createOrUpdate(fhirDiagnosticReport);

@@ -19,11 +19,11 @@ import org.openmrs.module.fhir2.api.search.SearchQuery;
 import org.openmrs.module.fhir2.api.search.SearchQueryInclude;
 import org.openmrs.module.fhir2.api.search.param.SearchParameterMap;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
-import org.openmrs.module.fhirExtension.validators.DiagnosticReportBasedOnValidator;
 import org.openmrs.module.fhirExtension.translators.ObsBasedDiagnosticReportTranslator;
+import org.openmrs.module.fhirExtension.validators.DiagnosticReportRequestValidator;
 import org.openmrs.module.fhirExtension.validators.DiagnosticReportObsValidator;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -50,8 +50,8 @@ public class ObsBasedDiagnosticReportServiceTest {
 	private ObsBasedDiagnosticReportTranslator translator;
 	
 	@Mock
-	private DiagnosticReportBasedOnValidator diagnosticReportBasedOnValidator;
-
+	private DiagnosticReportRequestValidator diagnosticReportRequestValidator;
+	
 	@Mock
 	private DiagnosticReportObsValidator validator;
 	
@@ -95,7 +95,7 @@ public class ObsBasedDiagnosticReportServiceTest {
         FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
         fhirDiagnosticReport.setResults(new HashSet<>(asList(new Obs(), new Obs())));
 
-        doNothing().when(diagnosticReportBasedOnValidator).validate(fhirDiagnosticReport,diagnosticReportToCreate);
+        doNothing().when(diagnosticReportRequestValidator).validate(fhirDiagnosticReport);
         when(translator.toOpenmrsType(diagnosticReportToCreate)).thenReturn(fhirDiagnosticReport);
         doThrow(new UnsupportedOperationException()).when(validator).validate(fhirDiagnosticReport);
 
@@ -112,12 +112,12 @@ public class ObsBasedDiagnosticReportServiceTest {
         fhirDiagnosticReport.setResults(new HashSet<>(asList(new Obs(), new Obs())));
         Reference reference = new Reference("ServiceRequest");
         reference.setDisplay("Platelet Count");
-        List<Reference> basedOn = Arrays.asList(reference);
+        List<Reference> basedOn = Collections.singletonList(reference);
         diagnosticReportToCreate.setBasedOn(basedOn);
 
         when(translator.toOpenmrsType(diagnosticReportToCreate)).thenReturn(fhirDiagnosticReport);
         doNothing().when(validator).validate(fhirDiagnosticReport);
-        doThrow(new UnsupportedOperationException()).when(diagnosticReportBasedOnValidator).validate(fhirDiagnosticReport,diagnosticReportToCreate);
+        doThrow(new UnsupportedOperationException()).when(diagnosticReportRequestValidator).validate(fhirDiagnosticReport);
 
         obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
 
