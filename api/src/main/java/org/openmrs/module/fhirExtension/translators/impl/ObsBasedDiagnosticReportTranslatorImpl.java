@@ -2,10 +2,14 @@ package org.openmrs.module.fhirExtension.translators.impl;
 
 import org.hl7.fhir.r4.model.Attachment;
 import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Reference;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
+import org.openmrs.Provider;
 import org.openmrs.api.APIException;
+import org.openmrs.api.ProviderService;
 import org.openmrs.module.fhir2.api.translators.DiagnosticReportTranslator;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
 import org.openmrs.module.fhirExtension.domain.observation.LabResult;
@@ -15,9 +19,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -32,16 +38,23 @@ public class ObsBasedDiagnosticReportTranslatorImpl implements ObsBasedDiagnosti
 	@Autowired
 	private DiagnosticReportObsLabResultTranslatorImpl diagnosticReportObsLabResultTranslator;
 	
+	@Autowired
+	private ProviderService providerService;
+	
+	static final String PRACTITIONER = "Practitioner";
+	
 	@Override
 	public DiagnosticReport toFhirResource(@Nonnull FhirDiagnosticReport fhirDiagnosticReport) {
 		DiagnosticReport diagnosticReport = diagnosticReportTranslator.toFhirResource(fhirDiagnosticReport);
 		setPresentedForm(diagnosticReport, fhirDiagnosticReport);
+		setPractitioner(diagnosticReport, fhirDiagnosticReport);
 		return diagnosticReport;
 	}
 	
 	@Override
 	public FhirDiagnosticReport toOpenmrsType(@Nonnull DiagnosticReport diagnosticReport) {
 		FhirDiagnosticReport fhirDiagnosticReport = diagnosticReportTranslator.toOpenmrsType(diagnosticReport);
+		setPerformer(diagnosticReport, fhirDiagnosticReport);
 		updateObsResults(fhirDiagnosticReport, diagnosticReport);
 		return fhirDiagnosticReport;
 	}
@@ -76,6 +89,25 @@ public class ObsBasedDiagnosticReportTranslatorImpl implements ObsBasedDiagnosti
 				diagnosticReport.addPresentedForm(attachment);
 			}
 			diagnosticReport.setConclusion(labResult.getLabReportNotes());
+		}
+	}
+	
+	private void setPractitioner(DiagnosticReport diagnosticReport, FhirDiagnosticReport fhirDiagnosticReport) {
+		Set<Provider> performers = fhirDiagnosticReport.getPerformers();
+		if (!performers.isEmpty()) {
+			Provider doctorProvider = performers.iterator().next();
+			Reference reference = new Reference(PRACTITIONER);
+			reference.setDisplay(doctorProvider.getName());
+			diagnosticReport.setPerformer(Collections.singletonList(reference));
+		}
+	}
+	
+	private void setPerformer(DiagnosticReport diagnosticReport, FhirDiagnosticReport fhirDiagnosticReport) {
+		if (!diagnosticReport.getPerformer().isEmpty()) {
+			String reference = diagnosticReport.getPerformer().get(0).getReference();
+			String providerUuid = reference.split("/")[1];
+			Provider doctorProvider = providerService.getProviderByUuid(providerUuid);
+			fhirDiagnosticReport.setPerformers(Collections.singleton(doctorProvider));
 		}
 	}
 	
