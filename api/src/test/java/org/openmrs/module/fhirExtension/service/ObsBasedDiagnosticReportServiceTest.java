@@ -59,14 +59,17 @@ public class ObsBasedDiagnosticReportServiceTest {
 	private ObsService obsService;
 	
 	@Mock
+	private OrderUpdateService orderUpdateService;
+	
+	@Mock
 	private FhirDiagnosticReportDao dao;
 	
 	@Mock
 	private SearchQuery<FhirDiagnosticReport, DiagnosticReport, FhirDiagnosticReportDao, ObsBasedDiagnosticReportTranslator, SearchQueryInclude<DiagnosticReport>> mockSearchQuery;
-
+	
 	@Mock
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
-
+	
 	@InjectMocks
 	private final ObsBasedDiagnosticReportService obsBasedDiagnosticReportService = new ObsBasedDiagnosticReportService();
 	
@@ -75,16 +78,17 @@ public class ObsBasedDiagnosticReportServiceTest {
 		DiagnosticReport diagnosticReportToCreate = new DiagnosticReport();
 		FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
 		fhirDiagnosticReport.setResults(of(new Obs(), new Obs()).collect(toSet()));
-
+		
 		when(translator.toOpenmrsType(diagnosticReportToCreate)).thenReturn(fhirDiagnosticReport);
 		doNothing().when(validator).validate(fhirDiagnosticReport);
 		FhirDiagnosticReport updatedFhirDiagnosticReport = new FhirDiagnosticReport();
 		when(dao.createOrUpdate(fhirDiagnosticReport)).thenReturn(updatedFhirDiagnosticReport);
 		DiagnosticReport diagnosticReportCreated = new DiagnosticReport();
+		doNothing().when(orderUpdateService).updateOrder(diagnosticReportToCreate, fhirDiagnosticReport);
 		when(translator.toFhirResource(updatedFhirDiagnosticReport)).thenReturn(diagnosticReportCreated);
-
+		
 		DiagnosticReport result = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
-
+		
 		assertEquals(diagnosticReportCreated, result);
 		verify(obsService, times(2)).saveObs(any(Obs.class), eq(SAVE_OBS_MESSAGE));
 	}
@@ -104,7 +108,7 @@ public class ObsBasedDiagnosticReportServiceTest {
         verify(obsService, times(0)).saveObs(any(Obs.class), eq(SAVE_OBS_MESSAGE));
         verify(dao, times(0)).createOrUpdate(any(FhirDiagnosticReport.class));
     }
-
+	
 	@Test(expected = UnsupportedOperationException.class)
     public void shouldNotSaveObsAndDiagnosticReportWhenLabTestIsNotAValidPendingOrder() {
         DiagnosticReport diagnosticReportToCreate = new DiagnosticReport();
@@ -123,14 +127,14 @@ public class ObsBasedDiagnosticReportServiceTest {
 
         verify(dao, times(0)).createOrUpdate(any(FhirDiagnosticReport.class));
     }
-
+	
 	@Test
 	public void shouldCallQueryResultsWithProperParamtersWhenSearchNeedsToBePerformedForPatient() {
 		ReferenceAndListParam patientReference = new ReferenceAndListParam();
-
+		
 		obsBasedDiagnosticReportService.searchForDiagnosticReports(null, patientReference, null, null, null, null, null,
 		    null, null);
-
+		
 		ArgumentCaptor<SearchParameterMap> searchParameterArgumentCaptor = ArgumentCaptor.forClass(SearchParameterMap.class);
 		ArgumentCaptor<FhirDiagnosticReportDao> daoArgumentCaptor = ArgumentCaptor.forClass(FhirDiagnosticReportDao.class);
 		ArgumentCaptor<ObsBasedDiagnosticReportTranslator> translatorArgumentCaptor = ArgumentCaptor
@@ -139,7 +143,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		        .forClass(SearchQueryInclude.class);
 		verify(mockSearchQuery).getQueryResults(searchParameterArgumentCaptor.capture(), daoArgumentCaptor.capture(),
 		    translatorArgumentCaptor.capture(), searchQueryIncludeArgumentCaptor.capture());
-
+		
 		assertNotNull(searchParameterArgumentCaptor.getValue().getParameters(FhirConstants.PATIENT_REFERENCE_SEARCH_HANDLER));
 		assertEquals(dao, daoArgumentCaptor.getValue());
 		assertEquals(translator, translatorArgumentCaptor.getValue());

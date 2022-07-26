@@ -7,9 +7,7 @@ import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
-
 import static org.openmrs.module.fhir2.api.util.FhirUtils.createExceptionErrorOperationOutcome;
 
 @Component
@@ -28,7 +26,10 @@ public class DiagnosticReportRequestValidator {
         Patient patient = fhirDiagnosticReport.getSubject();
         Integer conceptId = fhirDiagnosticReport.getCode().getId();
         List<Order> allOrders = orderService.getAllOrdersByPatient(patient);
-        long matchingOrdersCount = allOrders.stream().filter(Order::isActive).filter((order) -> order.getConcept().getId().equals(conceptId)).count();
+        long matchingOrdersCount = allOrders.stream()
+                .filter(order -> !Order.FulfillerStatus.COMPLETED.equals(order.getFulfillerStatus()))
+                .filter(order -> !order.getVoided())
+                .filter((order) -> order.getConcept().getId().equals(conceptId)).count();
         if(matchingOrdersCount < 1)
             throw new UnprocessableEntityException(INVALID_ORDER_ERROR_MESSAGE, createExceptionErrorOperationOutcome(INVALID_ORDER_ERROR_MESSAGE));
     }

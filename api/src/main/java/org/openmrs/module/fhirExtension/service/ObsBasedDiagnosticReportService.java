@@ -52,15 +52,19 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	
 	@Autowired
 	private DiagnosticReportObsValidator diagnosticReportObsValidator;
-
+	
 	@Autowired
 	private DiagnosticReportRequestValidator diagnosticReportRequestValidator;
+	
+	@Autowired
+	private OrderUpdateService orderUpdateService;
 	
 	@Autowired
 	private SearchQuery<FhirDiagnosticReport, DiagnosticReport, FhirDiagnosticReportDao, ObsBasedDiagnosticReportTranslator, SearchQueryInclude<DiagnosticReport>> searchQuery;
 	
 	@Autowired
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
+	
 	@Override
 	public DiagnosticReport create(@Nonnull DiagnosticReport diagnosticReport) {
 		try {
