@@ -53,7 +53,7 @@ public class OrderUpdateServiceTest {
 	}
 	
 	@Test
-	public void shouldUpdateOrderFulfillerStatusWhenUploadingFromSidePanel() {
+	public void shouldUpdateOrderFulfillerStatusWhenUploadingReportAgainstAPendingLabOrder() {
 		DiagnosticReport diagnosticReport = new DiagnosticReport();
 		FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
 		Patient patient = new Patient(123);

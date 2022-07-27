@@ -1,7 +1,5 @@
 package org.openmrs.module.fhirExtension.service;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.QualifiedParamList;
 import ca.uhn.fhir.rest.param.ReferenceAndListParam;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.Reference;
@@ -20,16 +18,14 @@ import org.openmrs.module.fhir2.api.search.SearchQueryInclude;
 import org.openmrs.module.fhir2.api.search.param.SearchParameterMap;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
 import org.openmrs.module.fhirExtension.translators.ObsBasedDiagnosticReportTranslator;
-import org.openmrs.module.fhirExtension.validators.DiagnosticReportRequestValidator;
 import org.openmrs.module.fhirExtension.validators.DiagnosticReportObsValidator;
+import org.openmrs.module.fhirExtension.validators.DiagnosticReportRequestValidator;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
 import static org.junit.Assert.assertEquals;
@@ -99,7 +95,7 @@ public class ObsBasedDiagnosticReportServiceTest {
         FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
         fhirDiagnosticReport.setResults(new HashSet<>(asList(new Obs(), new Obs())));
 
-        doNothing().when(diagnosticReportRequestValidator).validate(fhirDiagnosticReport);
+        doNothing().when(diagnosticReportRequestValidator).validate(diagnosticReportToCreate);
         when(translator.toOpenmrsType(diagnosticReportToCreate)).thenReturn(fhirDiagnosticReport);
         doThrow(new UnsupportedOperationException()).when(validator).validate(fhirDiagnosticReport);
 
@@ -121,7 +117,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 
         when(translator.toOpenmrsType(diagnosticReportToCreate)).thenReturn(fhirDiagnosticReport);
         doNothing().when(validator).validate(fhirDiagnosticReport);
-        doThrow(new UnsupportedOperationException()).when(diagnosticReportRequestValidator).validate(fhirDiagnosticReport);
+        doThrow(new UnsupportedOperationException()).when(diagnosticReportRequestValidator).validate(diagnosticReportToCreate);
 
         obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
 
