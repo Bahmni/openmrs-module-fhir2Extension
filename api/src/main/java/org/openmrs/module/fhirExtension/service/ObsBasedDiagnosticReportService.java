@@ -8,7 +8,9 @@ import ca.uhn.fhir.rest.param.ReferenceAndListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.openmrs.Encounter;
 import org.openmrs.Obs;
+import org.openmrs.Order;
 import org.openmrs.api.ObsService;
 import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.FhirDiagnosticReportService;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nonnull;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,7 +60,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	private DiagnosticReportRequestValidator diagnosticReportRequestValidator;
 	
 	@Autowired
-	private OrderUpdateService orderUpdateService;
+	private OrderUtil orderUtil;
 	
 	@Autowired
 	private SearchQuery<FhirDiagnosticReport, DiagnosticReport, FhirDiagnosticReportDao, ObsBasedDiagnosticReportTranslator, SearchQueryInclude<DiagnosticReport>> searchQuery;
@@ -71,10 +74,11 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			FhirDiagnosticReport fhirDiagnosticReport = obsBasedDiagnosticReportTranslator.toOpenmrsType(diagnosticReport);
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
 			diagnosticReportRequestValidator.validate(diagnosticReport);
-			Set<Obs> createdObs = createObs(fhirDiagnosticReport.getResults());
+			Order order = orderUtil.getOrder(diagnosticReport, fhirDiagnosticReport);
+			Set<Obs> createdObs = createObs(fhirDiagnosticReport.getResults(), order);
 			fhirDiagnosticReport.setResults(createdObs);
 			FhirDiagnosticReport createdFhirDiagnosticReport = fhirDiagnosticReportDao.createOrUpdate(fhirDiagnosticReport);
-			orderUpdateService.updateOrder(diagnosticReport, fhirDiagnosticReport);
+			orderUtil.updateOrder(diagnosticReport, fhirDiagnosticReport);
 			return obsBasedDiagnosticReportTranslator.toFhirResource(createdFhirDiagnosticReport);
 		}
 		catch (Exception exception) {
@@ -111,9 +115,14 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		    searchQueryInclude);
 	}
 	
-	private Set<Obs> createObs(Set<Obs> results) {
-		return results.stream()
-				.map(obs -> obsService.saveObs(obs, SAVE_OBS_MESSAGE))
-				.collect(Collectors.toSet());
-	}
+	private Set<Obs> createObs(Set<Obs> results, Order order) {
+        return results.stream()
+                .map(obs -> {
+                    obs.setOrder(order);
+                    if (order != null)
+                        obs.setEncounter(order.getEncounter());
+                    return obsService.saveObs(obs, SAVE_OBS_MESSAGE);
+                })
+                .collect(Collectors.toSet());
+    }
 }
