@@ -8,7 +8,6 @@ import ca.uhn.fhir.rest.param.ReferenceAndListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.r4.model.DiagnosticReport;
-import org.openmrs.Encounter;
 import org.openmrs.Obs;
 import org.openmrs.Order;
 import org.openmrs.api.ObsService;
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nonnull;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -75,7 +73,9 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
 			diagnosticReportRequestValidator.validate(diagnosticReport);
 			Order order = orderUtil.getOrder(diagnosticReport, fhirDiagnosticReport);
-			Set<Obs> createdObs = createObs(fhirDiagnosticReport.getResults(), order);
+			Set<Obs> diagnosticObs = fhirDiagnosticReport.getResults();
+			orderUtil.updateObsWithOrder(diagnosticObs, order);
+			Set<Obs> createdObs = createObs(diagnosticObs);
 			fhirDiagnosticReport.setResults(createdObs);
 			FhirDiagnosticReport createdFhirDiagnosticReport = fhirDiagnosticReportDao.createOrUpdate(fhirDiagnosticReport);
 			orderUtil.updateOrder(diagnosticReport, fhirDiagnosticReport);
@@ -115,14 +115,9 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		    searchQueryInclude);
 	}
 	
-	private Set<Obs> createObs(Set<Obs> results, Order order) {
-        return results.stream()
-                .map(obs -> {
-                    obs.setOrder(order);
-                    if (order != null)
-                        obs.setEncounter(order.getEncounter());
-                    return obsService.saveObs(obs, SAVE_OBS_MESSAGE);
-                })
-                .collect(Collectors.toSet());
-    }
+	private Set<Obs> createObs(Set<Obs> results) {
+		return results.stream()
+				.map(obs -> obsService.saveObs(obs, SAVE_OBS_MESSAGE))
+				.collect(Collectors.toSet());
+	}
 }

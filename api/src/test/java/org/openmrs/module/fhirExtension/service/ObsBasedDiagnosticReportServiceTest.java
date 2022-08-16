@@ -55,7 +55,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 	private ObsService obsService;
 	
 	@Mock
-	private OrderUpdateService orderUpdateService;
+	private OrderUtil orderUtil;
 	
 	@Mock
 	private FhirDiagnosticReportDao dao;
@@ -80,7 +80,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		FhirDiagnosticReport updatedFhirDiagnosticReport = new FhirDiagnosticReport();
 		when(dao.createOrUpdate(fhirDiagnosticReport)).thenReturn(updatedFhirDiagnosticReport);
 		DiagnosticReport diagnosticReportCreated = new DiagnosticReport();
-		doNothing().when(orderUpdateService).updateOrder(diagnosticReportToCreate, fhirDiagnosticReport);
+		doNothing().when(orderUtil).updateOrder(diagnosticReportToCreate, fhirDiagnosticReport);
 		when(translator.toFhirResource(updatedFhirDiagnosticReport)).thenReturn(diagnosticReportCreated);
 		
 		DiagnosticReport result = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
