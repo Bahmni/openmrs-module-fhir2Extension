@@ -81,7 +81,7 @@ public class BahmniEncounterSessionMatcher implements EncounterMatcher {
 		    providerService.getProvidersByPerson(Context.getAuthenticatedUser().getPerson()))
 		        .orElse(Collections.emptyList());
 		
-		Optional<Visit> activeVisit = getActiveVisit(diagnosticReport.getSubject(), null);
+		Optional<Visit> activeVisit = getActiveVisit(diagnosticReport.getSubject());
 		if (!activeVisit.isPresent()) {
 			log.error("Can not identify an active visit for the patient");
 			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
@@ -161,16 +161,10 @@ public class BahmniEncounterSessionMatcher implements EncounterMatcher {
 		return location.hasTag(LOCATION_TAG_SUPPORTS_VISITS) ? location : visitLocationFor(location.getParentLocation());
 	}
 	
-	private Optional<Visit> getActiveVisit(Patient patient, String visitLocationUuid) {
+	private Optional<Visit> getActiveVisit(Patient patient) {
 		List<Visit> activeVisits = visitService.getActiveVisitsByPatient(patient);
 		if (CollectionUtils.isEmpty(activeVisits)) {
 			return Optional.empty();
-		}
-		if (visitLocationUuid != null) {
-			return activeVisits.stream().filter(v -> {
-				Location visitLocation = v.getLocation();
-				return visitLocation != null && (visitLocation.getUuid()).equals(visitLocationUuid);
-			}).findFirst();
 		}
 		return Optional.of(activeVisits.get(0));
 	}
