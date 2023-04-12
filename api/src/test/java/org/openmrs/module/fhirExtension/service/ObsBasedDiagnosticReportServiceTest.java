@@ -10,14 +10,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.openmrs.Concept;
-import org.openmrs.Obs;
-import org.openmrs.Order;
+import org.openmrs.*;
+import org.openmrs.Location;
 import org.openmrs.Patient;
-import org.openmrs.CareSetting;
-import org.openmrs.OrderType;
+import org.openmrs.Person;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.OrderService;
+import org.openmrs.api.context.Context;
+import org.openmrs.api.context.UserContext;
 import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.dao.FhirDiagnosticReportDao;
 import org.openmrs.module.fhir2.api.search.SearchQuery;
@@ -63,6 +63,9 @@ public class ObsBasedDiagnosticReportServiceTest {
 	
 	@Mock
 	private OrderService orderService;
+	
+	@Mock
+	private EncounterMatcher encounterMatcher;
 	
 	@InjectMocks
 	private DiagnosticReportRequestValidator diagnosticReportRequestValidator = Mockito
@@ -131,6 +134,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		when(dao.createOrUpdate(fhirDiagnosticReport)).thenReturn(updatedFhirDiagnosticReport);
 		when(translator.toFhirResource(updatedFhirDiagnosticReport)).thenReturn(mockDiagnosticReport);
 		
+		//when(encounterService.getEncounterType("LAB_RESULT")).thenReturn(new EncounterType());
 		DiagnosticReport actualDiagnosticReport = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
 		
 		verify(obsService, times(1)).saveObs(any(Obs.class), eq(SAVE_OBS_MESSAGE));
@@ -178,6 +182,14 @@ public class ObsBasedDiagnosticReportServiceTest {
 		doNothing().when(diagnosticReportObsValidator).validate(fhirDiagnosticReport);
 		when(dao.createOrUpdate(fhirDiagnosticReport)).thenReturn(updatedFhirDiagnosticReport);
 		when(translator.toFhirResource(updatedFhirDiagnosticReport)).thenReturn(mockDiagnosticReport);
+		//when(encounterService.getEncounterType("LAB_RESULT")).thenReturn(new EncounterType());
+		
+		User authenticatedUser = new User();
+		authenticatedUser.setPerson(new Person());
+		UserContext mockUserContext = mock(UserContext.class);
+		when(mockUserContext.getAuthenticatedUser()).thenReturn(authenticatedUser);
+		when(mockUserContext.getLocation()).thenReturn(new Location());
+		Context.setUserContext(mockUserContext);
 		
 		DiagnosticReport actualDiagnosticReport = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
 		

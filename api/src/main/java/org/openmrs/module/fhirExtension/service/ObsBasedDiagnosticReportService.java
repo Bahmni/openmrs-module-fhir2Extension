@@ -8,11 +8,12 @@ import ca.uhn.fhir.rest.param.ReferenceAndListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.r4.model.DiagnosticReport;
+import org.openmrs.CareSetting;
+import org.openmrs.Encounter;
 import org.openmrs.Obs;
 import org.openmrs.Order;
-import org.openmrs.Patient;
 import org.openmrs.OrderType;
-import org.openmrs.CareSetting;
+import org.openmrs.Patient;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.FhirConstants;
@@ -74,6 +75,9 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	@Autowired
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
 	
+	@Autowired
+	private EncounterMatcher encounterMatcher;
+	
 	@Override
 	public DiagnosticReport create(@Nonnull DiagnosticReport diagnosticReport) {
 		try {
@@ -82,7 +86,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
 			
 			Order order = getOrder(diagnosticReport, fhirDiagnosticReport);
-			Set<Obs> reportObs = createReportObs(fhirDiagnosticReport, order);
+			Encounter encounter = encounterMatcher.findOrCreateEncounter(fhirDiagnosticReport);
+			Set<Obs> reportObs = createReportObs(fhirDiagnosticReport, order, encounter);
 			
 			fhirDiagnosticReport.setResults(reportObs);
 			
@@ -96,11 +101,11 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		}
 	}
 	
-	private Set<Obs> createReportObs(FhirDiagnosticReport fhirDiagnosticReport, Order order) {
+	private Set<Obs> createReportObs(FhirDiagnosticReport fhirDiagnosticReport, Order order, Encounter encounter) {
 		String SAVE_OBS_MESSAGE = "Created when saving a Fhir Diagnostic Report";
 
 		Set<Obs> diagnosticObs = fhirDiagnosticReport.getResults();
-		updateObsWithOrder(diagnosticObs, order);
+		updateObsWithOrderAndEncounter(diagnosticObs, order, encounter);
 		return diagnosticObs.stream()
 				.map(obs -> obsService.saveObs(obs, SAVE_OBS_MESSAGE))
 				.collect(Collectors.toSet());
@@ -159,11 +164,12 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			order.setFulfillerStatus(Order.FulfillerStatus.COMPLETED);
 	}
 	
-	private void updateObsWithOrder(Set<Obs> diagnosticObs, Order order) {
+	private void updateObsWithOrderAndEncounter(Set<Obs> diagnosticObs, Order order, Encounter encounter) {
 		diagnosticObs.forEach(obs -> {
 			obs.setOrder(order);
+			obs.setEncounter(encounter);
 			if (obs.hasGroupMembers()) {
-				updateObsWithOrder(obs.getGroupMembers(), order);
+				updateObsWithOrderAndEncounter(obs.getGroupMembers(), order, encounter);
 			}
 		});
 	}
