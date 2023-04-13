@@ -14,8 +14,11 @@ import org.openmrs.*;
 import org.openmrs.Location;
 import org.openmrs.Patient;
 import org.openmrs.Person;
+import org.openmrs.api.EncounterService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.OrderService;
+import org.openmrs.api.ProviderService;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.UserContext;
 import org.openmrs.module.fhir2.FhirConstants;
@@ -64,9 +67,6 @@ public class ObsBasedDiagnosticReportServiceTest {
 	@Mock
 	private OrderService orderService;
 	
-	@Mock
-	private EncounterMatcher encounterMatcher;
-	
 	@InjectMocks
 	private DiagnosticReportRequestValidator diagnosticReportRequestValidator = Mockito
 	        .spy(new DiagnosticReportRequestValidator());
@@ -85,6 +85,15 @@ public class ObsBasedDiagnosticReportServiceTest {
 	
 	@Mock
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
+	
+	@Mock
+	private EncounterService encounterService;
+	
+	@Mock
+	private VisitService visitService;
+	
+	@Mock
+	private ProviderService providerService;
 	
 	@InjectMocks
 	private final ObsBasedDiagnosticReportService obsBasedDiagnosticReportService = new ObsBasedDiagnosticReportService();
@@ -124,6 +133,13 @@ public class ObsBasedDiagnosticReportServiceTest {
 		OrderType orderType = new OrderType(1);
 		String careSettingName = CareSetting.CareSettingType.OUTPATIENT.toString();
 		
+		User authenticatedUser = new User();
+		authenticatedUser.setPerson(new Person());
+		UserContext mockUserContext = mock(UserContext.class);
+		when(mockUserContext.getAuthenticatedUser()).thenReturn(authenticatedUser);
+		when(mockUserContext.getLocation()).thenReturn(new Location());
+		Context.setUserContext(mockUserContext);
+		
 		DiagnosticReport mockDiagnosticReport = new DiagnosticReport();
 		FhirDiagnosticReport updatedFhirDiagnosticReport = new FhirDiagnosticReport();
 		when(orderService.getCareSettingByName(careSettingName)).thenReturn(careSetting);
@@ -134,7 +150,8 @@ public class ObsBasedDiagnosticReportServiceTest {
 		when(dao.createOrUpdate(fhirDiagnosticReport)).thenReturn(updatedFhirDiagnosticReport);
 		when(translator.toFhirResource(updatedFhirDiagnosticReport)).thenReturn(mockDiagnosticReport);
 		
-		//when(encounterService.getEncounterType("LAB_RESULT")).thenReturn(new EncounterType());
+		when(encounterService.getEncounterType("LAB_RESULT")).thenReturn(new EncounterType());
+		when(visitService.getActiveVisitsByPatient(patient)).thenReturn(Collections.singletonList(new Visit()));
 		DiagnosticReport actualDiagnosticReport = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
 		
 		verify(obsService, times(1)).saveObs(any(Obs.class), eq(SAVE_OBS_MESSAGE));
@@ -190,7 +207,8 @@ public class ObsBasedDiagnosticReportServiceTest {
 		when(mockUserContext.getAuthenticatedUser()).thenReturn(authenticatedUser);
 		when(mockUserContext.getLocation()).thenReturn(new Location());
 		Context.setUserContext(mockUserContext);
-		
+		when(encounterService.getEncounterType("LAB_RESULT")).thenReturn(new EncounterType());
+		when(visitService.getActiveVisitsByPatient(patient)).thenReturn(Collections.singletonList(new Visit()));
 		DiagnosticReport actualDiagnosticReport = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
 		
 		verify(obsService, times(2)).saveObs(any(Obs.class), eq(SAVE_OBS_MESSAGE));

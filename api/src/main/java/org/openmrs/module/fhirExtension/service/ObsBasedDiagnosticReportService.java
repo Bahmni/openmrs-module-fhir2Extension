@@ -21,8 +21,11 @@ import org.openmrs.Patient;
 import org.openmrs.Provider;
 import org.openmrs.User;
 import org.openmrs.Visit;
+import org.openmrs.api.EncounterService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.OrderService;
+import org.openmrs.api.ProviderService;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.FhirDiagnosticReportService;
@@ -90,6 +93,15 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	@Autowired
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
 	
+	@Autowired
+	private EncounterService encounterService;
+	
+	@Autowired
+	private VisitService visitService;
+	
+	@Autowired
+	private ProviderService providerService;
+	
 	@Override
 	public DiagnosticReport create(@Nonnull DiagnosticReport diagnosticReport) {
 		try {
@@ -121,7 +133,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			log.info("Diagnostic Report was submitted with an existing encounter reference. This will be overwritten by a new encounter");
 		}
 		
-		EncounterType encounterType = Context.getEncounterService().getEncounterType("LAB_RESULT");
+		EncounterType encounterType = encounterService.getEncounterType("LAB_RESULT");
 		if (encounterType == null) {
 			log.error("Encounter type LAB_RESULT must be defined to support Diagnostic Report");
 			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
@@ -139,13 +151,12 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
 		}
 		
-		return Context.getEncounterService().saveEncounter(
-		    newEncounterInstance(fhirDiagnosticReport.getSubject(), encounterType, location, activeVisit.get(),
-		        Context.getAuthenticatedUser()));
+		return encounterService.saveEncounter(newEncounterInstance(fhirDiagnosticReport.getSubject(), encounterType,
+		    location, activeVisit.get(), Context.getAuthenticatedUser()));
 	}
 	
 	private Encounter newEncounterInstance(Patient patient, EncounterType encounterType, Location location, Visit activeVisit, User user) {
-		Collection<Provider> providersForUser = Optional.ofNullable(Context.getProviderService().getProvidersByPerson(user.getPerson())).orElse(Collections.emptyList());
+		Collection<Provider> providersForUser = Optional.ofNullable(providerService.getProvidersByPerson(user.getPerson())).orElse(Collections.emptyList());
 		Encounter encounter = new Encounter();
 		encounter.setVisit(activeVisit);
 		encounter.setPatient(patient);
@@ -167,12 +178,12 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	}
 	
 	EncounterRole getEncounterRoleForLabResults() {
-		return Optional.ofNullable(Context.getEncounterService().getEncounterRoleByName(LAB_RESULTS_ENCOUNTER_ROLE)).orElse(
-		    Context.getEncounterService().getEncounterRoleByUuid(EncounterRole.UNKNOWN_ENCOUNTER_ROLE_UUID));
+		return Optional.ofNullable(encounterService.getEncounterRoleByName(LAB_RESULTS_ENCOUNTER_ROLE)).orElse(
+		    encounterService.getEncounterRoleByUuid(EncounterRole.UNKNOWN_ENCOUNTER_ROLE_UUID));
 	}
 	
 	private Optional<Visit> getActiveVisit(Patient patient) {
-		List<Visit> activeVisits = Context.getVisitService().getActiveVisitsByPatient(patient);
+		List<Visit> activeVisits = visitService.getActiveVisitsByPatient(patient);
 		if (CollectionUtils.isEmpty(activeVisits)) {
 			return Optional.empty();
 		}
