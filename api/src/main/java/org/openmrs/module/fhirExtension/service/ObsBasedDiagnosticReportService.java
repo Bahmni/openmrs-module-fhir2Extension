@@ -10,12 +10,20 @@ import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.openmrs.CareSetting;
 import org.openmrs.Encounter;
+import org.openmrs.EncounterProvider;
+import org.openmrs.EncounterRole;
+import org.openmrs.EncounterType;
+import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Order;
 import org.openmrs.OrderType;
 import org.openmrs.Patient;
+import org.openmrs.Provider;
+import org.openmrs.User;
+import org.openmrs.Visit;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.OrderService;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.FhirDiagnosticReportService;
 import org.openmrs.module.fhir2.api.dao.FhirDao;
@@ -33,12 +41,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Primary
@@ -50,6 +63,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	static final String SAVE_OBS_MESSAGE = "Created when saving a Fhir Diagnostic Report";
 	
 	static final String ORDER_TYPE_NAME = "Lab Order";
+	
+	public static final String LAB_RESULTS_ENCOUNTER_ROLE = "Supporting services";
 	
 	@Autowired
 	private FhirDiagnosticReportDao fhirDiagnosticReportDao;
@@ -75,9 +90,6 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	@Autowired
 	private SearchQueryInclude<DiagnosticReport> searchQueryInclude;
 	
-	@Autowired
-	private EncounterMatcher encounterMatcher;
-	
 	@Override
 	public DiagnosticReport create(@Nonnull DiagnosticReport diagnosticReport) {
 		try {
@@ -86,7 +98,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
 			
 			Order order = getOrder(diagnosticReport, fhirDiagnosticReport);
-			Encounter encounter = encounterMatcher.findOrCreateEncounter(fhirDiagnosticReport);
+			Encounter encounter = createNewEncounter(fhirDiagnosticReport);
+			fhirDiagnosticReport.setEncounter(encounter);
 			Set<Obs> reportObs = createReportObs(fhirDiagnosticReport, order, encounter);
 			
 			fhirDiagnosticReport.setResults(reportObs);
@@ -99,6 +112,71 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			log.error("Exception while saving diagnostic report: " + exception.getMessage());
 			throw exception;
 		}
+	}
+	
+	static final String UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT = "Can not process Diagnostic Report. Please check with your administrator.";
+	
+	private Encounter createNewEncounter(FhirDiagnosticReport fhirDiagnosticReport) {
+		if (fhirDiagnosticReport.getEncounter() != null) {
+			log.info("Diagnostic Report was submitted with an existing encounter reference. This will be overwritten by a new encounter");
+		}
+		
+		EncounterType encounterType = Context.getEncounterService().getEncounterType("LAB_RESULT");
+		if (encounterType == null) {
+			log.error("Encounter type LAB_RESULT must be defined to support Diagnostic Report");
+			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
+		}
+		
+		Location location = Context.getUserContext().getLocation(); //TODO if not present get from clinic
+		if (location == null) {
+			log.error("Logged in location for user is null. Can not identify encounter session.");
+			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
+		}
+		
+		Optional<Visit> activeVisit = getActiveVisit(fhirDiagnosticReport.getSubject());
+		if (!activeVisit.isPresent()) {
+			log.error("Can not identify an active visit for the patient");
+			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
+		}
+		
+		return Context.getEncounterService().saveEncounter(
+		    newEncounterInstance(fhirDiagnosticReport.getSubject(), encounterType, location, activeVisit.get(),
+		        Context.getAuthenticatedUser()));
+	}
+	
+	private Encounter newEncounterInstance(Patient patient, EncounterType encounterType, Location location, Visit activeVisit, User user) {
+		Collection<Provider> providersForUser = Optional.ofNullable(Context.getProviderService().getProvidersByPerson(user.getPerson())).orElse(Collections.emptyList());
+		Encounter encounter = new Encounter();
+		encounter.setVisit(activeVisit);
+		encounter.setPatient(patient);
+		encounter.setEncounterType(encounterType);
+		encounter.setUuid(UUID.randomUUID().toString());
+		encounter.setEncounterDatetime(new Date());
+		encounter.setLocation(location);
+		EncounterRole encounterRole = getEncounterRoleForLabResults();
+		Set<EncounterProvider> encounterProviders = providersForUser.stream().map(prov -> {
+			EncounterProvider encounterProvider = new EncounterProvider();
+			encounterProvider.setEncounter(encounter);
+			encounterProvider.setProvider(prov);
+			encounterProvider.setEncounterRole(encounterRole);
+			return encounterProvider;
+		}).collect(Collectors.toSet());
+		encounter.setEncounterProviders(encounterProviders);
+		encounter.setCreator(user);
+		return encounter;
+	}
+	
+	EncounterRole getEncounterRoleForLabResults() {
+		return Optional.ofNullable(Context.getEncounterService().getEncounterRoleByName(LAB_RESULTS_ENCOUNTER_ROLE)).orElse(
+		    Context.getEncounterService().getEncounterRoleByUuid(EncounterRole.UNKNOWN_ENCOUNTER_ROLE_UUID));
+	}
+	
+	private Optional<Visit> getActiveVisit(Patient patient) {
+		List<Visit> activeVisits = Context.getVisitService().getActiveVisitsByPatient(patient);
+		if (CollectionUtils.isEmpty(activeVisits)) {
+			return Optional.empty();
+		}
+		return Optional.of(activeVisits.get(0));
 	}
 	
 	private Set<Obs> createReportObs(FhirDiagnosticReport fhirDiagnosticReport, Order order, Encounter encounter) {
