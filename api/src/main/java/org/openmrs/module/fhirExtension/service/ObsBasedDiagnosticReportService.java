@@ -21,6 +21,8 @@ import org.openmrs.Patient;
 import org.openmrs.Provider;
 import org.openmrs.User;
 import org.openmrs.Visit;
+import org.openmrs.VisitType;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.OrderService;
@@ -41,12 +43,20 @@ import org.openmrs.module.fhirExtension.translators.ObsBasedDiagnosticReportTran
 import org.openmrs.module.fhirExtension.validators.DiagnosticReportObsValidator;
 import org.openmrs.module.fhirExtension.validators.DiagnosticReportRequestValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -67,7 +77,15 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	
 	static final String ORDER_TYPE_NAME = "Lab Order";
 	
+	static final String LOCATION_TAG_SUPPORTS_VISITS = "Visit Location";
+	
+	public static final String LAB_RESULT_ENC_TYPE = "LAB_RESULT";
+	
 	public static final String LAB_RESULTS_ENCOUNTER_ROLE = "Supporting services";
+	
+	public static final String LAB_ENTRY_VISIT_TYPE = "labEntry.visitType";
+	
+	public static final String DEFAULT_LAB_VISIT_TYPE = "LAB_VISIT";
 	
 	@Autowired
 	private FhirDiagnosticReportDao fhirDiagnosticReportDao;
@@ -102,6 +120,10 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	@Autowired
 	private ProviderService providerService;
 	
+	@Autowired
+	@Qualifier("adminService")
+	private AdministrationService adminService;
+	
 	@Override
 	public DiagnosticReport create(@Nonnull DiagnosticReport diagnosticReport) {
 		try {
@@ -110,7 +132,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
 			
 			Order order = getOrder(diagnosticReport, fhirDiagnosticReport);
-			Encounter encounter = createNewEncounter(fhirDiagnosticReport);
+			Encounter encounter = createNewEncounterForReport(fhirDiagnosticReport, order);
 			fhirDiagnosticReport.setEncounter(encounter);
 			Set<Obs> reportObs = createReportObs(fhirDiagnosticReport, order, encounter);
 			
@@ -128,12 +150,12 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	
 	static final String UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT = "Can not process Diagnostic Report. Please check with your administrator.";
 	
-	private Encounter createNewEncounter(FhirDiagnosticReport fhirDiagnosticReport) {
+	private Encounter createNewEncounterForReport(FhirDiagnosticReport fhirDiagnosticReport, Order order) {
 		if (fhirDiagnosticReport.getEncounter() != null) {
 			log.info("Diagnostic Report was submitted with an existing encounter reference. This will be overwritten by a new encounter");
 		}
 		
-		EncounterType encounterType = encounterService.getEncounterType("LAB_RESULT");
+		EncounterType encounterType = encounterService.getEncounterType(LAB_RESULT_ENC_TYPE);
 		if (encounterType == null) {
 			log.error("Encounter type LAB_RESULT must be defined to support Diagnostic Report");
 			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
@@ -144,25 +166,71 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			log.error("Logged in location for user is null. Can not identify encounter session.");
 			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
 		}
-		
-		Optional<Visit> activeVisit = getActiveVisit(fhirDiagnosticReport.getSubject());
-		if (!activeVisit.isPresent()) {
-			log.error("Can not identify an active visit for the patient");
+
+		Optional<Visit> reportOrderVisit = Optional.ofNullable(order).map(ord -> ord.getEncounter()).map(enc -> enc.getVisit());
+		Visit applicableVisit = reportOrderVisit.isPresent() ? reportOrderVisit.get() : getActiveVisit(fhirDiagnosticReport).orElseGet(() -> {
+			log.warn("Can not identify an active visit for the patient. Trying to identify a lab visit for today...");
+			return findOrCreateLabVisit(fhirDiagnosticReport, location);
+		});
+		if (applicableVisit == null) {
+			log.error("Can not identify or create visit for the patient for lab results upload. Please check with your administrator");
 			throw new RuntimeException(UNABLE_TO_PROCESS_DIAGNOSTIC_REPORT);
 		}
 		
 		return encounterService.saveEncounter(newEncounterInstance(fhirDiagnosticReport.getSubject(), encounterType,
-		    location, activeVisit.get(), Context.getAuthenticatedUser()));
+		    location, applicableVisit, Context.getAuthenticatedUser()));
 	}
 	
-	private Encounter newEncounterInstance(Patient patient, EncounterType encounterType, Location location, Visit activeVisit, User user) {
+	private Visit findOrCreateLabVisit(FhirDiagnosticReport report, Location location) {
+		String labEntryVisitType = adminService.getGlobalProperty(LAB_ENTRY_VISIT_TYPE);
+		if (labEntryVisitType == null || "".equals(labEntryVisitType)) {
+			labEntryVisitType = DEFAULT_LAB_VISIT_TYPE;
+		}
+		List<VisitType> labVisitTypes = visitService.getVisitTypes(labEntryVisitType);
+		if (CollectionUtils.isEmpty(labVisitTypes)) {
+			return null;
+		}
+		LocalDate today = LocalDate.now();
+		Instant startOfDay = today.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+		Instant endOfDate = LocalTime.MAX.atDate(today).atZone(ZoneId.systemDefault()).toInstant();
+		Date startDate = Date.from(startOfDay);
+		Date endDate = Date.from(endOfDate);
+
+		List<Visit> labVisitsForToday = visitService.getVisits(
+				labVisitTypes,
+				Collections.singletonList(report.getSubject()),
+				null,
+				null,
+				startDate, null,
+				null, endDate,
+				null,
+				true,
+				false);
+
+		if (!CollectionUtils.isEmpty(labVisitsForToday)) {
+			return labVisitsForToday.stream().reduce((first, second) -> second).orElse(null);
+		}
+
+		Date visitStartDate = Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+		Date visitEndDate = Date.from(LocalDateTime.now().plus(Duration.of(5, ChronoUnit.MINUTES)).atZone(ZoneId.systemDefault()).toInstant());
+		Visit newVisit = new Visit();
+		newVisit.setPatient(report.getSubject());
+		newVisit.setVisitType(labVisitTypes.get(0));
+		newVisit.setStartDatetime(visitStartDate);
+		newVisit.setStopDatetime(visitEndDate);
+		newVisit.setEncounters(new HashSet<Encounter>());
+		newVisit.setLocation(visitLocationFor(location));
+		return visitService.saveVisit(newVisit);
+	}
+	
+	private Encounter newEncounterInstance(Patient patient, EncounterType encounterType, Location location, Visit visit, User user) {
 		Collection<Provider> providersForUser = Optional.ofNullable(providerService.getProvidersByPerson(user.getPerson())).orElse(Collections.emptyList());
 		Encounter encounter = new Encounter();
-		encounter.setVisit(activeVisit);
+		encounter.setVisit(visit);
 		encounter.setPatient(patient);
 		encounter.setEncounterType(encounterType);
 		encounter.setUuid(UUID.randomUUID().toString());
-		encounter.setEncounterDatetime(new Date());
+		encounter.setEncounterDatetime(visit.getStartDatetime());
 		encounter.setLocation(location);
 		EncounterRole encounterRole = getEncounterRoleForLabResults();
 		Set<EncounterProvider> encounterProviders = providersForUser.stream().map(prov -> {
@@ -182,8 +250,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		    encounterService.getEncounterRoleByUuid(EncounterRole.UNKNOWN_ENCOUNTER_ROLE_UUID));
 	}
 	
-	private Optional<Visit> getActiveVisit(Patient patient) {
-		List<Visit> activeVisits = visitService.getActiveVisitsByPatient(patient);
+	private Optional<Visit> getActiveVisit(FhirDiagnosticReport report) {
+		List<Visit> activeVisits = visitService.getActiveVisitsByPatient(report.getSubject());
 		if (CollectionUtils.isEmpty(activeVisits)) {
 			return Optional.empty();
 		}
@@ -249,8 +317,9 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	}
 	
 	private void updateFulFillerStatus(Order order) {
-		if (order != null)
+		if (order != null) {
 			order.setFulfillerStatus(Order.FulfillerStatus.COMPLETED);
+		}
 	}
 	
 	private void updateObsWithOrderAndEncounter(Set<Obs> diagnosticObs, Order order, Encounter encounter) {
@@ -261,5 +330,12 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 				updateObsWithOrderAndEncounter(obs.getGroupMembers(), order, encounter);
 			}
 		});
+	}
+	
+	private Location visitLocationFor(Location location) {
+		if (location.getParentLocation() == null) {
+			return location;
+		}
+		return location.hasTag(LOCATION_TAG_SUPPORTS_VISITS) ? location : visitLocationFor(location.getParentLocation());
 	}
 }
