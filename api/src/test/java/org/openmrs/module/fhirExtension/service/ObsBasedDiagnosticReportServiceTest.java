@@ -441,20 +441,4 @@ public class ObsBasedDiagnosticReportServiceTest {
 		return concept;
 	}
 	
-	@Test
-	public void doSomething() {
-		Instant currentInstant = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant();
-		LocalDate today = LocalDate.now();
-		Instant startOfDay = today.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-		Instant endOfDate = LocalTime.MAX.atDate(today).atZone(ZoneId.systemDefault()).toInstant();
-		System.out.println("Start time: " + java.util.Date.from(startOfDay));
-		System.out.println("End time: " + java.util.Date.from(endOfDate));
-		
-		java.util.Date visitStartDate = java.util.Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
-		java.util.Date visitEndDate = Date.from(LocalDateTime.now().plus(Duration.of(5, ChronoUnit.MINUTES))
-		        .atZone(ZoneId.systemDefault()).toInstant());
-		System.out.println("Visit start date:" + visitStartDate);
-		System.out.println("Visit end date:" + visitEndDate);
-	}
-	
 }
