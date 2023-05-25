@@ -8,7 +8,6 @@ import ca.uhn.fhir.rest.param.ReferenceAndListParam;
 import ca.uhn.fhir.rest.param.TokenAndListParam;
 import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.Observation;
 import org.openmrs.CareSetting;
@@ -160,7 +159,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			if(attachmentObs.isEmpty()) {
 				Obs obs = reportResults.get(0);
 				LabResult labResult = LabResult.builder().
-						labResultValue(obs.getValueAsString(Locale.ENGLISH))
+						labResultValue(obs.getValueNumeric().toString())
 						.concept(fhirDiagnosticReport.getCode())
 						.obsFactory(newObs(fhirDiagnosticReport.getSubject(), fhirDiagnosticReport.getIssued()))
 						.build();
@@ -168,17 +167,6 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 						of(diagnosticReportObsLabResultTranslator.toOpenmrsType(labResult))
 								.filter(Objects::nonNull)
 								.collect(Collectors.toSet()));
-			}
-			else{
-				Obs level1Obs = attachmentObs.iterator().next();
-					Obs level2Obs = level1Obs.getGroupMembers().iterator().next();
-					for (Obs groupMember : level2Obs.getGroupMembers()) {
-						System.out.println(groupMember.getConcept());
-						System.out.println(groupMember.getValueAsString(Locale.ENGLISH));
-					}
-					reportResults.forEach(res -> {
-						level2Obs.addGroupMember(res);
-					});
 			}
 
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
