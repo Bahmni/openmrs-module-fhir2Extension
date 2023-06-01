@@ -5,12 +5,25 @@ import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.openmrs.*;
+import org.openmrs.CareSetting;
+import org.openmrs.Concept;
+import org.openmrs.ConceptDatatype;
+import org.openmrs.EncounterType;
 import org.openmrs.Location;
+import org.openmrs.Obs;
+import org.openmrs.Order;
+import org.openmrs.OrderType;
 import org.openmrs.Patient;
 import org.openmrs.Person;
+import org.openmrs.User;
+import org.openmrs.Visit;
+import org.openmrs.VisitType;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.ObsService;
@@ -520,7 +533,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		obs1.setPerson(patient);
 		obs1.setConcept(concept);
 		obs1.setOrder(order1);
-
+		
 		when(orderService.getCareSettingByName(careSettingName)).thenReturn(careSetting);
 		when(orderService.getOrderTypeByName("Lab Order")).thenReturn(orderType);
 		when(orderService.getOrderByUuid("uuid-12")).thenReturn(order1);

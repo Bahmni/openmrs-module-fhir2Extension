@@ -65,11 +65,18 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Stream.of;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 @Primary
 @Component
@@ -164,7 +171,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 						.obsFactory(newObs(fhirDiagnosticReport.getSubject(), fhirDiagnosticReport.getIssued()))
 						.build();
 				fhirDiagnosticReport.setResults(
-						of(diagnosticReportObsLabResultTranslator.toOpenmrsType(labResult))
+						Stream.of(diagnosticReportObsLabResultTranslator.toOpenmrsType(labResult))
 								.filter(Objects::nonNull)
 								.collect(Collectors.toSet()));
 			}
