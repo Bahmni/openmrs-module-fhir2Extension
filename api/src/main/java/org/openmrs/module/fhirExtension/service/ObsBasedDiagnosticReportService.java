@@ -165,8 +165,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			fhirDiagnosticReport.setEncounter(encounter);
 			if(attachmentObs.isEmpty()) {
 				Obs obs = reportResults.get(0);
-				LabResult labResult = LabResult.builder().
-						labResultValue(obs.getValueNumeric().toString())
+				LabResult labResult = LabResult.builder()
+						.setLabResultValue(obs)
 						.concept(fhirDiagnosticReport.getCode())
 						.obsFactory(newObs(fhirDiagnosticReport.getSubject(), fhirDiagnosticReport.getIssued()))
 						.build();
@@ -191,15 +191,24 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		}
 	}
 	
-	private BiFunction<Concept, String, Obs> newObs(Patient subject, Date issued) {
+	private BiFunction<Concept, Object, Obs> newObs(Patient subject, Date issued) {
 		return (concept, value) -> {
 			Obs obs = new Obs();
 			obs.setPerson(subject);
 			obs.setObsDatetime(issued);
 			obs.setConcept(concept);
-			setObsValue(obs, value);
+			if (value instanceof Concept)
+				setObsValue(obs, (Concept) value);
+			else
+				setObsValue(obs, (String) value);
 			return obs;
 		};
+	}
+	
+	private void setObsValue(Obs obs, Concept value) {
+		if (value != null) {
+			obs.setValueCoded(value);
+		}
 	}
 	
 	private void setObsValue(Obs obs, String value) {

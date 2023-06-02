@@ -23,7 +23,11 @@ public class LabResult {
 	
 	private String labResultValue;
 	
-	private BiFunction<Concept, String, Obs> obsFactory;
+	private Concept labResultConceptValue;
+	
+	private Boolean labResultBooleanValue;
+	
+	private BiFunction<Concept, Object, Obs> obsFactory;
 	
 	public boolean isPanel() {
 		return !concept.getSetMembers().isEmpty();
@@ -39,6 +43,13 @@ public class LabResult {
 	
 	public Optional<Obs> newValueObs(Concept obsConcept, String value) {
 		if (value != null && !"".equals(value.trim())) {
+			return Optional.of(obsFactory.apply(obsConcept, value));
+		}
+		return Optional.empty();
+	}
+	
+	public Optional<Obs> newValueObs(Concept obsConcept, Concept value) {
+		if (value != null) {
 			return Optional.of(obsFactory.apply(obsConcept, value));
 		}
 		return Optional.empty();
@@ -92,6 +103,17 @@ public class LabResult {
 		
 		public LabResultBuilder labResultValue(String value) {
 			this.labResultValue = value;
+			return this;
+		}
+		
+		public LabResultBuilder setLabResultValue(Obs obs) {
+			if (obs.getValueNumeric() != null)
+				this.labResultValue = obs.getValueNumeric().toString();
+			else if (obs.getValueCoded() != null) {
+				this.labResultConceptValue = obs.getValueCoded();
+			} else if (obs.getValueBoolean() != null) {
+				this.labResultBooleanValue = obs.getValueBoolean();
+			}
 			return this;
 		}
 	}

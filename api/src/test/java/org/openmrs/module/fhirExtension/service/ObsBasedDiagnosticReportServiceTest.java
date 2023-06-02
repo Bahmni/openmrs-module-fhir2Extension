@@ -639,7 +639,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		verify(diagnosticReportObsLabResultTranslator).toOpenmrsType(labResultArgumentCaptor.capture());
 
 		LabResult labResult = labResultArgumentCaptor.getValue();
-		BiFunction<Concept, String, Obs> obsFactory = labResult.getObsFactory();
+		BiFunction<Concept, Object, Obs> obsFactory = labResult.getObsFactory();
 		Obs resultObs = obsFactory.apply(concept, "10.0");
 
 		assertEquals(diagnosticReportToCreate, actualDiagnosticReport);

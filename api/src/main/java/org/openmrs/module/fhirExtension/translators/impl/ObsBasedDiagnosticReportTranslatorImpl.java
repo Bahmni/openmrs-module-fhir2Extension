@@ -105,15 +105,24 @@ public class ObsBasedDiagnosticReportTranslatorImpl implements ObsBasedDiagnosti
 		}
 	}
 	
-	private BiFunction<Concept, String, Obs> newObs(Patient subject, Date issued) {
+	private BiFunction<Concept, Object, Obs> newObs(Patient subject, Date issued) {
 		return (concept, value) -> {
 			Obs obs = new Obs();
 			obs.setPerson(subject);
 			obs.setObsDatetime(issued);
 			obs.setConcept(concept);
-			setObsValue(obs, value);
+			if (value instanceof Concept)
+				setObsValue(obs, (Concept) value);
+			else
+				setObsValue(obs, (String) value);
 			return obs;
 		};
+	}
+	
+	private void setObsValue(Obs obs, Concept value) {
+		if (value != null) {
+			obs.setValueCoded(value);
+		}
 	}
 	
 	private void setObsValue(Obs obs, String value) {
