@@ -25,8 +25,6 @@ public class LabResult {
 	
 	private Concept labResultConceptValue;
 	
-	private Boolean labResultBooleanValue;
-	
 	private BiFunction<Concept, Object, Obs> obsFactory;
 	
 	public boolean isPanel() {
@@ -101,18 +99,11 @@ public class LabResult {
 			return this;
 		}
 		
-		public LabResultBuilder labResultValue(String value) {
-			this.labResultValue = value;
-			return this;
-		}
-		
 		public LabResultBuilder setLabResultValue(Obs obs) {
 			if (obs.getValueNumeric() != null)
 				this.labResultValue = obs.getValueNumeric().toString();
 			else if (obs.getValueCoded() != null) {
 				this.labResultConceptValue = obs.getValueCoded();
-			} else if (obs.getValueBoolean() != null) {
-				this.labResultBooleanValue = obs.getValueBoolean();
 			}
 			return this;
 		}
