@@ -111,27 +111,29 @@ public class ObsBasedDiagnosticReportTranslatorImpl implements ObsBasedDiagnosti
 			obs.setPerson(subject);
 			obs.setObsDatetime(issued);
 			obs.setConcept(concept);
-			if (value instanceof Concept)
-				setObsValue(obs, (Concept) value);
-			else
-				setObsValue(obs, (String) value);
+			setObsValue(obs, value);
 			return obs;
 		};
 	}
 	
-	private void setObsValue(Obs obs, Concept value) {
+	private void setObsValue(Obs obs, Object value) {
 		if (value != null) {
-			obs.setValueCoded(value);
-		}
-	}
-	
-	private void setObsValue(Obs obs, String value) {
-		if (value != null) {
-			try {
-				obs.setValueAsString(value);
-			}
-			catch (ParseException e) {
-				throw new APIException(e);
+			if (value instanceof Concept)
+				obs.setValueCoded((Concept) value);
+			else if (value instanceof Boolean) {
+				obs.setValueBoolean((Boolean) value);
+			} else if (value instanceof Date) {
+				obs.setValueDatetime((Date) value);
+			} else if (value instanceof Double) {
+				obs.setValueNumeric((Double) value);
+			} else {
+				try {
+					
+					obs.setValueAsString((String) value);
+				}
+				catch (ParseException e) {
+					throw new APIException(e);
+				}
 			}
 		}
 	}

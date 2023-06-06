@@ -3,6 +3,7 @@ package org.openmrs.module.fhirExtension.domain.observation;
 import lombok.Builder;
 import lombok.Getter;
 import org.openmrs.Concept;
+import org.openmrs.ConceptDatatype;
 import org.openmrs.Obs;
 
 import java.util.List;
@@ -21,9 +22,7 @@ public class LabResult {
 	
 	private String labReportNotes;
 	
-	private String labResultValue;
-	
-	private Concept labResultConceptValue;
+	private Object labResultValue;
 	
 	private BiFunction<Concept, Object, Obs> obsFactory;
 	
@@ -39,14 +38,7 @@ public class LabResult {
 		return obsFactory.apply(testConcept, null);
 	}
 	
-	public Optional<Obs> newValueObs(Concept obsConcept, String value) {
-		if (value != null && !"".equals(value.trim())) {
-			return Optional.of(obsFactory.apply(obsConcept, value));
-		}
-		return Optional.empty();
-	}
-	
-	public Optional<Obs> newValueObs(Concept obsConcept, Concept value) {
+	public Optional<Obs> newValueObs(Concept obsConcept, Object value) {
 		if (value != null) {
 			return Optional.of(obsFactory.apply(obsConcept, value));
 		}
@@ -100,11 +92,21 @@ public class LabResult {
 		}
 		
 		public LabResultBuilder setLabResultValue(Obs obs) {
-			if (obs.getValueNumeric() != null)
+			String datatype = obs.getConcept().getDatatype().getHl7Abbreviation();
+			if (datatype.equals(ConceptDatatype.NUMERIC))
 				this.labResultValue = obs.getValueNumeric().toString();
-			else if (obs.getValueCoded() != null) {
-				this.labResultConceptValue = obs.getValueCoded();
-			}
+			else if (datatype.equals(ConceptDatatype.CODED)) {
+				this.labResultValue = obs.getValueCoded();
+			} else if (datatype.equals(ConceptDatatype.BOOLEAN)) {
+				this.labResultValue = obs.getValueBoolean();
+			} else if (datatype.equals(ConceptDatatype.DATETIME)) {
+				this.labResultValue = obs.getValueDatetime();
+			} else if (datatype.equals(ConceptDatatype.DATE)) {
+				this.labResultValue = obs.getValueDate();
+			} else if (datatype.equals(ConceptDatatype.TIME)) {
+				this.labResultValue = obs.getValueTime();
+			} else
+				this.labResultValue = obs.getValueText();
 			return this;
 		}
 	}
