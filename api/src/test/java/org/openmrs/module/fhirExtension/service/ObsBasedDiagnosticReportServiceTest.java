@@ -588,7 +588,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		Concept concept = new Concept(12);
 		concept.setUuid(orderUuid);
 		ConceptDatatype conceptDatatype = new ConceptDatatype();
-		conceptDatatype.setHl7Abbreviation(ConceptDatatype.TEXT);
+		conceptDatatype.setHl7Abbreviation(ConceptDatatype.NUMERIC);
 		concept.setDatatype(conceptDatatype);
 
 		Obs topLevelObs = new Obs();
@@ -644,7 +644,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 
 		assertEquals(diagnosticReportToCreate, actualDiagnosticReport);
 		
-		// assertEquals(labResult.getLabResultValue(), "10.0");
+		 assertEquals(labResult.getLabResultValue(), "10.0");
 		
 		assertEquals(patient, resultObs.getPerson());
 
