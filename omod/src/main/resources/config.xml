@@ -94,5 +94,11 @@
 		<defaultValue>LAB_VISIT</defaultValue>
 		<description>Visit type for lab results upload. Will be considered if there is no active visit for the patient</description>
 	</globalProperty>
+
+	<globalProperty>
+		<property>fhir.export.files.directory</property>
+		<defaultValue>/openmrs/data/fhirExports</defaultValue>
+		<description>Directory where exported zip in FHIR format are stored</description>
+	</globalProperty>
 	
 </module>

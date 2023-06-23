@@ -1,5 +1,6 @@
 package org.openmrs.module.fhirExtension.web;
 
+import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.service.ExportTask;
 import org.openmrs.module.webservices.rest.web.RestConstants;
@@ -27,13 +28,11 @@ public class ExportController extends BaseRestController {
 	
 	@RequestMapping(method = RequestMethod.GET)
 	@ResponseBody
-	public ResponseEntity export(
-	        @RequestParam(value = "exportType", required = false, defaultValue = "NDJSON") String exportType,
-	        @RequestParam(value = "startDate", required = false) String startDate,
-	        @RequestParam(value = "endDate", required = false) String endDate,
-	        @RequestParam(value = "resourceType", required = false) List<String> resourceTypes) {
-		FhirTask task = exportTask.getInitialTaskResponse();
-		return new ResponseEntity(getFhirTaskUri(task), HttpStatus.ACCEPTED);
+	public ResponseEntity export(@RequestParam(value = "startDate", required = false) String startDate,
+	        @RequestParam(value = "endDate", required = false) String endDate) {
+		FhirTask fhirTask = exportTask.getInitialTaskResponse();
+		exportTask.export(fhirTask, startDate, endDate, Context.getUserContext());
+		return new ResponseEntity(getFhirTaskUri(fhirTask), HttpStatus.ACCEPTED);
 	}
 	
 	private String getFhirTaskUri(FhirTask task) {
