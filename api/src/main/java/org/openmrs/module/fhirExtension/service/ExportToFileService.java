@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -45,7 +46,7 @@ public class ExportToFileService {
 		String basePath = getBasePath();
 		Path filePath = Paths.get(basePath, directory, resourceType + NDJSON_EXTENSION);
 		createFile(filePath);
-		writeToFile(resourceType, fhirResources, filePath);
+		writeToFile(fhirResources, filePath);
 	}
 	
 	public void createDirectory(String directory) {
@@ -62,19 +63,25 @@ public class ExportToFileService {
 		}
 	}
 	
-	private void writeToFile(String resourceType, List<IBaseResource> fhirResources, Path filePath) {
-		try (RandomAccessFile writer = new RandomAccessFile(filePath.toFile(), "rw");
-			 FileChannel channel = writer.getChannel()) {
-            for (IBaseResource iBaseResource : fhirResources) {
-                String jsonStr = parser.encodeResourceToString(iBaseResource) + NEW_LINE;
-                ByteBuffer buffer = ByteBuffer.wrap(jsonStr.getBytes(StandardCharsets.UTF_8));
-                channel.write(buffer);
-            }
-        } catch (IOException e) {
-            log.error("Exception while processing data for " + resourceType);
-            throw new RuntimeException(e);
-        }
-    }
+	private void writeToFile(List<IBaseResource> fhirResources, Path filePath) {
+		long length = filePath.toFile().length();
+		try {
+			RandomAccessFile writer = new RandomAccessFile(filePath.toFile(), "rw");
+			writer.seek(length);
+			FileChannel channel = writer.getChannel();
+			for (IBaseResource iBaseResource : fhirResources) {
+				String jsonStr = parser.encodeResourceToString(iBaseResource) + NEW_LINE;
+				ByteBuffer buffer = ByteBuffer.wrap(jsonStr.getBytes(StandardCharsets.UTF_8));
+				channel.write(buffer);
+			}
+		} catch (FileNotFoundException e) {
+			log.error("File " + filePath + " not found ");
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			log.error("Exception while processing data for " + filePath);
+			throw new RuntimeException(e);
+		}
+	}
 	
 	private String getBasePath() {
 		String propertyValue = adminService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP);
