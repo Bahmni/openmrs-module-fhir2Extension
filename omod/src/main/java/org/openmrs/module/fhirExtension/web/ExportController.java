@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.List;
-
 @Controller
 @RequestMapping(value = "/rest/" + RestConstants.VERSION_1 + "/export")
 public class ExportController extends BaseRestController {
 	
 	public static final String FHIR2_R4_TASK_URI = "/ws/fhir2/R4/Task/";
+	
+	public static final String FILE_DOWNLOAD_URI = "/rest/v1/download";
 	
 	@Autowired
 	private ExportTask exportTask;
@@ -31,7 +31,8 @@ public class ExportController extends BaseRestController {
 	public ResponseEntity export(@RequestParam(value = "startDate", required = false) String startDate,
 	        @RequestParam(value = "endDate", required = false) String endDate) {
 		FhirTask fhirTask = exportTask.getInitialTaskResponse();
-		exportTask.export(fhirTask, startDate, endDate, Context.getUserContext());
+		exportTask.export(fhirTask, startDate, endDate, Context.getUserContext(), ServletUriComponentsBuilder
+		        .fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI);
 		return new ResponseEntity(getFhirTaskUri(fhirTask), HttpStatus.ACCEPTED);
 	}
 	

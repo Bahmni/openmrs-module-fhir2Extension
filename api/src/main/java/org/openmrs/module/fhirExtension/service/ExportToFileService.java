@@ -11,24 +11,34 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Log4j2
 @Component
 public class ExportToFileService {
 	
 	private static final String NDJSON_EXTENSION = ".ndjson";
+	
 	public static final String NEW_LINE = "\n";
 	
+	public static final String EXTENSION_ZIP = ".zip";
+	
 	private AdministrationService adminService;
+	
 	private IParser parser;
 	
 	@Autowired
@@ -63,6 +73,14 @@ public class ExportToFileService {
 		}
 	}
 	
+	public void createZipWithExportedNdjsonFiles(String directoryName) {
+		String basePath = getBasePath();
+		Path exportedFilesPath = Paths.get(basePath, directoryName);
+		Path zipFilePath = Paths.get(basePath, directoryName + EXTENSION_ZIP);
+		createFile(zipFilePath);
+		createZip(exportedFilesPath, zipFilePath);
+	}
+	
 	private void writeToFile(List<IBaseResource> fhirResources, Path filePath) {
 		long length = filePath.toFile().length();
 		try {
@@ -74,10 +92,12 @@ public class ExportToFileService {
 				ByteBuffer buffer = ByteBuffer.wrap(jsonStr.getBytes(StandardCharsets.UTF_8));
 				channel.write(buffer);
 			}
-		} catch (FileNotFoundException e) {
+		}
+		catch (FileNotFoundException e) {
 			log.error("File " + filePath + " not found ");
 			throw new RuntimeException(e);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			log.error("Exception while processing data for " + filePath);
 			throw new RuntimeException(e);
 		}
@@ -98,6 +118,26 @@ public class ExportToFileService {
 		}
 		catch (IOException e) {
 			log.error("Error while creating file " + filePath);
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private void createZip(Path exportedNdjsonFilesDirectoryPath, Path destinationZipPath) {
+		try {
+			ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(destinationZipPath.toFile()));
+			Files.walkFileTree(exportedNdjsonFilesDirectoryPath, new SimpleFileVisitor<Path>() {
+				
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					zos.putNextEntry(new ZipEntry(exportedNdjsonFilesDirectoryPath.relativize(file).toString()));
+					Files.copy(file, zos);
+					zos.closeEntry();
+					return FileVisitResult.CONTINUE;
+				}
+			});
+			zos.close();
+		}
+		catch (IOException e) {
+			log.error("Error while creating zip file " + destinationZipPath);
 			throw new RuntimeException(e);
 		}
 	}

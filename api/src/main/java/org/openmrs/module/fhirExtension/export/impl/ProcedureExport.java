@@ -26,9 +26,11 @@ import java.util.List;
 public class ProcedureExport implements Exporter {
 	
 	public static final String PROCEDURE_ORDER = "Procedure Order";
+	
 	public static final String DATE_FORMAT = "yyyy-MM-dd";
 	
 	private OrderService orderService;
+	
 	private ConceptTranslator conceptTranslator;
 	
 	@Autowired

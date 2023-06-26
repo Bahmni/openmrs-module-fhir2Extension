@@ -20,8 +20,12 @@ import java.util.List;
 @Log4j2
 public class ExportTask {
 	
+	public static final String DOWNLOAD_URL = "Download URL";
+	
 	private FhirTaskDao fhirTaskDao;
+	
 	private ConceptService conceptService;
+	
 	private ExportToFileService exportToFileService;
 	
 	@Autowired
@@ -45,7 +49,7 @@ public class ExportTask {
 	}
 	
 	@Async("export-fhir-data-threadPoolTaskExecutor")
-	public void export(FhirTask fhirTask, String startDate, String endDate, UserContext userContext) {
+	public void export(FhirTask fhirTask, String startDate, String endDate, UserContext userContext, String downloadUrl) {
 		FhirTask.TaskStatus taskStatus = null;
 		
 		try {
@@ -55,15 +59,12 @@ public class ExportTask {
 			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
 			exportToFileService.createDirectory(fhirTask.getUuid());
 			for (Exporter fhirExporter : fhirExporters) {
-				List<IBaseResource> fhirRsources = fhirExporter.export(startDate, endDate);
-				exportToFileService.createAndWriteToFile(fhirRsources, fhirTask.getUuid());
+				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
+				exportToFileService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
 			}
 			
-			FhirTaskOutput fhirTaskOutput = new FhirTaskOutput();
-			fhirTaskOutput.setName("Download Link Name");
-			fhirTaskOutput.setTask(fhirTask);
-			fhirTaskOutput.setValueText(fhirTask.getUuid());
-			fhirTaskOutput.setType(conceptService.getConceptByName("Download URL"));
+			exportToFileService.createZipWithExportedNdjsonFiles(fhirTask.getUuid());
+			FhirTaskOutput fhirTaskOutput = getFhirTaskOutput(fhirTask, downloadUrl);
 			fhirTask.setOutput(Collections.singleton(fhirTaskOutput));
 		}
 		catch (Exception exception) {
@@ -78,5 +79,14 @@ public class ExportTask {
 			fhirTaskDao.createOrUpdate(fhirTask);
 			Context.closeSession();
 		}
+	}
+	
+	private FhirTaskOutput getFhirTaskOutput(FhirTask fhirTask, String downloadUrl) {
+		FhirTaskOutput fhirTaskOutput = new FhirTaskOutput();
+		fhirTaskOutput.setName("Download Link Name");
+		fhirTaskOutput.setTask(fhirTask);
+		fhirTaskOutput.setValueText(downloadUrl + "?fileId=" + fhirTask.getUuid());
+		fhirTaskOutput.setType(conceptService.getConceptByName(DOWNLOAD_URL));
+		return fhirTaskOutput;
 	}
 }

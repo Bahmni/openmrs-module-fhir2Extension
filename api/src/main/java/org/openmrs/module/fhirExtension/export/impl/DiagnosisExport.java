@@ -30,13 +30,19 @@ import java.util.Optional;
 public class DiagnosisExport implements Exporter {
 	
 	private static final String VISIT_DIAGNOSES = "Visit Diagnoses";
+	
 	private static final String CODED_DIAGNOSIS = "Coded Diagnosis";
+	
 	private static final String BAHMNI_DIAGNOSIS_STATUS = "Bahmni Diagnosis Status";
+	
 	public static final String DATE_FORMAT = "yyyy-MM-dd";
 	
 	private ConceptTranslator conceptTranslator;
+	
 	private ObsService obsService;
+	
 	private ConceptService conceptService;
+	
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
 	
 	@Autowired
@@ -91,7 +97,8 @@ public class DiagnosisExport implements Exporter {
 			return null;
 		try {
 			date = DateUtils.parseDate(dateStr, DATE_FORMAT);
-		} catch (ParseException e) {
+		}
+		catch (ParseException e) {
 			log.error("Exception while parsing the date ", e);
 			throw new RuntimeException(e);
 		}
