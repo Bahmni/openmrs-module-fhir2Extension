@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>org.openmrs.web</groupId>
 			<artifactId>openmrs-web</artifactId>
-			<version>${openmrs.platform.version}</version>
+			<version>${openmrsPlatformVersion}</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
