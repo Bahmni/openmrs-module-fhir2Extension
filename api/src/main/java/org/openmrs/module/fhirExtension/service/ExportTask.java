@@ -70,6 +70,7 @@ public class ExportTask {
 		catch (Exception exception) {
 			taskStatus = FhirTask.TaskStatus.REJECTED;
 			log.error("Exception occurred while exporting data in FHIR format ", exception);
+			throw new RuntimeException();
 		}
 		finally {
 			if (taskStatus == null) {

@@ -37,6 +37,8 @@ public class ExportToFileService {
 	
 	public static final String EXTENSION_ZIP = ".zip";
 	
+	public static final String FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP = "fhir.export.files.directory";
+	
 	private AdministrationService adminService;
 	
 	private IParser parser;
@@ -46,8 +48,6 @@ public class ExportToFileService {
 		this.adminService = adminService;
 		this.parser = parser;
 	}
-	
-	public static final String FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP = "fhir.export.files.directory";
 	
 	public void createAndWriteToFile(List<IBaseResource> fhirResources, String directory) {
 		if (fhirResources.isEmpty())
@@ -92,10 +92,6 @@ public class ExportToFileService {
 				ByteBuffer buffer = ByteBuffer.wrap(jsonStr.getBytes(StandardCharsets.UTF_8));
 				channel.write(buffer);
 			}
-		}
-		catch (FileNotFoundException e) {
-			log.error("File " + filePath + " not found ");
-			throw new RuntimeException(e);
 		}
 		catch (IOException e) {
 			log.error("Exception while processing data for " + filePath);
