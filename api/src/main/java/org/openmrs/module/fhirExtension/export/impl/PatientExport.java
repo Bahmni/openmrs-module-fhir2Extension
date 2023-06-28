@@ -14,8 +14,12 @@ import java.util.List;
 @Component
 public class PatientExport implements Exporter {
 	
-	@Autowired
 	private FhirPatientService fhirPatientService;
+	
+	@Autowired
+	public PatientExport(FhirPatientService fhirPatientService) {
+		this.fhirPatientService = fhirPatientService;
+	}
 	
 	@Override
 	public List<IBaseResource> export(String startDate, String endDate) {
@@ -24,16 +28,5 @@ public class PatientExport implements Exporter {
 		        null, null, null, null, null, lastUpdated, null, null);
 		IBundleProvider iBundleProvider = fhirPatientService.searchForPatients(patientSearchParams);
 		return iBundleProvider.getAllResources();
-	}
-	
-	private DateRangeParam getLastUpdated(String startDate, String endDate) {
-		DateRangeParam lastUpdated = new DateRangeParam();
-		if (startDate != null) {
-			lastUpdated.setLowerBound(startDate);
-		}
-		if (endDate != null) {
-			lastUpdated.setUpperBound(endDate);
-		}
-		return lastUpdated;
 	}
 }

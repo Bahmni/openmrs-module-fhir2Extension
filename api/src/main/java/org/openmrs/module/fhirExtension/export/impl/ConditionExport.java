@@ -28,14 +28,4 @@ public class ConditionExport implements Exporter {
 		return iBundleProvider.getAllResources();
 	}
 	
-	private DateRangeParam getLastUpdated(String startDate, String endDate) {
-		DateRangeParam lastUpdated = new DateRangeParam();
-		if (startDate != null) {
-			lastUpdated.setLowerBound(startDate);
-		}
-		if (endDate != null) {
-			lastUpdated.setUpperBound(endDate);
-		}
-		return lastUpdated;
-	}
 }

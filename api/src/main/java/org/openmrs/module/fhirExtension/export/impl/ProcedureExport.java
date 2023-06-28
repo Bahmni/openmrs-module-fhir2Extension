@@ -103,7 +103,7 @@ public class ProcedureExport implements Exporter {
 		}
 		catch (ParseException e) {
 			log.error("Exception while parsing the date ", e);
-			throw new RuntimeException();
+			throw new RuntimeException("Exception while parsing the date");
 		}
 		
 		return orderSearchCriteriaBuilder.build();

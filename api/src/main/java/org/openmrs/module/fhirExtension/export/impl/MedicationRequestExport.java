@@ -13,8 +13,12 @@ import java.util.List;
 @Component
 public class MedicationRequestExport implements Exporter {
 	
-	@Autowired
 	private FhirMedicationRequestService fhirMedicationRequestService;
+	
+	@Autowired
+	public MedicationRequestExport(FhirMedicationRequestService fhirMedicationRequestService) {
+		this.fhirMedicationRequestService = fhirMedicationRequestService;
+	}
 	
 	@Override
 	public List<IBaseResource> export(String startDate, String endDate) {
@@ -24,14 +28,4 @@ public class MedicationRequestExport implements Exporter {
 		return iBundleProvider.getAllResources();
 	}
 	
-	private DateRangeParam getLastUpdated(String startDate, String endDate) {
-		DateRangeParam lastUpdated = new DateRangeParam();
-		if (startDate != null) {
-			lastUpdated.setLowerBound(startDate);
-		}
-		if (endDate != null) {
-			lastUpdated.setUpperBound(endDate);
-		}
-		return lastUpdated;
-	}
 }
