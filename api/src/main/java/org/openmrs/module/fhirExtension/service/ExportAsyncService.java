@@ -28,13 +28,13 @@ public class ExportAsyncService {
 	
 	private ConceptService conceptService;
 	
-	private ExportToFileService exportToFileService;
+	private FileExportService fileExportService;
 	
 	@Autowired
-	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, ExportToFileService exportToFileService) {
+	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, FileExportService fileExportService) {
 		this.fhirTaskDao = fhirTaskDao;
 		this.conceptService = conceptService;
-		this.exportToFileService = exportToFileService;
+		this.fileExportService = fileExportService;
 	}
 	
 	@Async("export-fhir-data-threadPoolTaskExecutor")
@@ -46,20 +46,20 @@ public class ExportAsyncService {
 			Context.setUserContext(userContext);
 			
 			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
-			exportToFileService.createDirectory(fhirTask.getUuid());
+			fileExportService.createDirectory(fhirTask.getUuid());
 			for (Exporter fhirExporter : fhirExporters) {
 				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
-				exportToFileService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
+				fileExportService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
 			}
 			
-			exportToFileService.createZipWithExportedNdjsonFiles(fhirTask.getUuid());
+			fileExportService.createZipWithExportedNdjsonFiles(fhirTask.getUuid());
 			FhirTaskOutput fhirTaskOutput = getFhirTaskOutput(fhirTask, downloadUrl);
 			fhirTask.setOutput(Collections.singleton(fhirTaskOutput));
+			fileExportService.deleteDirectory(fhirTask.getUuid());
 		}
 		catch (Exception exception) {
 			taskStatus = FhirTask.TaskStatus.REJECTED;
 			log.error("Exception occurred while exporting data in FHIR format ", exception);
-			throw new RuntimeException();
 		}
 		finally {
 			if (taskStatus == null) {

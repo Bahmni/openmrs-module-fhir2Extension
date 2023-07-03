@@ -5,7 +5,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Procedure;
-import org.hl7.fhir.r4.model.Reference;
 import org.openmrs.Order;
 import org.openmrs.OrderType;
 import org.openmrs.api.OrderService;
@@ -58,12 +57,8 @@ public class ProcedureExport implements Exporter {
 		procedure.setId(order.getUuid());
 		CodeableConcept codeableConcept = conceptTranslator.toFhirResource(order.getConcept());
 		procedure.setCode(codeableConcept);
-		Reference patientReference = new Reference();
-		Reference encounterReference = new Reference();
-		patientReference.setReference("Patient/" + order.getPatient().getUuid());
-		encounterReference.setReference("Encounter/" + order.getEncounter().getUuid());
-		procedure.setSubject(patientReference);
-		procedure.setEncounter(encounterReference);
+		procedure.setSubject(getSubjectReference(order.getPatient().getUuid()));
+		procedure.setEncounter(getEncounterReference(order.getEncounter().getUuid()));
 		setProcedureStatus(order, procedure);
 		return procedure;
 	}

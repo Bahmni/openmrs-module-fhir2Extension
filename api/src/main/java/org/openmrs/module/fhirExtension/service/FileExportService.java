@@ -2,6 +2,7 @@ package org.openmrs.module.fhirExtension.service;
 
 import ca.uhn.fhir.parser.IParser;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.openmrs.api.APIException;
@@ -10,13 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,16 +21,15 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Log4j2
 @Component
-public class ExportToFileService {
+public class FileExportService {
 	
 	private static final String NDJSON_EXTENSION = ".ndjson";
-	
-	public static final String NEW_LINE = "\n";
 	
 	public static final String EXTENSION_ZIP = ".zip";
 	
@@ -44,7 +40,7 @@ public class ExportToFileService {
 	private IParser parser;
 	
 	@Autowired
-	public ExportToFileService(@Qualifier("adminService") AdministrationService adminService, IParser parser) {
+	public FileExportService(@Qualifier("adminService") AdministrationService adminService, IParser parser) {
 		this.adminService = adminService;
 		this.parser = parser;
 	}
@@ -53,28 +49,40 @@ public class ExportToFileService {
 		if (fhirResources.isEmpty())
 			return;
 		String resourceType = fhirResources.get(0).getClass().getSimpleName();
-		String basePath = getBasePath();
+		String basePath = getBaseDirectory();
 		Path filePath = Paths.get(basePath, directory, resourceType + NDJSON_EXTENSION);
 		createFile(filePath);
 		writeToFile(fhirResources, filePath);
 	}
 	
-	public void createDirectory(String directory) {
-		String basePath = getBasePath();
-		Path directoryPath = Paths.get(basePath, directory);
+	public void createDirectory(String uuidFolderName) {
+		Path uuidDirectoryPath = Paths.get(getBaseDirectory(), uuidFolderName);
 		try {
-			if (!Files.exists(directoryPath)) {
-				Files.createDirectories(directoryPath);
-			}
+			Files.createDirectories(uuidDirectoryPath);
 		}
 		catch (IOException e) {
-			log.error("Error while creating directory " + directoryPath);
+			log.error("Error while creating directory " + uuidDirectoryPath);
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public void deleteDirectory(String directory) {
+		String basePath = getBaseDirectory();
+		Path directoryPath = Paths.get(basePath, directory);
+		try {
+			FileUtils.deleteDirectory(directoryPath.toFile());
+		}
+		catch (FileAlreadyExistsException e) {
+			log.info("File exists " + directory);
+		}
+		catch (IOException e) {
+			log.error("Error while deleting directory " + directoryPath);
 			throw new RuntimeException(e);
 		}
 	}
 	
 	public void createZipWithExportedNdjsonFiles(String directoryName) {
-		String basePath = getBasePath();
+		String basePath = getBaseDirectory();
 		Path exportedFilesPath = Paths.get(basePath, directoryName);
 		Path zipFilePath = Paths.get(basePath, directoryName + EXTENSION_ZIP);
 		createFile(zipFilePath);
@@ -82,24 +90,16 @@ public class ExportToFileService {
 	}
 	
 	private void writeToFile(List<IBaseResource> fhirResources, Path filePath) {
-		long length = filePath.toFile().length();
+		List<String> stringList = fhirResources.stream().map(iBaseResource -> parser.encodeResourceToString(iBaseResource)).collect(Collectors.toList());
 		try {
-			RandomAccessFile writer = new RandomAccessFile(filePath.toFile(), "rw");
-			writer.seek(length);
-			FileChannel channel = writer.getChannel();
-			for (IBaseResource iBaseResource : fhirResources) {
-				String jsonStr = parser.encodeResourceToString(iBaseResource) + NEW_LINE;
-				ByteBuffer buffer = ByteBuffer.wrap(jsonStr.getBytes(StandardCharsets.UTF_8));
-				channel.write(buffer);
-			}
-		}
-		catch (IOException e) {
+			FileUtils.writeLines(filePath.toFile(), stringList, true);
+		} catch (IOException e) {
 			log.error("Exception while processing data for " + filePath);
 			throw new RuntimeException(e);
 		}
 	}
 	
-	private String getBasePath() {
+	private String getBaseDirectory() {
 		String propertyValue = adminService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP);
 		if (StringUtils.isBlank(propertyValue))
 			throw new APIException();
@@ -108,9 +108,10 @@ public class ExportToFileService {
 	
 	private void createFile(Path filePath) {
 		try {
-			if (!Files.exists(filePath)) {
-				Files.createFile(filePath);
-			}
+			Files.createFile(filePath);
+		}
+		catch (FileAlreadyExistsException e) {
+			log.info("File exists " + filePath);
 		}
 		catch (IOException e) {
 			log.error("Error while creating file " + filePath);

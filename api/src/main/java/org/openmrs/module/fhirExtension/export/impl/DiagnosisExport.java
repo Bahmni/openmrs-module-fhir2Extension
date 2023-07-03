@@ -6,7 +6,6 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.DateTimeType;
-import org.hl7.fhir.r4.model.Reference;
 import org.openmrs.Concept;
 import org.openmrs.ConditionClinicalStatus;
 import org.openmrs.Obs;
@@ -66,27 +65,23 @@ public class DiagnosisExport implements Exporter {
 		    null, null, null, null, startDate, endDate, false);
 
 		visitDiagnosesObs.stream().filter(this::isCodedDiagnosis)
-				                  .map(this::getDiagnosisAsFhirCondition)
+				                  .map(this::convertDiagnosisAsFhirCondition)
 				                  .forEach(fhirResources :: add);
 		
 		return fhirResources;
 	}
 	
-	private Condition getDiagnosisAsFhirCondition(Obs visitDiagnosisObsGroup) {
+	private Condition convertDiagnosisAsFhirCondition(Obs visitDiagnosisObsGroup) {
 		Condition condition = new Condition();
-		Reference patientReference = new Reference();
-		Reference encounterReference = new Reference();
 		Obs codedDiagnosisObs = getObsFor(visitDiagnosisObsGroup, CODED_DIAGNOSIS);
 		CodeableConcept clinicalStatus = getClinicalStatus(visitDiagnosisObsGroup);
-		patientReference.setReference("Patient/" + codedDiagnosisObs.getPerson().getUuid());
-		encounterReference.setReference("Encounter/" + codedDiagnosisObs.getEncounter().getUuid());
 		CodeableConcept codeableConcept = conceptTranslator.toFhirResource(codedDiagnosisObs.getValueCoded());
 		condition.setId(codedDiagnosisObs.getUuid());
 		condition.setClinicalStatus(clinicalStatus);
 		condition.setOnset(new DateTimeType().setValue(codedDiagnosisObs.getObsDatetime()));
 		condition.setCode(codeableConcept);
-		condition.setSubject(patientReference);
-		condition.setEncounter(encounterReference);
+		condition.setSubject(getSubjectReference(codedDiagnosisObs.getPerson().getUuid()));
+		condition.setEncounter(getEncounterReference(codedDiagnosisObs.getEncounter().getUuid()));
 		condition.getMeta().setLastUpdated(codedDiagnosisObs.getObsDatetime());
 		return condition;
 	}

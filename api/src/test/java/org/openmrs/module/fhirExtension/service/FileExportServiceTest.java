@@ -34,15 +34,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.openmrs.module.fhirExtension.service.ExportToFileService.FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP;
+import static org.openmrs.module.fhirExtension.service.FileExportService.FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ Context.class })
 @PowerMockIgnore("javax.management.*")
-public class ExportToFileServiceTest {
+public class FileExportServiceTest {
 	
 	@InjectMocks
-	private ExportToFileService exportToFileService;
+	private FileExportService fileExportService;
 	
 	@Mock
 	@Qualifier("adminService")
@@ -56,7 +56,7 @@ public class ExportToFileServiceTest {
 	
 	@Before
 	public void setUp() {
-		exportToFileService = new ExportToFileService(administrationService, FhirContext.forR4().newJsonParser());
+		fileExportService = new FileExportService(administrationService, FhirContext.forR4().newJsonParser());
 		PowerMockito.mockStatic(Context.class);
 		when(Context.getAdministrationService()).thenReturn(administrationService);
 	}
@@ -67,7 +67,7 @@ public class ExportToFileServiceTest {
 		when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
 		
 		String directory = UUID.randomUUID().toString();
-		exportToFileService.createDirectory(directory);
+		fileExportService.createDirectory(directory);
 		
 		File directoryPath = new File(basePath, directory);
 		assertTrue(directoryPath.exists());
@@ -80,7 +80,7 @@ public class ExportToFileServiceTest {
 		when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
 		
 		String directory = UUID.randomUUID().toString();
-		exportToFileService.createDirectory(directory);
+		fileExportService.createDirectory(directory);
 	}
 	
 	@Test(expected = RuntimeException.class)
@@ -89,7 +89,7 @@ public class ExportToFileServiceTest {
 		when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
 		
 		String directory = UUID.randomUUID().toString();
-		exportToFileService.createDirectory(directory);
+		fileExportService.createDirectory(directory);
 	}
 	
 	@Test
@@ -100,8 +100,8 @@ public class ExportToFileServiceTest {
 		
 		String directory = UUID.randomUUID().toString();
 		
-		exportToFileService.createDirectory(directory);
-		exportToFileService.createAndWriteToFile(patientResources, directory);
+		fileExportService.createDirectory(directory);
+		fileExportService.createAndWriteToFile(patientResources, directory);
 		
 		File patientNdjsonFile = new File(basePath, directory + "/Patient.ndjson");
 		assertTrue(patientNdjsonFile.exists());
@@ -118,8 +118,8 @@ public class ExportToFileServiceTest {
 
 		String directory = UUID.randomUUID().toString();
 
-		exportToFileService.createDirectory(directory);
-		exportToFileService.createAndWriteToFile(patientResources, directory);
+		fileExportService.createDirectory(directory);
+		fileExportService.createAndWriteToFile(patientResources, directory);
 
 		File patientNdjsonFile = new File(basePath, directory + "/Patient.ndjson");
 		assertFalse(patientNdjsonFile.exists());
@@ -133,11 +133,30 @@ public class ExportToFileServiceTest {
 		
 		String directory = UUID.randomUUID().toString();
 		
-		exportToFileService.createDirectory(directory);
-		exportToFileService.createAndWriteToFile(patientResources, directory);
-		exportToFileService.createZipWithExportedNdjsonFiles(directory);
+		fileExportService.createDirectory(directory);
+		fileExportService.createAndWriteToFile(patientResources, directory);
+		fileExportService.createZipWithExportedNdjsonFiles(directory);
 		
 		File fhirExportZipFile = new File(basePath, directory + ".zip");
+		assertTrue(fhirExportZipFile.exists());
+		assertFalse(fhirExportZipFile.isDirectory());
+	}
+	
+	@Test
+	public void shouldDeleteDirectoryForFhirExport_afterCreatingZipFile() {
+		String basePath = System.getProperty("java.io.tmpdir");
+		List<IBaseResource> patientResources = getPatientResources();
+		when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
+		
+		String directory = UUID.randomUUID().toString();
+		fileExportService.createDirectory(directory);
+		fileExportService.createAndWriteToFile(patientResources, directory);
+		fileExportService.createZipWithExportedNdjsonFiles(directory);
+		fileExportService.deleteDirectory(directory);
+		
+		File directoryPath = new File(basePath, directory);
+		File fhirExportZipFile = new File(basePath, directory + ".zip");
+		assertFalse(directoryPath.exists());
 		assertTrue(fhirExportZipFile.exists());
 		assertFalse(fhirExportZipFile.isDirectory());
 	}

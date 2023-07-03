@@ -22,7 +22,7 @@ public class ExportController extends BaseRestController {
 	
 	public static final String FHIR2_R4_TASK_URI = "/ws/fhir2/R4/Task/";
 	
-	public static final String FILE_DOWNLOAD_URI = "/rest/v1/fhirExtension/export";
+	public static final String FILE_DOWNLOAD_URI = "/ws/rest/v1/fhirExtension/export";
 	
 	private ExportTask exportTask;
 	

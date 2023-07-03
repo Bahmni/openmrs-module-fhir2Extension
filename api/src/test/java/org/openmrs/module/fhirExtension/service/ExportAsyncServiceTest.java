@@ -40,7 +40,7 @@ public class ExportAsyncServiceTest {
 	private ConceptService conceptService;
 	
 	@Mock
-	private ExportToFileService exportToFileService;
+	private FileExportService fileExportService;
 	
 	@Mock
 	private FhirConditionService fhirConditionService;
@@ -67,8 +67,8 @@ public class ExportAsyncServiceTest {
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
 	}
 	
-	@Test (expected = RuntimeException.class)
-	public void shouldThrowException_whenInvalidDateRangeProvided() {
+	@Test
+	public void shouldChangeFhirTaskStatusToRejected_whenInvalidDateRangeProvided() {
 		List<Exporter> exporters = new ArrayList<>();
 		exporters.add(new ConditionExport(fhirConditionService));
 		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
