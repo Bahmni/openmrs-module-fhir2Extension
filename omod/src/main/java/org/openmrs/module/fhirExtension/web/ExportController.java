@@ -2,6 +2,7 @@ package org.openmrs.module.fhirExtension.web;
 
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirTask;
+import org.openmrs.module.fhirExtension.service.ExportAsyncService;
 import org.openmrs.module.fhirExtension.service.ExportTask;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.v1_0.controller.BaseRestController;
@@ -21,17 +22,24 @@ public class ExportController extends BaseRestController {
 	
 	public static final String FHIR2_R4_TASK_URI = "/ws/fhir2/R4/Task/";
 	
-	public static final String FILE_DOWNLOAD_URI = "/rest/v1/fhirexport/download";
+	public static final String FILE_DOWNLOAD_URI = "/rest/v1/fhirExtension/export";
+	
+	private ExportTask exportTask;
+	
+	private ExportAsyncService exportAsyncService;
 	
 	@Autowired
-	private ExportTask exportTask;
+	public ExportController(ExportTask exportTask, ExportAsyncService exportAsyncService) {
+		this.exportTask = exportTask;
+		this.exportAsyncService = exportAsyncService;
+	}
 	
 	@RequestMapping(method = RequestMethod.GET)
 	@ResponseBody
 	public ResponseEntity export(@RequestParam(value = "startDate", required = false) String startDate,
 	        @RequestParam(value = "endDate", required = false) String endDate) {
 		FhirTask fhirTask = exportTask.getInitialTaskResponse();
-		exportTask.export(fhirTask, startDate, endDate, Context.getUserContext(), ServletUriComponentsBuilder
+		exportAsyncService.export(fhirTask, startDate, endDate, Context.getUserContext(), ServletUriComponentsBuilder
 		        .fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI);
 		return new ResponseEntity(getFhirTaskUri(fhirTask), HttpStatus.ACCEPTED);
 	}

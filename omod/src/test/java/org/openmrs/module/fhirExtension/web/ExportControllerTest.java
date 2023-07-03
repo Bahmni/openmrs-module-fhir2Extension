@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirTask;
+import org.openmrs.module.fhirExtension.service.ExportAsyncService;
 import org.openmrs.module.fhirExtension.service.ExportTask;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -38,6 +39,9 @@ public class ExportControllerTest {
 	@Mock
 	private ExportTask exportTask;
 	
+	@Mock
+	private ExportAsyncService exportAsyncService;
+	
 	@InjectMocks
 	private ExportController exportController;
 	
@@ -52,7 +56,7 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
-		doNothing().when(exportTask).export(any(), any(), any(), any(), any());
+		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), any());
 		when(exportTask.getInitialTaskResponse()).thenReturn(mockFhirTask());
 		ResponseEntity responseEntity = exportController.export("2023-05-01", "2023-05-31");
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());

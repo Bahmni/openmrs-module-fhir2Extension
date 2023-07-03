@@ -89,6 +89,11 @@
 	</messages>
 	<!-- /Internationalization -->
 
+	<privilege>
+		<name>Export Patient Data</name>
+		<description>Ability to export patient data in FHIR format</description>
+	</privilege>
+
 	<globalProperty>
 		<property>labEntry.visitType</property>
 		<defaultValue>LAB_VISIT</defaultValue>
