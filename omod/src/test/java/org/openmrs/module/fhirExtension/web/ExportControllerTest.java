@@ -10,6 +10,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.service.ExportAsyncService;
 import org.openmrs.module.fhirExtension.service.ExportTask;
+import org.openmrs.module.webservices.rest.SimpleObject;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -58,9 +59,12 @@ public class ExportControllerTest {
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
 		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), any());
 		when(exportTask.getInitialTaskResponse()).thenReturn(mockFhirTask());
-		ResponseEntity responseEntity = exportController.export("2023-05-01", "2023-05-31");
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31");
+		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
-		assertThat(responseEntity.getBody().toString(), CoreMatchers.containsString(FHIR2_R4_TASK_URI + FHIR_TASK_UUID));
+		assertEquals("ACCEPTED", simpleObject.get("status"));
+		assertEquals(FHIR_TASK_UUID, simpleObject.get("taskId"));
+		assertThat(simpleObject.get("link"), CoreMatchers.containsString(FHIR2_R4_TASK_URI + FHIR_TASK_UUID));
 	}
 	
 	private FhirTask mockFhirTask() {
