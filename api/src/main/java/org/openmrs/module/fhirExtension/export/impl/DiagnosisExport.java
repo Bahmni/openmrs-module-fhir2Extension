@@ -1,7 +1,6 @@
 package org.openmrs.module.fhirExtension.export.impl;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Condition;
@@ -17,7 +16,6 @@ import org.openmrs.module.fhirExtension.export.Exporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -34,13 +32,11 @@ public class DiagnosisExport implements Exporter {
 	
 	private static final String BAHMNI_DIAGNOSIS_STATUS = "Bahmni Diagnosis Status";
 	
-	public static final String DATE_FORMAT = "yyyy-MM-dd";
+	private final ConceptTranslator conceptTranslator;
 	
-	private ConceptTranslator conceptTranslator;
+	private final ObsService obsService;
 	
-	private ObsService obsService;
-	
-	private ConceptService conceptService;
+	private final ConceptService conceptService;
 	
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
 	
@@ -58,15 +54,20 @@ public class DiagnosisExport implements Exporter {
 	public List<IBaseResource> export(String startDateStr, String endDateStr) {
 		List<IBaseResource> fhirResources = new ArrayList<>();
 
-		Date startDate = getFormattedDate(startDateStr);
-		Date endDate = getFormattedDate(endDateStr);
-		Concept visitDiagnosesConcept = conceptService.getConceptByName(VISIT_DIAGNOSES);
-		List<Obs> visitDiagnosesObs = obsService.getObservations(null, null, Arrays.asList(visitDiagnosesConcept), null, null,
-		    null, null, null, null, startDate, endDate, false);
+		try {
+			Date startDate = getFormattedDate(startDateStr);
+			Date endDate = getFormattedDate(endDateStr);
+			Concept visitDiagnosesConcept = conceptService.getConceptByName(VISIT_DIAGNOSES);
+			List<Obs> visitDiagnosesObs = obsService.getObservations(null, null, Arrays.asList(visitDiagnosesConcept), null, null,
+					null, null, null, null, startDate, endDate, false);
 
-		visitDiagnosesObs.stream().filter(this::isCodedDiagnosis)
-				                  .map(this::convertDiagnosisAsFhirCondition)
-				                  .forEach(fhirResources :: add);
+			visitDiagnosesObs.stream().filter(this::isCodedDiagnosis)
+					.map(this::convertDiagnosisAsFhirCondition)
+					.forEach(fhirResources :: add);
+		} catch (Exception e) {
+			log.error("Exception while exporting diagnosis to FHIR type ", e);
+			throw new RuntimeException(e);
+		}
 		
 		return fhirResources;
 	}
@@ -84,20 +85,6 @@ public class DiagnosisExport implements Exporter {
 		condition.setEncounter(getEncounterReference(codedDiagnosisObs.getEncounter().getUuid()));
 		condition.getMeta().setLastUpdated(codedDiagnosisObs.getObsDatetime());
 		return condition;
-	}
-	
-	private Date getFormattedDate(String dateStr) {
-		Date date = null;
-		if (dateStr == null)
-			return null;
-		try {
-			date = DateUtils.parseDate(dateStr, DATE_FORMAT);
-		}
-		catch (ParseException e) {
-			log.error("Exception while parsing the date ", e);
-			throw new RuntimeException(e);
-		}
-		return date;
 	}
 	
 	private boolean isActiveDiagnosis(Obs visitDiagnosisObsGroup) {

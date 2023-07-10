@@ -1,13 +1,18 @@
 package org.openmrs.module.fhirExtension.export;
 
 import ca.uhn.fhir.rest.param.DateRangeParam;
+import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Reference;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 
 public interface Exporter extends BeanPostProcessor {
+
+	String DATE_FORMAT = "yyyy-MM-dd";
 	
 	List<IBaseResource> export(String startDate, String endDate);
 
@@ -32,5 +37,11 @@ public interface Exporter extends BeanPostProcessor {
 		Reference encounterReference = new Reference();
 		encounterReference.setReference("Encounter/" + uuid);
 		return encounterReference;
+	}
+
+	default Date getFormattedDate(String dateStr) throws ParseException {
+		if (dateStr == null)
+			return null;
+		return DateUtils.parseDate(dateStr, DATE_FORMAT);
 	}
 }

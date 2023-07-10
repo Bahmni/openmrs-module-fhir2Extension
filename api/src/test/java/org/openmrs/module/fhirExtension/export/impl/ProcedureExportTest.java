@@ -13,6 +13,7 @@ import org.openmrs.Encounter;
 import org.openmrs.Order;
 import org.openmrs.OrderType;
 import org.openmrs.Patient;
+import org.openmrs.api.ConceptService;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.parameter.OrderSearchCriteria;
@@ -33,6 +34,9 @@ public class ProcedureExportTest {
 	
 	@Mock
 	private OrderService orderService;
+	
+	@Mock
+	private ConceptService conceptService;
 	
 	@Mock
 	private ConceptTranslator conceptTranslator;
@@ -87,22 +91,22 @@ public class ProcedureExportTest {
 	}
 	
 	private List<Order> getMockOpenmrsProcedureOrders() {
-		List<Order> orders = new ArrayList<>();
-		Order order = new Order(1);
+        List<Order> orders = new ArrayList<>();
+        Order order = new Order(1);
 
-		Patient patient = new Patient();
-		patient.setUuid("patient-uuid-1");
-		Encounter encounter = new Encounter(1);
-		encounter.setUuid("encounter-uuid-1");
+        Patient patient = new Patient();
+        patient.setUuid("patient-uuid-1");
+        Encounter encounter = new Encounter(1);
+        encounter.setUuid("encounter-uuid-1");
 
-		order.setUuid(UUID.randomUUID().toString());
-		order.setPatient(patient);
-		order.setEncounter(encounter);
-		order.setFulfillerStatus(Order.FulfillerStatus.RECEIVED);
+        order.setUuid(UUID.randomUUID().toString());
+        order.setPatient(patient);
+        order.setEncounter(encounter);
+        order.setFulfillerStatus(Order.FulfillerStatus.RECEIVED);
 
-		orders.add(order);
-		return orders;
-	}
+        orders.add(order);
+        return orders;
+    }
 	
 	private CodeableConcept getCodeableConcept() {
 		CodeableConcept codeableConcept = new CodeableConcept();

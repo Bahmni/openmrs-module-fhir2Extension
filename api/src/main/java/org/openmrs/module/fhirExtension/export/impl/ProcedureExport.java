@@ -4,9 +4,11 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Procedure;
+import org.hl7.fhir.r4.model.ServiceRequest;
+import org.openmrs.Concept;
 import org.openmrs.Order;
 import org.openmrs.OrderType;
+import org.openmrs.api.ConceptService;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
@@ -26,62 +28,50 @@ public class ProcedureExport implements Exporter {
 	
 	public static final String PROCEDURE_ORDER = "Procedure Order";
 	
-	public static final String DATE_FORMAT = "yyyy-MM-dd";
+	public static final String SURGICAL_PROCEDURE = "surgical procedure";
 	
-	private OrderService orderService;
+	private final OrderService orderService;
 	
-	private ConceptTranslator conceptTranslator;
+	private final ConceptService conceptService;
+	
+	private final ConceptTranslator conceptTranslator;
 	
 	@Autowired
-	public ProcedureExport(OrderService orderService, ConceptTranslator conceptTranslator) {
+	public ProcedureExport(OrderService orderService, ConceptService conceptService, ConceptTranslator conceptTranslator) {
 		this.orderService = orderService;
+		this.conceptService = conceptService;
 		this.conceptTranslator = conceptTranslator;
 	}
 	
 	@Override
-	public List<IBaseResource> export(String startDate, String endDate) {
-		List<IBaseResource> procedureResources = new ArrayList<>();
-		OrderType procedureOrderType = orderService.getOrderTypeByName(PROCEDURE_ORDER);
-		if (procedureOrderType == null) {
-			log.error("Order Type " + PROCEDURE_ORDER + " is not available");
-			return procedureResources;
-		}
-		OrderSearchCriteria orderSearchCriteria = getOrderSearchCriteria(procedureOrderType, startDate, endDate);
-		List<Order> orders = orderService.getOrders(orderSearchCriteria);
-		orders.stream().map(this::convertToFhirResource).forEach(procedureResources :: add);
-		return procedureResources;
-	}
+    public List<IBaseResource> export(String startDate, String endDate) {
+        List<IBaseResource> procedureResources = new ArrayList<>();
+        OrderType procedureOrderType = orderService.getOrderTypeByName(PROCEDURE_ORDER);
+        if (procedureOrderType == null) {
+            log.error("Order Type " + PROCEDURE_ORDER + " is not available");
+            return procedureResources;
+        }
+        OrderSearchCriteria orderSearchCriteria = getOrderSearchCriteria(procedureOrderType, startDate, endDate);
+        List<Order> orders = orderService.getOrders(orderSearchCriteria);
+        orders.stream().map(this::convertToFhirResource).forEach(procedureResources :: add);
+        return procedureResources;
+    }
 	
-	private Procedure convertToFhirResource(Order order) {
-		Procedure procedure = new Procedure();
-		procedure.setId(order.getUuid());
+	private ServiceRequest convertToFhirResource(Order order) {
+		ServiceRequest serviceRequest = new ServiceRequest();
+		
 		CodeableConcept codeableConcept = conceptTranslator.toFhirResource(order.getConcept());
-		procedure.setCode(codeableConcept);
-		procedure.setSubject(getSubjectReference(order.getPatient().getUuid()));
-		procedure.setEncounter(getEncounterReference(order.getEncounter().getUuid()));
-		setProcedureStatus(order, procedure);
-		return procedure;
-	}
-	
-	private void setProcedureStatus(Order order, Procedure procedure) {
-		if (order.getFulfillerStatus() != null) {
-			switch (order.getFulfillerStatus()) {
-				case RECEIVED:
-					procedure.setStatus(Procedure.ProcedureStatus.PREPARATION);
-					break;
-				case IN_PROGRESS:
-					procedure.setStatus(Procedure.ProcedureStatus.INPROGRESS);
-					break;
-				case COMPLETED:
-					procedure.setStatus(Procedure.ProcedureStatus.COMPLETED);
-					break;
-				case EXCEPTION:
-					procedure.setStatus(Procedure.ProcedureStatus.STOPPED);
-					break;
-				default:
-					procedure.setStatus(Procedure.ProcedureStatus.UNKNOWN);
-			}
-		}
+		
+		serviceRequest.setId(order.getUuid());
+		serviceRequest.setStatus(ServiceRequest.ServiceRequestStatus.ACTIVE);
+		serviceRequest.setCode(codeableConcept);
+		serviceRequest.setSubject(getSubjectReference(order.getPatient().getUuid()));
+		serviceRequest.setEncounter(getEncounterReference(order.getEncounter().getUuid()));
+		
+		Concept surgicalProcedureConcept = conceptService.getConceptByName(SURGICAL_PROCEDURE);
+		CodeableConcept serviceRequestCategory = conceptTranslator.toFhirResource(surgicalProcedureConcept);
+		serviceRequest.setCategory(Collections.singletonList(serviceRequestCategory));
+		return serviceRequest;
 	}
 	
 	private OrderSearchCriteria getOrderSearchCriteria(OrderType procedureOrderType, String startDate, String endDate) {
