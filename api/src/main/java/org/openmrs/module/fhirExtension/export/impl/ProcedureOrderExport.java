@@ -24,7 +24,7 @@ import java.util.List;
 
 @Component
 @Log4j2
-public class ProcedureExport implements Exporter {
+public class ProcedureOrderExport implements Exporter {
 	
 	public static final String PROCEDURE_ORDER = "Procedure Order";
 	
@@ -37,7 +37,7 @@ public class ProcedureExport implements Exporter {
 	private final ConceptTranslator conceptTranslator;
 	
 	@Autowired
-	public ProcedureExport(OrderService orderService, ConceptService conceptService, ConceptTranslator conceptTranslator) {
+	public ProcedureOrderExport(OrderService orderService, ConceptService conceptService, ConceptTranslator conceptTranslator) {
 		this.orderService = orderService;
 		this.conceptService = conceptService;
 		this.conceptTranslator = conceptTranslator;

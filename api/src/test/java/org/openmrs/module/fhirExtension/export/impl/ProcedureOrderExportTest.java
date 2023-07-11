@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ProcedureExportTest {
+public class ProcedureOrderExportTest {
 	
 	public static final String PROCEDURE_ORDER = "Procedure Order";
 	
@@ -42,7 +42,7 @@ public class ProcedureExportTest {
 	private ConceptTranslator conceptTranslator;
 	
 	@InjectMocks
-	private ProcedureExport procedureExport;
+	private ProcedureOrderExport procedureOrderExport;
 	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -53,7 +53,7 @@ public class ProcedureExportTest {
 		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
 		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
 		
-		List<IBaseResource> procedureResources = procedureExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31");
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}
@@ -62,7 +62,7 @@ public class ProcedureExportTest {
 	public void shouldNotExportProcedureData_whenProcedureOrderTypeUnavailable() {
 		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(null);
 		
-		List<IBaseResource> procedureResources = procedureExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31");
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -74,7 +74,7 @@ public class ProcedureExportTest {
 		
 		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
 		
-		List<IBaseResource> procedureResources = procedureExport.export("2023-AB-CD", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-AB-CD", "2023-05-31");
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -85,7 +85,7 @@ public class ProcedureExportTest {
 		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
 		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
 		
-		List<IBaseResource> procedureResources = procedureExport.export(null, null);
+		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}
