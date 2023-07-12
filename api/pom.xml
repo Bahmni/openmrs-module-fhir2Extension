@@ -71,7 +71,6 @@
                         <include>**/*</include>
                     </includes>
                     <excludes>
-                        <exclude>**/AsyncConfiguration.class</exclude>
                         <exclude>**/FhirExtensionModuleActivator.class</exclude>
                         <exclude>**/ModuleConfiguration.class</exclude>
                     </excludes>
