@@ -20,14 +20,12 @@ import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.util.LocaleUtility;
-import org.openmrs.util.OpenmrsUtil;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.io.File;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -45,7 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class, LocaleUtility.class, OpenmrsUtil.class })
+@PrepareForTest({ Context.class, LocaleUtility.class })
 @PowerMockIgnore("javax.management.*")
 public class ProcedureFormExportTest {
 	
@@ -76,12 +74,11 @@ public class ProcedureFormExportTest {
 	public void setUp() {
 		PowerMockito.mockStatic(Context.class);
 		PowerMockito.mockStatic(LocaleUtility.class);
-		PowerMockito.mockStatic(OpenmrsUtil.class);
 		when(Context.getAdministrationService()).thenReturn(administrationService);
 		when(LocaleUtility.getLocalesInOrder()).thenReturn(Collections.singleton(Locale.getDefault()));
 		when(Context.getLocale()).thenReturn(Locale.getDefault());
-		File resourcesDirectory = new File("src/test/resources/");
-		when(OpenmrsUtil.getApplicationDataDirectory()).thenReturn(resourcesDirectory.getAbsolutePath() + "/");
+		when(administrationService.getGlobalProperty("fhir.export.procedure.template")).thenReturn(
+		    "src/test/resources/procedure-template.properties");
 	}
 	
 	@Test
@@ -134,15 +131,15 @@ public class ProcedureFormExportTest {
 	
 	@Test
 	public void shouldReadProcedureAttributesFromGlobalProperties_whenProcedureTemplateUnavailable() {
-		File resourcesDirectory = new File("/unknown/path");
-		when(OpenmrsUtil.getApplicationDataDirectory()).thenReturn(resourcesDirectory.getAbsolutePath() + "/");
+		when(administrationService.getGlobalProperty("fhir.export.procedure.template")).thenReturn(
+		    "/unknown/path/procedure-template.properties");
 		when(administrationService.getGlobalProperty("conceptMap.procedure.procedureName")).thenReturn(
 		    "9bb07482-4ff0-0305-1990-000000000001");
 		when(conceptService.getConceptByUuid(anyString())).thenReturn(null);
 		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31");
 		
 		assertEquals(0, procedureResources.size());
-		verify(administrationService, times(10)).getGlobalProperty(anyString());
+		verify(administrationService, times(11)).getGlobalProperty(anyString());
 	}
 	
 	private List<Obs> getProcedureRecordObs() {
@@ -206,73 +203,6 @@ public class ProcedureFormExportTest {
 		procedureEndDatetimeObs.setEncounter(encounter);
 		
 		procedureRecordObs.addGroupMember(codedProcedureObs);
-		procedureRecordObs.addGroupMember(procedureDatetimeObs);
-		procedureRecordObs.addGroupMember(codedBodySiteObs);
-		procedureRecordObs.addGroupMember(procedureEndDatetimeObs);
-		return Collections.singletonList(procedureRecordObs);
-	}
-	
-	private List<Obs> getProcedureRecordObsForNonCoded() {
-		Encounter encounter = new Encounter();
-		encounter.setUuid("encounter-uuid-101");
-		Patient patient = new Patient();
-		patient.setUuid("patient-uuid-101");
-		
-		Obs procedureRecordObs = new Obs(100);
-		Concept procedureRecordConcept = new Concept(101);
-		ConceptName procedureRecordConceptName = new ConceptName(PROCEDURE_RECORD, Locale.getDefault());
-		procedureRecordConcept.setFullySpecifiedName(procedureRecordConceptName);
-		procedureRecordObs.setPerson(patient);
-		procedureRecordObs.setEncounter(encounter);
-		
-		Obs nonCodedProcedureObs = new Obs(102);
-		Concept procedureNameConcept = new Concept(102);
-		procedureNameConcept.setUuid("9bb07482-4ff0-0305-1990-000000000001");
-		ConceptName procedureNameConceptFQN = new ConceptName("Name of Procedure performed", Locale.getDefault());
-		procedureNameConcept.setFullySpecifiedName(procedureNameConceptFQN);
-		Concept hairTransplantConcept = new Concept(3);
-		ConceptName hairTransplantConceptFQN = new ConceptName("Hair Transplant", Locale.getDefault());
-		hairTransplantConcept.setFullySpecifiedName(hairTransplantConceptFQN);
-		nonCodedProcedureObs.setValueCoded(hairTransplantConcept);
-		nonCodedProcedureObs.setConcept(procedureNameConcept);
-		nonCodedProcedureObs.setPerson(patient);
-		nonCodedProcedureObs.setEncounter(encounter);
-		
-		Obs procedureDatetimeObs = new Obs(3);
-		Concept procedureDatetimeConcept = new Concept(4);
-		procedureDatetimeConcept.setUuid("9bb07482-4ff0-0305-1990-000000000002");
-		ConceptName procedureDatetimeConceptFQN = new ConceptName("Procedure date/time", Locale.getDefault());
-		procedureDatetimeConcept.setFullySpecifiedName(procedureDatetimeConceptFQN);
-		procedureDatetimeObs.setValueDatetime(Date.from(LocalDate.of(2023, 5, 3).atStartOfDay().toInstant(ZoneOffset.UTC)));
-		procedureDatetimeObs.setConcept(procedureDatetimeConcept);
-		procedureDatetimeObs.setPerson(patient);
-		procedureDatetimeObs.setEncounter(encounter);
-		
-		Obs codedBodySiteObs = new Obs(4);
-		Concept codedBodySiteConcept = new Concept(5);
-		codedBodySiteConcept.setUuid("9bb07482-4ff0-0305-1990-000000000004");
-		ConceptName codedBodySiteConceptFQN = new ConceptName("Procedure site", Locale.getDefault());
-		procedureNameConcept.setFullySpecifiedName(codedBodySiteConceptFQN);
-		Concept headConcept = new Concept(6);
-		ConceptName headConceptFQN = new ConceptName("Head", Locale.getDefault());
-		headConcept.setFullySpecifiedName(headConceptFQN);
-		codedBodySiteObs.setValueCoded(headConcept);
-		codedBodySiteObs.setConcept(codedBodySiteConcept);
-		codedBodySiteObs.setPerson(patient);
-		codedBodySiteObs.setEncounter(encounter);
-		
-		Obs procedureEndDatetimeObs = new Obs(5);
-		Concept procedureEndDatetimeConcept = new Concept(7);
-		procedureEndDatetimeConcept.setUuid("9bb07482-4ff0-0305-1990-000000000003");
-		ConceptName procedureEndDatetimeConceptFQN = new ConceptName("Procedure end date/time", Locale.getDefault());
-		procedureEndDatetimeConcept.setFullySpecifiedName(procedureEndDatetimeConceptFQN);
-		procedureEndDatetimeObs.setValueDatetime(Date.from(LocalDate.of(2023, 5, 3).atStartOfDay().plusHours(1)
-		        .toInstant(ZoneOffset.UTC)));
-		procedureEndDatetimeObs.setConcept(procedureEndDatetimeConcept);
-		procedureEndDatetimeObs.setPerson(patient);
-		procedureEndDatetimeObs.setEncounter(encounter);
-		
-		procedureRecordObs.addGroupMember(nonCodedProcedureObs);
 		procedureRecordObs.addGroupMember(procedureDatetimeObs);
 		procedureRecordObs.addGroupMember(codedBodySiteObs);
 		procedureRecordObs.addGroupMember(procedureEndDatetimeObs);

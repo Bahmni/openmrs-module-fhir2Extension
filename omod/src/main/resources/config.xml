@@ -105,5 +105,10 @@
 		<defaultValue>/openmrs/data/fhirExports</defaultValue>
 		<description>Directory where exported zip in FHIR format are stored</description>
 	</globalProperty>
-	
+
+	<globalProperty>
+		<property>fhir.export.procedure.template</property>
+		<defaultValue></defaultValue>
+		<description>Properties file path for procedure template</description>
+	</globalProperty>
 </module>

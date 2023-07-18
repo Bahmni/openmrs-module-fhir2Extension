@@ -15,7 +15,6 @@ import org.openmrs.api.ConceptService;
 import org.openmrs.api.ObsService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
-import org.openmrs.util.OpenmrsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -47,7 +46,7 @@ public class ProcedureFormExport implements Exporter {
 	
 	private final ObsService obsService;
 
-	private static final String PROCEDURE_TEMPLATE_PROPERTIES_FILE_NAME = "procedure-template.properties";
+	private static final String GP_PROCEDURE_TEMPLATE_PROPERTIES_FILE_PATH = "fhir.export.procedure.template";
 	private final Map<ProcedureAttribute, String> procedureAttributesMap = new HashMap<>();
 	private final Properties procedureRecordAttributesFromProperties = new Properties();
 	private final List<String> procedureConfigurationKeys = new ArrayList<>();
@@ -194,8 +193,12 @@ public class ProcedureFormExport implements Exporter {
 	}
 
 	private void readProcedureAttributeProperties() {
-		Path configFilePath = Paths.get(OpenmrsUtil.getApplicationDataDirectory(), PROCEDURE_TEMPLATE_PROPERTIES_FILE_NAME);
-		if (!Files.exists(configFilePath)) {
+		String procedureTemplateGlobalPropValue = adminService.getGlobalProperty(GP_PROCEDURE_TEMPLATE_PROPERTIES_FILE_PATH);
+		Path configFilePath = null;
+		if ( StringUtils.isNotBlank(procedureTemplateGlobalPropValue) ) {
+			configFilePath = Paths.get(procedureTemplateGlobalPropValue);
+		}
+		if (StringUtils.isEmpty(procedureTemplateGlobalPropValue) || !Files.exists(configFilePath)) {
 			log.warn(String.format("Procedure Attribute config file does not exist: [%s]. Trying to read from Global Properties", configFilePath));
 			readFromGlobalProperties();
 			return;
