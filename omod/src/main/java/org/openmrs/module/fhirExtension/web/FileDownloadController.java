@@ -19,11 +19,11 @@ import java.io.IOException;
 @RequestMapping(value = "/rest/" + RestConstants.VERSION_1 + "/fhirExtension")
 public class FileDownloadController extends BaseRestController {
 	
-	private FileDownloadService downloadService;
+	private FileDownloadService fileDownloadService;
 	
 	@Autowired
-	public FileDownloadController(FileDownloadService downloadService) {
-		this.downloadService = downloadService;
+	public FileDownloadController(FileDownloadService fileDownloadService) {
+		this.fileDownloadService = fileDownloadService;
 	}
 	
 	@ResponseBody
@@ -31,7 +31,7 @@ public class FileDownloadController extends BaseRestController {
     public ResponseEntity<?> getFile(@RequestParam("file") String fileName) {
         byte[] bytes = null;
         try {
-            bytes = downloadService.getFile(fileName);
+            bytes = fileDownloadService.getFile(fileName);
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
