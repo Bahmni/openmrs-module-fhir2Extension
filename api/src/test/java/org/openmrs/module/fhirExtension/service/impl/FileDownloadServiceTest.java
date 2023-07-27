@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -25,46 +26,52 @@ import static org.mockito.Mockito.when;
 import static org.openmrs.module.fhirExtension.service.FileExportService.FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class })
+@PrepareForTest({Context.class})
 @PowerMockIgnore("javax.management.*")
 public class FileDownloadServiceTest {
-	
-	@Mock
-	@Qualifier("adminService")
-	AdministrationService administrationService;
-	
-	@Mock
-	private UserContext userContext;
-	
-	@InjectMocks
-	private FileDownloadServiceImpl fileDownloadService;
-	
-	String basePath = System.getProperty("java.io.tmpdir");
-	
-	@Before
-	public void setup() {
-		PowerMockito.mockStatic(Context.class);
-		when(Context.getAdministrationService()).thenReturn(administrationService);
-	}
-	
-	@After
-	public void tearDown() throws IOException {
-		Path newFilePath = Paths.get(basePath, "dummy.zip");
-		Files.deleteIfExists(newFilePath);
-	}
-	
-	@Test
-	public void testGetFile_ExistingFile_ReturnsFileContents() throws IOException {
-		
-		Path newFilePath = Paths.get(basePath, "dummy.zip");
-		Files.createFile(newFilePath);
-		when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
-		byte[] result = fileDownloadService.getFile("dummy");
-		Assert.assertNotNull(result);
-	}
-	
-	@Test
+
+    @Mock
+    @Qualifier("adminService")
+    AdministrationService administrationService;
+
+    @Mock
+    private UserContext userContext;
+
+    @InjectMocks
+    private FileDownloadServiceImpl fileDownloadService;
+
+    String basePath = System.getProperty("java.io.tmpdir");
+
+    @Before
+    public void setup() {
+        PowerMockito.mockStatic(Context.class);
+        when(Context.getAdministrationService()).thenReturn(administrationService);
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        Path newFilePath = Paths.get(basePath, "dummy.zip");
+        Files.deleteIfExists(newFilePath);
+    }
+
+    @Test
+    public void testGetFile_ExistingFile_ReturnsFileContents() throws IOException {
+
+        Path newFilePath = Paths.get(basePath, "dummy.zip");
+        Files.createFile(newFilePath);
+        when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
+        byte[] result = fileDownloadService.getFile("dummy");
+        Assert.assertNotNull(result);
+    }
+
+    @Test
     public void testGetFile_NonExistingFile_ThrowsIOException() {
         Assert.assertThrows(IOException.class, () -> fileDownloadService.getFile("nonExistingFile"));
+    }
+
+    @Test
+    public void testGetFile_InvalidDirectory_ThrowsAPIException() {
+        when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn("invalidPath");
+        Assert.assertThrows(NoSuchFileException.class, () -> fileDownloadService.getFile("dummy"));
     }
 }
