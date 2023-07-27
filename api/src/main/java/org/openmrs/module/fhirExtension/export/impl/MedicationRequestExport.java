@@ -35,7 +35,7 @@ public class MedicationRequestExport implements Exporter {
 	}
 	
 	@Override
-	public List<IBaseResource> export(String startDate, String endDate) {
+	public List<IBaseResource> export(String startDate, String endDate, boolean isAnonymise) {
 		DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
 		IBundleProvider iBundleProvider = fhirMedicationRequestService.searchForMedicationRequests(null, null, null, null,
 		    null, null, null, null, lastUpdated, null, null);

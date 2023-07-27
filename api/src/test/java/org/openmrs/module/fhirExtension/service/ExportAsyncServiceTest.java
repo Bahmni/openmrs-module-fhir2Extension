@@ -60,7 +60,7 @@ public class ExportAsyncServiceTest {
 	public void shouldExportPatientDataAndUpdateFhirTaskStatusToCompleted_whenValidDateRangeProvided() {
 		FhirTask fhirTask = mockFhirTask();
 		
-		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "");
+		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", false);
 		
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
 		verify(conceptService, times(1)).getConceptByName("Download URL");
@@ -75,7 +75,7 @@ public class ExportAsyncServiceTest {
 
 		FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), "");
+		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), "", false);
 
 		assertEquals(FhirTask.TaskStatus.REJECTED, fhirTask.getStatus());
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));

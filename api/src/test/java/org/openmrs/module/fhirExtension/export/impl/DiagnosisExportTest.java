@@ -88,7 +88,7 @@ public class DiagnosisExportTest {
 		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(visitDiagnosesObs);
 		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertNotNull(diagnosisResources);
 		assertEquals(2, diagnosisResources.size());
@@ -102,7 +102,7 @@ public class DiagnosisExportTest {
 		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(visitDiagnosesObs);
 		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export(null, null);
+		List<IBaseResource> diagnosisResources = diagnosisExport.export(null, null, false);
 		
 		assertNotNull(diagnosisResources);
 		assertEquals(1, diagnosisResources.size());
@@ -114,7 +114,7 @@ public class DiagnosisExportTest {
 		thrown.expect(RuntimeException.class);
 		thrown.expectMessage("java.text.ParseException: Unable to parse the date: 2023-AB-CD");
 		
-		diagnosisExport.export("2023-AB-CD", "2023-05-31");
+		diagnosisExport.export("2023-AB-CD", "2023-05-31", false);
 	}
 	
 	@Test
@@ -122,7 +122,7 @@ public class DiagnosisExportTest {
 		thrown.expect(RuntimeException.class);
 		thrown.expectMessage("java.text.ParseException: Unable to parse the date: 2023-AB-CD");
 		
-		diagnosisExport.export("2023-05-01", "2023-AB-CD");
+		diagnosisExport.export("2023-05-01", "2023-AB-CD", false);
 	}
 	
 	private List<Obs> getVisitDiagnosesObs() {

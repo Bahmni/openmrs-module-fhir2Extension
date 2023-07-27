@@ -53,7 +53,7 @@ public class DiagnosisExport implements Exporter {
 	}
 	
 	@Override
-	public List<IBaseResource> export(String startDateStr, String endDateStr) {
+	public List<IBaseResource> export(String startDateStr, String endDateStr, boolean isAnonymise) {
 		List<IBaseResource> fhirResources = new ArrayList<>();
 
 		try {

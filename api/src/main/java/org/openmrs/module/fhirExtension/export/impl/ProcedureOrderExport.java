@@ -44,7 +44,7 @@ public class ProcedureOrderExport implements Exporter {
 	}
 	
 	@Override
-    public List<IBaseResource> export(String startDate, String endDate) {
+    public List<IBaseResource> export(String startDate, String endDate, boolean isAnonymise) {
         List<IBaseResource> procedureResources = new ArrayList<>();
         OrderType procedureOrderType = orderService.getOrderTypeByName(PROCEDURE_ORDER);
         if (procedureOrderType == null) {

@@ -53,7 +53,7 @@ public class ProcedureOrderExportTest {
 		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
 		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", false);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}
@@ -62,7 +62,7 @@ public class ProcedureOrderExportTest {
 	public void shouldNotExportProcedureData_whenProcedureOrderTypeUnavailable() {
 		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(null);
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -74,7 +74,7 @@ public class ProcedureOrderExportTest {
 		
 		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-AB-CD", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-AB-CD", "2023-05-31", false);
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -85,7 +85,7 @@ public class ProcedureOrderExportTest {
 		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
 		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null);
+		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null, false);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}

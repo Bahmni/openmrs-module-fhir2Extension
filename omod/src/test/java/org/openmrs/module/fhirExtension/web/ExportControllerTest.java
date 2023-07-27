@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -57,10 +58,10 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
-		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), any());
+		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse()).thenReturn(mockFhirTask());
 		when(exportTask.validateParams("2023-05-01", "2023-05-31")).thenReturn(null);
-		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31");
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", false);
 		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 		assertEquals("ACCEPTED", simpleObject.get("status"));
@@ -70,10 +71,10 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldGetBadRequest_whenFhirExportCalledWithInvalidDateFormat() {
-		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), any());
+		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse()).thenReturn(mockFhirTask());
 		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn("Invalid Date Format [yyyy-mm-dd]");
-		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-AB", "2023-05-31");
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-AB", "2023-05-31", false);
 		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Invalid Date Format [yyyy-mm-dd]", simpleObject.get("error"));

@@ -36,7 +36,7 @@ public class ConditionExportTest {
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(getMockConditionBundle(2));
 		
-		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertNotNull(conditionResources);
 		assertEquals(2, conditionResources.size());
@@ -47,7 +47,7 @@ public class ConditionExportTest {
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(getMockConditionBundle(1));
 		
-		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", null);
+		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", null, false);
 		
 		assertNotNull(conditionResources);
 		assertEquals(1, conditionResources.size());
@@ -58,7 +58,7 @@ public class ConditionExportTest {
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(getMockConditionBundle(1));
 		
-		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31");
+		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31", false);
 		
 		assertNotNull(conditionResources);
 		assertEquals(1, conditionResources.size());

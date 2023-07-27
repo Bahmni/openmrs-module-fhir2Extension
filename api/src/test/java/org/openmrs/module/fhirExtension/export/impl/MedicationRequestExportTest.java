@@ -49,7 +49,7 @@ public class MedicationRequestExportTest {
 		    fhirMedicationRequestService.searchForMedicationRequests(any(), any(), any(), any(), any(), any(), any(), any(),
 		        any(), any(), any())).thenReturn(getMockMedicationRequestBundle());
 		
-		List<IBaseResource> medicationRequestResources = medicationRequestExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> medicationRequestResources = medicationRequestExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertNotNull(medicationRequestResources);
 		assertEquals(1, medicationRequestResources.size());

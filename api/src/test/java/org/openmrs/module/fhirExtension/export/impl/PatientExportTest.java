@@ -34,7 +34,7 @@ public class PatientExportTest {
 	public void shouldExportPaientDataInFhirFormat_whenValidDateRangeProvided() {
 		when(fhirPatientService.searchForPatients(any(PatientSearchParams.class))).thenReturn(getMockPatientBundle());
 		
-		List<IBaseResource> patientResources = patientExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> patientResources = patientExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertNotNull(patientResources);
 		assertEquals(1, patientResources.size());
