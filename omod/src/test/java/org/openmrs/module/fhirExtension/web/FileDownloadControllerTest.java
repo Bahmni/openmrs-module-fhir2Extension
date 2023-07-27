@@ -47,7 +47,7 @@ public class FileDownloadControllerTest {
 	}
 	
 	@Test
-	public void shouldReturnFile() throws Exception {
+	public void shouldReturn_File_WhenExists() throws Exception {
 		byte[] bytes = new byte[10];
 		when(fileDownloadService.getFile(any())).thenReturn(bytes);
 		ResponseEntity<?> responseEntity = fileDownloadController.getFile("fileName");
@@ -58,7 +58,7 @@ public class FileDownloadControllerTest {
 	}
 	
 	@Test
-	public void shouldReturnNotFound() throws Exception {
+	public void shouldReturn_NotFound_WhenMissingFile() throws Exception {
 		when(fileDownloadService.getFile(any())).thenThrow(new IOException());
 		ResponseEntity<?> responseEntity = fileDownloadController.getFile("fileName");
 		assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());

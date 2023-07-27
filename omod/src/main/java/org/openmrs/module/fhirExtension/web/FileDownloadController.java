@@ -29,7 +29,7 @@ public class FileDownloadController extends BaseRestController {
     @ResponseBody
     @RequestMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE, method = RequestMethod.GET)
     public ResponseEntity<?> getFile(@RequestParam("file") String fileName) {
-        byte[] bytes = null;
+        byte[] bytes;
         try {
             bytes = fileDownloadService.getFile(fileName);
         } catch (IOException e) {
