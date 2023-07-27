@@ -18,15 +18,15 @@ import java.io.IOException;
 @Controller
 @RequestMapping(value = "/rest/" + RestConstants.VERSION_1 + "/fhirExtension")
 public class FileDownloadController extends BaseRestController {
-
-    private FileDownloadService fileDownloadService;
-
-    @Autowired
-    public FileDownloadController(FileDownloadService fileDownloadService) {
-        this.fileDownloadService = fileDownloadService;
-    }
-
-    @ResponseBody
+	
+	private FileDownloadService fileDownloadService;
+	
+	@Autowired
+	public FileDownloadController(FileDownloadService fileDownloadService) {
+		this.fileDownloadService = fileDownloadService;
+	}
+	
+	@ResponseBody
     @RequestMapping(value = "/export", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE, method = RequestMethod.GET)
     public ResponseEntity<?> getFile(@RequestParam("file") String fileName) {
         byte[] bytes;
@@ -35,13 +35,12 @@ public class FileDownloadController extends BaseRestController {
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append("attachment; filename=\"")
-                .append(fileName).append(".zip")
-                .append("\"");
-        String attachmentName = sb.toString();
         return ResponseEntity.ok()
-                .header("Content-Disposition", attachmentName)
+                .header("Content-Disposition", getAttachment(fileName))
                 .body(bytes);
     }
+	
+	private String getAttachment(String fileName) {
+		return new StringBuilder().append("attachment; filename=\"").append(fileName).append(".zip").append("\"").toString();
+	}
 }
