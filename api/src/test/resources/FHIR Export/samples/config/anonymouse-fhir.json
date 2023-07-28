@@ -1,0 +1,18 @@
+{
+  "config": {
+    "patient": [
+      {
+        "fieldName": "identifier",
+        "method": "redact"
+      },
+      {
+        "fieldName": "address",
+        "method": "redact"
+      },
+      {
+        "fieldName": "name",
+        "method": "redact",
+      }
+    ]
+  }
+}
