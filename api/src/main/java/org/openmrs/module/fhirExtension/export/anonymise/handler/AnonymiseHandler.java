@@ -7,7 +7,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymisedResourceConfig;
 import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymiserConfig;
-import org.openmrs.module.fhirExtension.export.anonymise.factory.FieldHandlerSingletonFactory;
+import org.openmrs.module.fhirExtension.export.anonymise.factory.RedactFieldHandlerSingletonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +22,8 @@ import java.util.List;
 public class AnonymiseHandler {
 	
 	private static final String GP_ANONYMISATION_CONFIG_PROPERTIES_FILE_PATH = "fhir.export.anonymise.config.path";
+
+    private static final String REDACT_METHOD_NAME = "redact";
 	
 	private final AdministrationService adminService;
 	
@@ -37,8 +39,10 @@ public class AnonymiseHandler {
         if (anonymisedResourceConfigList == null) {
             return;
         }
-        anonymisedResourceConfigList.forEach(eachFieldConfig -> {
-            FieldHandlerSingletonFactory.getInstance(eachFieldConfig.getFieldName()).redact(iBaseResource);
+        anonymisedResourceConfigList.forEach(fieldConfig -> {
+            if(REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
+                RedactFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).redact(iBaseResource);
+            }
         });
     }
 	

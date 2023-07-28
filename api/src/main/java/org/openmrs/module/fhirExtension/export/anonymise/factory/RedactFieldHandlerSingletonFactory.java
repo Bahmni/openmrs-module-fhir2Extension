@@ -1,6 +1,5 @@
 package org.openmrs.module.fhirExtension.export.anonymise.factory;
 
-import org.hl7.fhir.r4.model.Dosage;
 import org.openmrs.module.fhirExtension.export.anonymise.ResourceRedact;
 import org.openmrs.module.fhirExtension.export.anonymise.impl.AddressResourceRedact;
 import org.openmrs.module.fhirExtension.export.anonymise.impl.AuthoredOnResourceRedact;
@@ -14,7 +13,7 @@ import org.openmrs.module.fhirExtension.export.anonymise.impl.RecorderResourceRe
 import org.openmrs.module.fhirExtension.export.anonymise.impl.RequesterResourceRedact;
 import org.openmrs.module.fhirExtension.export.anonymise.impl.TelecomResourceRedact;
 
-public class FieldHandlerSingletonFactory {
+public class RedactFieldHandlerSingletonFactory {
 
     public static ResourceRedact getInstance(String fieldName) {
         if (fieldName == null || fieldName.isEmpty())
