@@ -132,7 +132,7 @@ public class DiagnosisExport implements Exporter {
 		return Collections.singletonList(codeableConcept.addCoding(coding));
 	}
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
-		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "medication"));
+		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
 		return iBaseResources;
 	}
 }

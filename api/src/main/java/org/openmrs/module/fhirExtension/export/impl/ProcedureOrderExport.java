@@ -99,7 +99,7 @@ public class ProcedureOrderExport implements Exporter {
 		return orderSearchCriteriaBuilder.build();
 	}
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
-		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "medication"));
+		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "serviceRequest"));
 		return iBaseResources;
 	}
 }

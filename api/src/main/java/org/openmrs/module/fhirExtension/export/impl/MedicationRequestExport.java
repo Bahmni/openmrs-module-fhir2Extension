@@ -57,7 +57,7 @@ public class MedicationRequestExport implements Exporter {
 		return medicationRequest;
 	}
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
-		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "medication"));
+		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "medicationRequest"));
 		return iBaseResources;
 	}
 }
