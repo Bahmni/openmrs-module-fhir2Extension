@@ -11,7 +11,7 @@
       },
       {
         "fieldName": "name",
-        "method": "redact",
+        "method": "redact"
       }
     ]
   }
