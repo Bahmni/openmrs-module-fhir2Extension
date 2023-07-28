@@ -13,6 +13,7 @@ import org.openmrs.module.fhir2.api.FhirConditionService;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.export.Exporter;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.openmrs.module.fhirExtension.export.impl.ConditionExport;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -44,6 +45,8 @@ public class ExportAsyncServiceTest {
 	
 	@Mock
 	private FhirConditionService fhirConditionService;
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@InjectMocks
 	private ExportAsyncService exportAsyncService;
@@ -70,7 +73,7 @@ public class ExportAsyncServiceTest {
 	@Test
 	public void shouldChangeFhirTaskStatusToRejected_whenInvalidDateRangeProvided() {
 		List<Exporter> exporters = new ArrayList<>();
-		exporters.add(new ConditionExport(fhirConditionService));
+		exporters.add(new ConditionExport(fhirConditionService, anonymiseHandler));
 		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 
 		FhirTask fhirTask = mockFhirTask();

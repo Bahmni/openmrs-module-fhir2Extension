@@ -8,6 +8,7 @@ import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
 import org.openmrs.module.fhir2.api.FhirConditionService;
 import org.openmrs.module.fhirExtension.export.Exporter;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +20,13 @@ import java.util.stream.Collectors;
 public class ConditionExport implements Exporter {
 	
 	private FhirConditionService fhirConditionService;
-	
+	private AnonymiseHandler anonymiseHandler;
+
+
 	@Autowired
-	public ConditionExport(FhirConditionService fhirConditionService) {
+	public ConditionExport(FhirConditionService fhirConditionService, AnonymiseHandler anonymiseHandler) {
 		this.fhirConditionService = fhirConditionService;
+		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Override
@@ -31,7 +35,7 @@ public class ConditionExport implements Exporter {
         IBundleProvider iBundleProvider = fhirConditionService.searchConditions(null, null, null, null, null, null, null,
                 lastUpdated, null, null);
         List<IBaseResource> conditionList = iBundleProvider.getAllResources().stream().map(this::addCategory).collect(Collectors.toList());
-        return conditionList;
+        return isAnonymise ? anonymise(conditionList) : conditionList;
     }
 	
 	private Condition addCategory(IBaseResource baseResource) {
@@ -41,6 +45,10 @@ public class ConditionExport implements Exporter {
 		        "Problem List Item");
 		condition.setCategory(Collections.singletonList(codeableConcept.addCoding(coding)));
 		return condition;
+	}
+	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
+		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
+		return iBaseResources;
 	}
 	
 }

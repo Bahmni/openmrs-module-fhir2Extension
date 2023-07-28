@@ -35,7 +35,6 @@ public class AnonymiseHandler {
 	public void anonymise(IBaseResource iBaseResource, String resourceType) {
         List<AnonymisedResourceConfig> anonymisedResourceConfigList = anonymiserConfig.getConfig().get(resourceType);
         if (anonymisedResourceConfigList == null) {
-            log.warn(String.format("configuration for the resource type %s not specified", resourceType));
             return;
         }
         anonymisedResourceConfigList.forEach(eachFieldConfig -> {
@@ -43,8 +42,8 @@ public class AnonymiseHandler {
         });
     }
 	
-	public void loadAnonymiserConfig(boolean anonymise) {
-        if(!anonymise) {
+	public void loadAnonymiserConfig(boolean isAnonymise) {
+        if(!isAnonymise) {
             return;
         }
         String configPathGlobalPropertyValue = adminService.getGlobalProperty(GP_ANONYMISATION_CONFIG_PROPERTIES_FILE_PATH);

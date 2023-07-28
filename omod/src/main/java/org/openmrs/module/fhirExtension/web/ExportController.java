@@ -46,7 +46,7 @@ public class ExportController extends BaseRestController {
 			response.add("error", validationErrorMessage);
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
-		FhirTask fhirTask = exportTask.getInitialTaskResponse();
+		FhirTask fhirTask = exportTask.getInitialTaskResponse(isAnonymise);
 		exportAsyncService.export(fhirTask, startDate, endDate, Context.getUserContext(),
 		    ServletUriComponentsBuilder.fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI, isAnonymise);
 		return new ResponseEntity<>(getFhirTaskUri(fhirTask), HttpStatus.ACCEPTED);
