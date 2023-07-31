@@ -41,7 +41,6 @@ public class EncounterResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final EncounterResourceRedact INSTANCE = new EncounterResourceRedact();
 	}
 }

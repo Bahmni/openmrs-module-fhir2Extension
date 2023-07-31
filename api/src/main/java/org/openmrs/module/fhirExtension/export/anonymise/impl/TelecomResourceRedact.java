@@ -17,7 +17,6 @@ public class TelecomResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final TelecomResourceRedact INSTANCE = new TelecomResourceRedact();
 	}
 	

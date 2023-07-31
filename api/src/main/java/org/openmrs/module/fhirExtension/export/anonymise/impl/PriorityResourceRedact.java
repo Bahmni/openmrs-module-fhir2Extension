@@ -21,7 +21,6 @@ public class PriorityResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final PriorityResourceRedact INSTANCE = new PriorityResourceRedact();
 	}
 }
