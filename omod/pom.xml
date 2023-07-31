@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.bahmni.module</groupId>
-		<artifactId>fhir2Extension</artifactId>
+		<artifactId>fhir2Extension-fhir</artifactId>
 		<version>1.3.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>fhir2Extension-omod</artifactId>
+	<artifactId>fhir2Extension-fhir-omod</artifactId>
 	<packaging>jar</packaging>
 	<name>FHIR2 module extensions OMOD</name>
 	<description>OpenMRS module project for FHIR2 Extensions</description>
@@ -15,7 +15,7 @@
 	<dependencies>
         <dependency>
             <groupId>org.bahmni.module</groupId>
-            <artifactId>fhir2Extension-api</artifactId>
+            <artifactId>fhir2Extension-fhir-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 		<dependency>
