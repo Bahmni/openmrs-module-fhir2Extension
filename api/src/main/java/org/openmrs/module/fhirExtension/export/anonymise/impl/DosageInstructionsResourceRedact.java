@@ -21,7 +21,6 @@ public class DosageInstructionsResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final DosageInstructionsResourceRedact INSTANCE = new DosageInstructionsResourceRedact();
 	}
 }

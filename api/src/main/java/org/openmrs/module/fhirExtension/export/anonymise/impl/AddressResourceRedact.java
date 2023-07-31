@@ -17,7 +17,6 @@ public class AddressResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final AddressResourceRedact INSTANCE = new AddressResourceRedact();
 	}
 	

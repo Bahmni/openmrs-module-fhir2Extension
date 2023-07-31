@@ -87,6 +87,7 @@ public class DiagnosisExport implements Exporter {
 		condition.setCategory(getCategory());
 		condition.setClinicalStatus(clinicalStatus);
 		condition.setOnset(new DateTimeType().setValue(codedDiagnosisObs.getObsDatetime()));
+		condition.setRecordedDate(codedDiagnosisObs.getDateCreated());
 		condition.setCode(codeableConcept);
 		condition.setSubject(getSubjectReference(codedDiagnosisObs.getPerson().getUuid()));
 		condition.setEncounter(getEncounterReference(codedDiagnosisObs.getEncounter().getUuid()));

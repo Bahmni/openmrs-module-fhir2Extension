@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Log4j2
@@ -40,14 +41,17 @@ public class AnonymiseHandler {
             return;
         }
         anonymisedResourceConfigList.forEach(fieldConfig -> {
-            if(REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
+            if (StringUtils.isBlank(fieldConfig.getFieldName())) {
+                return;
+            }
+            if (REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
                 RedactFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).redact(iBaseResource);
             }
         });
     }
 	
 	public void loadAnonymiserConfig(boolean isAnonymise) {
-        if(!isAnonymise) {
+        if (!isAnonymise) {
             return;
         }
         String configPathGlobalPropertyValue = adminService.getGlobalProperty(GP_ANONYMISATION_CONFIG_PROPERTIES_FILE_PATH);

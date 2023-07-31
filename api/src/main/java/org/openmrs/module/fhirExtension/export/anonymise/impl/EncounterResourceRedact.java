@@ -19,7 +19,6 @@ public class EncounterResourceRedact implements ResourceRedact {
 	
 	@Override
 	public void redact(IBaseResource iBaseResource) {
-		
 		if (iBaseResource instanceof Condition) {
 			Condition condition = (Condition) iBaseResource;
 			condition.setEncounter(null);
@@ -42,7 +41,6 @@ public class EncounterResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final EncounterResourceRedact INSTANCE = new EncounterResourceRedact();
 	}
 }

@@ -16,8 +16,6 @@ import org.openmrs.module.fhirExtension.export.anonymise.impl.TelecomResourceRed
 public class RedactFieldHandlerSingletonFactory {
 	
 	public static ResourceRedact getInstance(String fieldName) {
-		if (fieldName == null || fieldName.isEmpty())
-			return null;
 		switch (fieldName) {
 			case "identifier":
 				return IdentifierResourceRedact.getInstance();

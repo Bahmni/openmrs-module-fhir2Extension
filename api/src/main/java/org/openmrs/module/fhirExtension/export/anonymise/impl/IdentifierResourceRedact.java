@@ -29,7 +29,6 @@ public class IdentifierResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
-		
 		private static final IdentifierResourceRedact INSTANCE = new IdentifierResourceRedact();
 	}
 	

@@ -118,7 +118,7 @@
 
 	<globalProperty>
 		<property>fhir.export.anonymise.config.path</property>
-		<defaultValue>/openmrs/data/anonymise-config.json</defaultValue>
+		<defaultValue></defaultValue>
 		<description>Properties file path for fhir export anonymisation</description>
 	</globalProperty>
 </module>
