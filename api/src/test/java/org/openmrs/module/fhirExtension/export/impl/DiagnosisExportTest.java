@@ -63,6 +63,7 @@ public class DiagnosisExportTest {
 	
 	@Mock
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
+	
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
 	
@@ -117,23 +118,22 @@ public class DiagnosisExportTest {
 		assertEquals(1, diagnosisResources.size());
 		
 	}
-
+	
 	@Test
 	public void shouldExportAnonymisedDiagnosis_whenValidDateRangeProvided() {
 		List<Obs> visitDiagnosesObs = Stream
-				.concat(getVisitDiagnosesObs().stream(), getInactiveVisitDiagnosesObs().stream()).collect(
-						Collectors.toList());
+		        .concat(getVisitDiagnosesObs().stream(), getInactiveVisitDiagnosesObs().stream()).collect(
+		            Collectors.toList());
 		when(
-				obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
-						anyBoolean())).thenReturn(visitDiagnosesObs);
-
+		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
+		        anyBoolean())).thenReturn(visitDiagnosesObs);
+		
 		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31", true);
-
+		
 		assertNotNull(diagnosisResources);
 		assertEquals(2, diagnosisResources.size());
-		verify(anonymiseHandler , times(2)).anonymise(any(IBaseResource.class), eq("condition"));
-
-
+		verify(anonymiseHandler, times(2)).anonymise(any(IBaseResource.class), eq("condition"));
+		
 	}
 	
 	@Test
