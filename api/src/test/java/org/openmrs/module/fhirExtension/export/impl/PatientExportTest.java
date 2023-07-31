@@ -32,9 +32,9 @@ public class PatientExportTest {
 	
 	@Mock
 	private FhirPatientService fhirPatientService;
+	
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
-
 	
 	@InjectMocks
 	private PatientExport patientExport;
@@ -44,16 +44,17 @@ public class PatientExportTest {
 		when(fhirPatientService.searchForPatients(any(PatientSearchParams.class))).thenReturn(getMockPatientBundle());
 		
 		List<IBaseResource> patientResources = patientExport.export("2023-05-01", "2023-05-31", false);
-		verify(anonymiseHandler , times(0)).anonymise(any(), any());
+		verify(anonymiseHandler, times(0)).anonymise(any(), any());
 		
 		assertNotNull(patientResources);
 		assertEquals(1, patientResources.size());
 	}
+	
 	@Test
 	public void shouldExportAnonymisedPatientDataInFhirFormat_whenValidDateRangeProvided() {
 		when(fhirPatientService.searchForPatients(any(PatientSearchParams.class))).thenReturn(getMockPatientBundle());
 		List<IBaseResource> patientResources = patientExport.export("2023-05-01", "2023-05-31", true);
-		verify(anonymiseHandler , times(1)).anonymise(any(IBaseResource.class), eq("patient"));
+		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("patient"));
 		assertNotNull(patientResources);
 		assertEquals(1, patientResources.size());
 	}

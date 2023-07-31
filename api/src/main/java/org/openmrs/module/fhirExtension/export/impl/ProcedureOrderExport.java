@@ -36,12 +36,12 @@ public class ProcedureOrderExport implements Exporter {
 	private final ConceptService conceptService;
 	
 	private final ConceptTranslator conceptTranslator;
-
+	
 	private AnonymiseHandler anonymiseHandler;
-
-
+	
 	@Autowired
-	public ProcedureOrderExport(OrderService orderService, ConceptService conceptService, ConceptTranslator conceptTranslator, AnonymiseHandler anonymiseHandler) {
+	public ProcedureOrderExport(OrderService orderService, ConceptService conceptService,
+	    ConceptTranslator conceptTranslator, AnonymiseHandler anonymiseHandler) {
 		this.orderService = orderService;
 		this.conceptService = conceptService;
 		this.conceptTranslator = conceptTranslator;
@@ -98,6 +98,7 @@ public class ProcedureOrderExport implements Exporter {
 		
 		return orderSearchCriteriaBuilder.build();
 	}
+	
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
 		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "serviceRequest"));
 		return iBaseResources;

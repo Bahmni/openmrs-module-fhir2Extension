@@ -22,8 +22,8 @@ import java.util.List;
 public class AnonymiseHandler {
 	
 	private static final String GP_ANONYMISATION_CONFIG_PROPERTIES_FILE_PATH = "fhir.export.anonymise.config.path";
-
-    private static final String REDACT_METHOD_NAME = "redact";
+	
+	private static final String REDACT_METHOD_NAME = "redact";
 	
 	private final AdministrationService adminService;
 	

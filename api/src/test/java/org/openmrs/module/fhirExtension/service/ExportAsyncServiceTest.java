@@ -45,6 +45,7 @@ public class ExportAsyncServiceTest {
 	
 	@Mock
 	private FhirConditionService fhirConditionService;
+	
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
 	

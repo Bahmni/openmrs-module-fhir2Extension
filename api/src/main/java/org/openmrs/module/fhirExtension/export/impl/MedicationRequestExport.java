@@ -26,13 +26,12 @@ public class MedicationRequestExport implements Exporter {
 	private final MedicationTranslator medicationTranslator;
 	
 	private final OrderService orderService;
+	
 	private AnonymiseHandler anonymiseHandler;
-
-
+	
 	@Autowired
 	public MedicationRequestExport(FhirMedicationRequestService fhirMedicationRequestService,
-	    MedicationTranslator medicationTranslator, OrderService orderService,
-								   AnonymiseHandler anonymiseHandler) {
+	    MedicationTranslator medicationTranslator, OrderService orderService, AnonymiseHandler anonymiseHandler) {
 		this.fhirMedicationRequestService = fhirMedicationRequestService;
 		this.medicationTranslator = medicationTranslator;
 		this.orderService = orderService;
@@ -56,6 +55,7 @@ public class MedicationRequestExport implements Exporter {
 		medicationRequest.setMedication(medicationFhirResource.getCode());
 		return medicationRequest;
 	}
+	
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
 		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "medicationRequest"));
 		return iBaseResources;

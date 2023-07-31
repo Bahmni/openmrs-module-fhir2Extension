@@ -14,35 +14,35 @@ import org.openmrs.module.fhirExtension.export.anonymise.impl.RequesterResourceR
 import org.openmrs.module.fhirExtension.export.anonymise.impl.TelecomResourceRedact;
 
 public class RedactFieldHandlerSingletonFactory {
-
-    public static ResourceRedact getInstance(String fieldName) {
-        if (fieldName == null || fieldName.isEmpty())
-            return null;
-        switch (fieldName) {
-            case "identifier":
-                return IdentifierResourceRedact.getInstance();
-            case "address":
-                return AddressResourceRedact.getInstance();
-            case "name":
-                return NameResourceRedact.getInstance();
-            case "telecom":
-                return TelecomResourceRedact.getInstance();
-            case "encounter":
-                return EncounterResourceRedact.getInstance();
-            case "recorder":
-                return RecorderResourceRedact.getInstance();
-            case "recordedDate":
-                return RecordedDateResourceRedact.getInstance();
-            case "priority":
-                return PriorityResourceRedact.getInstance();
-            case "authoredOn":
-                return AuthoredOnResourceRedact.getInstance();
-            case "requester":
-                return RequesterResourceRedact.getInstance();
-            case "dosageInstruction":
-                return DosageInstructionsResourceRedact.getInstance();
-            default:
-                throw new IllegalArgumentException("Unknown fieldName " + fieldName);
-        }
-    }
+	
+	public static ResourceRedact getInstance(String fieldName) {
+		if (fieldName == null || fieldName.isEmpty())
+			return null;
+		switch (fieldName) {
+			case "identifier":
+				return IdentifierResourceRedact.getInstance();
+			case "address":
+				return AddressResourceRedact.getInstance();
+			case "name":
+				return NameResourceRedact.getInstance();
+			case "telecom":
+				return TelecomResourceRedact.getInstance();
+			case "encounter":
+				return EncounterResourceRedact.getInstance();
+			case "recorder":
+				return RecorderResourceRedact.getInstance();
+			case "recordedDate":
+				return RecordedDateResourceRedact.getInstance();
+			case "priority":
+				return PriorityResourceRedact.getInstance();
+			case "authoredOn":
+				return AuthoredOnResourceRedact.getInstance();
+			case "requester":
+				return RequesterResourceRedact.getInstance();
+			case "dosageInstruction":
+				return DosageInstructionsResourceRedact.getInstance();
+			default:
+				throw new IllegalArgumentException("Unknown fieldName " + fieldName);
+		}
+	}
 }

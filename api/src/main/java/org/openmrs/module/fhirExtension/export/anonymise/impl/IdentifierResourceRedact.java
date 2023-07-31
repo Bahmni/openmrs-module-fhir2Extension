@@ -9,27 +9,28 @@ import java.util.Collections;
 import java.util.List;
 
 public class IdentifierResourceRedact implements ResourceRedact {
-
-    private IdentifierResourceRedact() {
-
-    }
-
-    public static IdentifierResourceRedact getInstance() {
-        return SingletonHelper.INSTANCE;
-    }
-
-    @Override
-    public void redact(IBaseResource iBaseResource) {
-        Patient patient = (Patient) iBaseResource;
-        List<Identifier> identifiersList = patient.getIdentifier();
-        if (!identifiersList.isEmpty()) {
-            Identifier patientIdentifier = identifiersList.get(0);
-            patient.setIdentifier(Collections.singletonList(patientIdentifier));
-        }
-    }
-
-    private static class SingletonHelper {
-        private static final IdentifierResourceRedact INSTANCE = new IdentifierResourceRedact();
-    }
-
+	
+	private IdentifierResourceRedact() {
+		
+	}
+	
+	public static IdentifierResourceRedact getInstance() {
+		return SingletonHelper.INSTANCE;
+	}
+	
+	@Override
+	public void redact(IBaseResource iBaseResource) {
+		Patient patient = (Patient) iBaseResource;
+		List<Identifier> identifiersList = patient.getIdentifier();
+		if (!identifiersList.isEmpty()) {
+			Identifier patientIdentifier = identifiersList.get(0);
+			patient.setIdentifier(Collections.singletonList(patientIdentifier));
+		}
+	}
+	
+	private static class SingletonHelper {
+		
+		private static final IdentifierResourceRedact INSTANCE = new IdentifierResourceRedact();
+	}
+	
 }

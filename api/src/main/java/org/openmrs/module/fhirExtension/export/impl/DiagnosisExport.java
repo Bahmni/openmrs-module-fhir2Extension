@@ -42,10 +42,9 @@ public class DiagnosisExport implements Exporter {
 	private final ConceptService conceptService;
 	
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
-
+	
 	private AnonymiseHandler anonymiseHandler;
-
-
+	
 	@Autowired
 	public DiagnosisExport(ConceptTranslator conceptTranslator,
 	    ConditionClinicalStatusTranslator conditionClinicalStatusTranslator, ConceptService conceptService,
@@ -131,6 +130,7 @@ public class DiagnosisExport implements Exporter {
 		        "Encounter Diagnosis");
 		return Collections.singletonList(codeableConcept.addCoding(coding));
 	}
+	
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
 		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
 		return iBaseResources;

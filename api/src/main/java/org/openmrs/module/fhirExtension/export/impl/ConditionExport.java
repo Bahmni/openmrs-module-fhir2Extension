@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
 public class ConditionExport implements Exporter {
 	
 	private FhirConditionService fhirConditionService;
+	
 	private AnonymiseHandler anonymiseHandler;
-
-
+	
 	@Autowired
 	public ConditionExport(FhirConditionService fhirConditionService, AnonymiseHandler anonymiseHandler) {
 		this.fhirConditionService = fhirConditionService;
@@ -46,9 +46,9 @@ public class ConditionExport implements Exporter {
 		condition.setCategory(Collections.singletonList(codeableConcept.addCoding(coding)));
 		return condition;
 	}
+	
 	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
 		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
 		return iBaseResources;
 	}
-	
 }
