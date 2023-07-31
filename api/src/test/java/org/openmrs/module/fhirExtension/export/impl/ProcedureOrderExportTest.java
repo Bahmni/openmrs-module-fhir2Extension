@@ -16,6 +16,7 @@ import org.openmrs.Patient;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.openmrs.parameter.OrderSearchCriteria;
 
 import java.util.ArrayList;
@@ -25,6 +26,9 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,6 +44,8 @@ public class ProcedureOrderExportTest {
 	
 	@Mock
 	private ConceptTranslator conceptTranslator;
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@InjectMocks
 	private ProcedureOrderExport procedureOrderExport;
@@ -88,6 +94,18 @@ public class ProcedureOrderExportTest {
 		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null, false);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
+	}
+	@Test
+	public void shouldExportAnonymisedProcedureDataInFhirFormat_whenValidDateRangeProvided() {
+		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
+		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
+		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
+
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", true);
+		assertNotNull(procedureResources);
+		assertEquals(1, procedureResources.size());
+		verify(anonymiseHandler , times(1)).anonymise(any(IBaseResource.class), eq("serviceRequest"));
+
 	}
 	
 	private List<Order> getMockOpenmrsProcedureOrders() {
