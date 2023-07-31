@@ -34,6 +34,9 @@ public class ConditionExportTest {
 	
 	@InjectMocks
 	private ConditionExport conditionExport;
+
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
@@ -69,6 +72,17 @@ public class ConditionExportTest {
 		
 		assertNotNull(conditionResources);
 		assertEquals(1, conditionResources.size());
+	}
+	@Test
+	public void shouldExportAnonymisedConditions_whenValidParamsProvided() {
+		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+				.thenReturn(getMockConditionBundle(1));
+
+		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31", true);
+
+		assertNotNull(conditionResources);
+		assertEquals(1, conditionResources.size());
+		verify(anonymiseHandler , times(1)).anonymise(any(IBaseResource.class), eq("condition"));
 	}
 	
 	@Test

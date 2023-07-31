@@ -41,6 +41,8 @@ public class MedicationRequestExportTest {
 	
 	@Mock
 	private OrderService orderService;
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
@@ -60,6 +62,20 @@ public class MedicationRequestExportTest {
 		
 		assertNotNull(medicationRequestResources);
 		assertEquals(1, medicationRequestResources.size());
+	}
+	@Test
+	public void shouldExportAnonymisedMedicationRequest_whenValidDateRangeProvided() {
+		when(orderService.getOrderByUuid(anyString())).thenReturn(new DrugOrder());
+		when(medicationTranslator.toFhirResource(any())).thenReturn(new Medication());
+		when(
+				fhirMedicationRequestService.searchForMedicationRequests(any(), any(), any(), any(), any(), any(), any(), any(),
+						any(), any(), any())).thenReturn(getMockMedicationRequestBundle());
+
+		List<IBaseResource> medicationRequestResources = medicationRequestExport.export("2023-05-01", "2023-05-31", true);
+
+		assertNotNull(medicationRequestResources);
+		assertEquals(1, medicationRequestResources.size());
+		verify(anonymiseHandler , times(1)).anonymise(any(IBaseResource.class), eq("medicationRequest"));
 	}
 	
 	@Test

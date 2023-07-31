@@ -44,6 +44,8 @@ public class ProcedureOrderExportTest {
 	
 	@Mock
 	private ConceptTranslator conceptTranslator;
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
@@ -95,6 +97,18 @@ public class ProcedureOrderExportTest {
 		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null, false);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
+	}
+	@Test
+	public void shouldExportAnonymisedProcedureDataInFhirFormat_whenValidDateRangeProvided() {
+		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
+		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
+		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
+
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", true);
+		assertNotNull(procedureResources);
+		assertEquals(1, procedureResources.size());
+		verify(anonymiseHandler , times(1)).anonymise(any(IBaseResource.class), eq("serviceRequest"));
+
 	}
 	
 	@Test
