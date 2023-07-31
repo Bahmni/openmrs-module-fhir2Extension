@@ -28,7 +28,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -82,6 +81,7 @@ public class ExportControllerTest {
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Invalid Date Format [yyyy-mm-dd]", simpleObject.get("error"));
 	}
+
 	@Test
 	public void shouldThrowException_whenLoggedInUserDoesNotHavePrivilegeToExportNonAnonymisedData() {
 		when(exportTask.getInitialTaskResponse(false)).thenThrow( new ContextAuthenticationException( "Privileges required: Export Non Anonymised Patient Data"));
