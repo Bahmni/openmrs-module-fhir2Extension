@@ -8,8 +8,8 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class AnonymiserConfig {
+public class AnonymiseConfig {
 	
-	private Map<String, List<AnonymisedResourceConfig>> config;
+	private Map<String, List<AnonymiseResourceConfig>> config;
 	
 }

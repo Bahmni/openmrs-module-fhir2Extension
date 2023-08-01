@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AnonymisedResourceConfig {
+public class AnonymiseResourceConfig {
 	
 	private String fieldName;
 	

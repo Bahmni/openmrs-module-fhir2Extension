@@ -5,8 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.openmrs.api.AdministrationService;
-import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymisedResourceConfig;
-import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymiserConfig;
+import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymiseResourceConfig;
+import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymiseConfig;
 import org.openmrs.module.fhirExtension.export.anonymise.factory.RedactFieldHandlerSingletonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 @Log4j2
@@ -28,7 +27,7 @@ public class AnonymiseHandler {
 	
 	private final AdministrationService adminService;
 	
-	private AnonymiserConfig anonymiserConfig;
+	private AnonymiseConfig anonymiseConfig;
 	
 	@Autowired
 	public AnonymiseHandler(AdministrationService adminService) {
@@ -36,11 +35,11 @@ public class AnonymiseHandler {
 	}
 	
 	public void anonymise(IBaseResource iBaseResource, String resourceType) {
-        List<AnonymisedResourceConfig> anonymisedResourceConfigList = anonymiserConfig.getConfig().get(resourceType);
-        if (anonymisedResourceConfigList == null) {
+        List<AnonymiseResourceConfig> anonymiseResourceConfigList = anonymiseConfig.getConfig().get(resourceType);
+        if (anonymiseResourceConfigList == null) {
             return;
         }
-        anonymisedResourceConfigList.forEach(fieldConfig -> {
+        anonymiseResourceConfigList.forEach(fieldConfig -> {
             if (StringUtils.isBlank(fieldConfig.getFieldName())) {
                 return;
             }
@@ -66,7 +65,7 @@ public class AnonymiseHandler {
         }
         try (InputStream configFile = Files.newInputStream(configFilePath)) {
             ObjectMapper mapper = new ObjectMapper();
-            anonymiserConfig = mapper.readValue(configFile, AnonymiserConfig.class);
+            anonymiseConfig = mapper.readValue(configFile, AnonymiseConfig.class);
         } catch (Exception e) {
             String errorMessage = String.format("Exception while parsing the configuration: [%s].", configFilePath);
             log.error(errorMessage);
