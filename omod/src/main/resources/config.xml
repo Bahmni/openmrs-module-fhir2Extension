@@ -95,7 +95,7 @@
 	</privilege>
 	<privilege>
 		<name>Export Non Anonymised Patient Data</name>
-		<description>Ability to export non anonymised patient data in FHIR format</description>
+		<description>Ability to bulk-export patient data that has NOT been anonymised, in FHIR JSON format</description>
 	</privilege>
 
 	<globalProperty>
@@ -119,6 +119,6 @@
 	<globalProperty>
 		<property>fhir.export.anonymise.config.path</property>
 		<defaultValue></defaultValue>
-		<description>Properties file path for fhir export anonymisation</description>
+		<description>Path of the config file that controls the anonymisation mechanism during bulk-export of patient data.</description>
 	</globalProperty>
 </module>

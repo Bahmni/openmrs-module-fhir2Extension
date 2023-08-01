@@ -54,14 +54,14 @@ public class AnonymiseHandlerTest {
 	
 	@Test
 	public void shouldLoadConfig_whenLoadingConfigForAnonymisedDataAndValidConfigPathProvided() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymouse-fhir.json");
+		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		verify(adminService, times(1)).getGlobalProperty(any());
 	}
 	
 	@Test
 	public void shouldAnonymisePatientResource_WhenPatientResourceAndPatientResourceTypePassed() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymouse-fhir.json");
+		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		Patient patient = mockPatientResource();
 		int initialIdentifierSize = patient.getIdentifier().size();
@@ -86,7 +86,7 @@ public class AnonymiseHandlerTest {
 	
 	@Test
 	public void shouldAnonymiseConditionResource_WhenConditionResourceAndConditionResourceTypePassed() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymouse-fhir.json");
+		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		
 		Condition condition = mockConditionResource();
@@ -108,7 +108,7 @@ public class AnonymiseHandlerTest {
 	
 	@Test
 	public void shouldAnonymiseMedicationRequestResource_WhenMedicationRequestResourceAndMedicationRequestResourceTypePassed() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymouse-fhir.json");
+		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		
 		MedicationRequest medicationRequest = mockMedicationRequestResource();
@@ -138,7 +138,7 @@ public class AnonymiseHandlerTest {
 	
 	@Test
 	public void shouldAnonymiseServiceRequestResource_WhenServiceRequestResourceAndServiceRequestResourceTypePassed() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymouse-fhir.json");
+		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		
 		ServiceRequest serviceRequest = mockServiceRequestResource();
