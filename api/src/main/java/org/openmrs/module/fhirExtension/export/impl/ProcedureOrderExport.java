@@ -67,6 +67,7 @@ public class ProcedureOrderExport implements Exporter {
 		serviceRequest.setCode(codeableConcept);
 		serviceRequest.setSubject(getSubjectReference(order.getPatient().getUuid()));
 		serviceRequest.setEncounter(getEncounterReference(order.getEncounter().getUuid()));
+		serviceRequest.setAuthoredOn(order.getDateCreated());
 		
 		Concept surgicalProcedureConcept = conceptService.getConceptByName(SURGICAL_PROCEDURE);
 		CodeableConcept serviceRequestCategory = conceptTranslator.toFhirResource(surgicalProcedureConcept);
