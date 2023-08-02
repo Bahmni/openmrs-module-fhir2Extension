@@ -11,6 +11,7 @@ import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.FhirMedicationRequestService;
 import org.openmrs.module.fhir2.api.translators.MedicationTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,21 +27,24 @@ public class MedicationRequestExport implements Exporter {
 	
 	private final OrderService orderService;
 	
+	private AnonymiseHandler anonymiseHandler;
+	
 	@Autowired
 	public MedicationRequestExport(FhirMedicationRequestService fhirMedicationRequestService,
-	    MedicationTranslator medicationTranslator, OrderService orderService) {
+	    MedicationTranslator medicationTranslator, OrderService orderService, AnonymiseHandler anonymiseHandler) {
 		this.fhirMedicationRequestService = fhirMedicationRequestService;
 		this.medicationTranslator = medicationTranslator;
 		this.orderService = orderService;
+		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Override
-	public List<IBaseResource> export(String startDate, String endDate) {
+	public List<IBaseResource> export(String startDate, String endDate, boolean isAnonymise) {
 		DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
 		IBundleProvider iBundleProvider = fhirMedicationRequestService.searchForMedicationRequests(null, null, null, null,
 		    null, null, null, null, lastUpdated, null, null);
 		List<IBaseResource> medicationRequests = iBundleProvider.getAllResources().stream().map(this::addMedicationInfo).collect(Collectors.toList());
-		return medicationRequests;
+		return isAnonymise ? anonymise(medicationRequests) : medicationRequests;
 	}
 	
 	private MedicationRequest addMedicationInfo(IBaseResource iBaseResource) {
@@ -50,5 +54,10 @@ public class MedicationRequestExport implements Exporter {
 		Medication medicationFhirResource = medicationTranslator.toFhirResource(drug);
 		medicationRequest.setMedication(medicationFhirResource.getCode());
 		return medicationRequest;
+	}
+	
+	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
+		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "medicationRequest"));
+		return iBaseResources;
 	}
 }

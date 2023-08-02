@@ -9,6 +9,7 @@ import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskOutput;
 import org.openmrs.module.fhirExtension.export.Exporter;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -30,15 +31,20 @@ public class ExportAsyncService {
 	
 	private FileExportService fileExportService;
 	
+	private AnonymiseHandler anonymiseHandler;
+	
 	@Autowired
-	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, FileExportService fileExportService) {
+	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, FileExportService fileExportService,
+	    AnonymiseHandler anonymiseHandler) {
 		this.fhirTaskDao = fhirTaskDao;
 		this.conceptService = conceptService;
 		this.fileExportService = fileExportService;
+		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Async("export-fhir-data-threadPoolTaskExecutor")
-	public void export(FhirTask fhirTask, String startDate, String endDate, UserContext userContext, String downloadUrl) {
+	public void export(FhirTask fhirTask, String startDate, String endDate, UserContext userContext, String downloadUrl,
+	        boolean isAnonymise) {
 		FhirTask.TaskStatus taskStatus = null;
 		
 		try {
@@ -47,8 +53,9 @@ public class ExportAsyncService {
 			
 			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
 			fileExportService.createDirectory(fhirTask.getUuid());
+			anonymiseHandler.loadAnonymiserConfig(isAnonymise);
 			for (Exporter fhirExporter : fhirExporters) {
-				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
+				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate, isAnonymise);
 				fileExportService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
 			}
 			

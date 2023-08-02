@@ -16,6 +16,8 @@ import static org.openmrs.module.fhirExtension.export.Exporter.DATE_FORMAT;
 @Transactional
 public class ExportTaskImpl implements ExportTask {
 	
+	private static final String NON_ANONYMISE_REQUIRED_PRIVILEGE = "Export Non Anonymised Patient Data";
+	
 	private FhirTaskDao fhirTaskDao;
 	
 	public ExportTaskImpl(FhirTaskDao fhirTaskDao) {
@@ -23,8 +25,11 @@ public class ExportTaskImpl implements ExportTask {
 	}
 	
 	@Override
-	public FhirTask getInitialTaskResponse() {
+	public FhirTask getInitialTaskResponse(boolean isAnonymise) {
 		FhirTask fhirTask = new FhirTask();
+		if (!isAnonymise) {
+			Context.requirePrivilege(NON_ANONYMISE_REQUIRED_PRIVILEGE);
+		}
 		fhirTask.setStatus(FhirTask.TaskStatus.ACCEPTED);
 		String logMessage = "Patient Data Export by " + Context.getAuthenticatedUser().getUsername();
 		fhirTask.setName(logMessage);

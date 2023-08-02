@@ -90,7 +90,7 @@ public class ProcedureFormExportTest {
 		    obsService.getObservations(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(Date.class),
 		        any(Date.class), anyBoolean())).thenReturn(procedureRecordObs);
 		
-		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31", false);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}
@@ -98,7 +98,7 @@ public class ProcedureFormExportTest {
 	@Test
 	public void shouldNotExportProcedureData_whenProcedureTemplateUnavailable() {
 		when(conceptService.getConceptByUuid(anyString())).thenReturn(null);
-		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -110,7 +110,7 @@ public class ProcedureFormExportTest {
 		
 		when(conceptService.getConceptByUuid("9bb07482-4ff0-0305-1990-000000000014")).thenReturn(getProcedureRootConcept());
 		
-		List<IBaseResource> procedureResources = procedureFormExport.export("2023-AB-CD", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureFormExport.export("2023-AB-CD", "2023-05-31", false);
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -124,7 +124,7 @@ public class ProcedureFormExportTest {
 		    obsService.getObservations(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(procedureRecordObs);
 		
-		List<IBaseResource> procedureResources = procedureFormExport.export(null, null);
+		List<IBaseResource> procedureResources = procedureFormExport.export(null, null, false);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}
@@ -136,7 +136,7 @@ public class ProcedureFormExportTest {
 		when(administrationService.getGlobalProperty("conceptMap.procedure.procedureName")).thenReturn(
 		    "9bb07482-4ff0-0305-1990-000000000001");
 		when(conceptService.getConceptByUuid(anyString())).thenReturn(null);
-		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> procedureResources = procedureFormExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertEquals(0, procedureResources.size());
 		verify(administrationService, times(11)).getGlobalProperty(anyString());

@@ -14,6 +14,7 @@ import org.openmrs.api.ObsService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhir2.api.translators.ConditionClinicalStatusTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,18 +43,21 @@ public class DiagnosisExport implements Exporter {
 	
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
 	
+	private AnonymiseHandler anonymiseHandler;
+	
 	@Autowired
 	public DiagnosisExport(ConceptTranslator conceptTranslator,
 	    ConditionClinicalStatusTranslator conditionClinicalStatusTranslator, ConceptService conceptService,
-	    ObsService obsService) {
+	    ObsService obsService, AnonymiseHandler anonymiseHandler) {
 		this.conceptTranslator = conceptTranslator;
 		this.conditionClinicalStatusTranslator = conditionClinicalStatusTranslator;
 		this.conceptService = conceptService;
 		this.obsService = obsService;
+		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Override
-	public List<IBaseResource> export(String startDateStr, String endDateStr) {
+	public List<IBaseResource> export(String startDateStr, String endDateStr, boolean isAnonymise) {
 		List<IBaseResource> fhirResources = new ArrayList<>();
 
 		try {
@@ -71,7 +75,7 @@ public class DiagnosisExport implements Exporter {
 			throw new RuntimeException(e);
 		}
 		
-		return fhirResources;
+		return isAnonymise ? anonymise(fhirResources) : fhirResources;
 	}
 	
 	private Condition convertDiagnosisAsFhirCondition(Obs visitDiagnosisObsGroup) {
@@ -83,6 +87,7 @@ public class DiagnosisExport implements Exporter {
 		condition.setCategory(getCategory());
 		condition.setClinicalStatus(clinicalStatus);
 		condition.setOnset(new DateTimeType().setValue(codedDiagnosisObs.getObsDatetime()));
+		condition.setRecordedDate(codedDiagnosisObs.getDateCreated());
 		condition.setCode(codeableConcept);
 		condition.setSubject(getSubjectReference(codedDiagnosisObs.getPerson().getUuid()));
 		condition.setEncounter(getEncounterReference(codedDiagnosisObs.getEncounter().getUuid()));
@@ -125,5 +130,10 @@ public class DiagnosisExport implements Exporter {
 		Coding coding = new Coding("http://terminology.hl7.org/CodeSystem/condition-category", "encounter-diagnosis",
 		        "Encounter Diagnosis");
 		return Collections.singletonList(codeableConcept.addCoding(coding));
+	}
+	
+	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
+		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
+		return iBaseResources;
 	}
 }
