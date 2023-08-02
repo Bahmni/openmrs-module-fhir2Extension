@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -26,8 +27,8 @@ public class AnonymiseHandler {
 	
 	private static final String REDACT_METHOD_NAME = "redact";
 	
-	private static final String RANDOMISE_METHOD_NAME = "random";
-
+	private static final List<String> RANDOMISE_METHOD_NAMES = Arrays.asList("random", "firstOfMonth");;
+	
 	private final AdministrationService adminService;
 	
 	private AnonymiseConfig anonymiseConfig;
@@ -48,7 +49,7 @@ public class AnonymiseHandler {
             }
             if (REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
                 RedactFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).redact(iBaseResource);
-            } else if (RANDOMISE_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
+            } else if (RANDOMISE_METHOD_NAMES.contains(fieldConfig.getMethod())) {
                 RandomiseFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).randomise(iBaseResource);
             }
         });
