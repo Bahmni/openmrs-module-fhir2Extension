@@ -19,6 +19,7 @@ import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhir2.api.translators.ConditionClinicalStatusTranslator;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.openmrs.util.LocaleUtility;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -37,6 +38,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
@@ -59,6 +63,9 @@ public class DiagnosisExportTest {
 	
 	@Mock
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
+	
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@Mock
 	@Qualifier("adminService")
@@ -88,7 +95,7 @@ public class DiagnosisExportTest {
 		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(visitDiagnosesObs);
 		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31");
+		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31", false);
 		
 		assertNotNull(diagnosisResources);
 		assertEquals(2, diagnosisResources.size());
@@ -102,10 +109,27 @@ public class DiagnosisExportTest {
 		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(visitDiagnosesObs);
 		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export(null, null);
+		List<IBaseResource> diagnosisResources = diagnosisExport.export(null, null, false);
 		
 		assertNotNull(diagnosisResources);
 		assertEquals(1, diagnosisResources.size());
+		
+	}
+	
+	@Test
+	public void shouldExportAnonymisedDiagnosis_whenValidDateRangeProvided() {
+		List<Obs> visitDiagnosesObs = Stream
+		        .concat(getVisitDiagnosesObs().stream(), getInactiveVisitDiagnosesObs().stream()).collect(
+		            Collectors.toList());
+		when(
+		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
+		        anyBoolean())).thenReturn(visitDiagnosesObs);
+		
+		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31", true);
+		
+		assertNotNull(diagnosisResources);
+		assertEquals(2, diagnosisResources.size());
+		verify(anonymiseHandler, times(2)).anonymise(any(IBaseResource.class), eq("condition"));
 		
 	}
 	
@@ -114,7 +138,7 @@ public class DiagnosisExportTest {
 		thrown.expect(RuntimeException.class);
 		thrown.expectMessage("java.text.ParseException: Unable to parse the date: 2023-AB-CD");
 		
-		diagnosisExport.export("2023-AB-CD", "2023-05-31");
+		diagnosisExport.export("2023-AB-CD", "2023-05-31", false);
 	}
 	
 	@Test
@@ -122,7 +146,7 @@ public class DiagnosisExportTest {
 		thrown.expect(RuntimeException.class);
 		thrown.expectMessage("java.text.ParseException: Unable to parse the date: 2023-AB-CD");
 		
-		diagnosisExport.export("2023-05-01", "2023-AB-CD");
+		diagnosisExport.export("2023-05-01", "2023-AB-CD", false);
 	}
 	
 	private List<Obs> getVisitDiagnosesObs() {
