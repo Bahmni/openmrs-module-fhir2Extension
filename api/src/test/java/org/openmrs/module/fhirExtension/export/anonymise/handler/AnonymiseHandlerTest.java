@@ -5,6 +5,8 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.ContactPoint;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.DateType;
 import org.hl7.fhir.r4.model.Dosage;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Identifier;
@@ -21,6 +23,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -82,6 +85,12 @@ public class AnonymiseHandlerTest {
 		
 		assertFalse(patient.hasTelecom());
 		assertTrue(isTelecomPresentInitially);
+		
+		assertEquals(1, patient.getBirthDateElement().getDay());
+		assertEquals(Calendar.JANUARY, patient.getBirthDateElement().getMonth());
+		
+		assertEquals(1, patient.getDeceasedDateTimeType().getDay());
+		assertEquals(Calendar.JANUARY, patient.getDeceasedDateTimeType().getMonth());
 	}
 	
 	@Test
@@ -172,6 +181,11 @@ public class AnonymiseHandlerTest {
         ContactPoint contactPoint = new ContactPoint();
         contactPoints.add(contactPoint.setValue("dummyValue"));
         patient.setTelecom(contactPoints);
+
+		DateType birthDateElement = new DateType("2000-05-03");
+		patient.setBirthDateElement(birthDateElement);
+		patient.setDeceased(new DateTimeType("2023-07-31T00:00:00.000+00:00"));
+
         return patient;
     }
 	

@@ -7,6 +7,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymiseResourceConfig;
 import org.openmrs.module.fhirExtension.export.anonymise.config.AnonymiseConfig;
+import org.openmrs.module.fhirExtension.export.anonymise.factory.RandomiseFieldHandlerSingletonFactory;
 import org.openmrs.module.fhirExtension.export.anonymise.factory.RedactFieldHandlerSingletonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,8 @@ public class AnonymiseHandler {
 	
 	private static final String REDACT_METHOD_NAME = "redact";
 	
+	private static final String RANDOMISE_METHOD_NAME = "random";
+
 	private final AdministrationService adminService;
 	
 	private AnonymiseConfig anonymiseConfig;
@@ -45,6 +48,8 @@ public class AnonymiseHandler {
             }
             if (REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
                 RedactFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).redact(iBaseResource);
+            } else if (RANDOMISE_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
+                RandomiseFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).randomise(iBaseResource);
             }
         });
     }
