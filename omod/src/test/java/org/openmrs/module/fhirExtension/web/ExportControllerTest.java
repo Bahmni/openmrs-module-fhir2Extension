@@ -81,14 +81,14 @@ public class ExportControllerTest {
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Invalid Date Format [yyyy-mm-dd]", simpleObject.get("error"));
 	}
-
+	
 	@Test
 	public void shouldThrowException_whenLoggedInUserDoesNotHavePrivilegeToExportNonAnonymisedData() {
 		when(exportTask.getInitialTaskResponse(false)).thenThrow( new ContextAuthenticationException( "Privileges required: Export Non Anonymised Patient Data"));
 		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn(null);
 		assertThrows(ContextAuthenticationException.class, () -> exportController.export("2023-05-AB", "2023-05-31", false));
 	}
-
+	
 	private FhirTask mockFhirTask() {
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setStatus(FhirTask.TaskStatus.ACCEPTED);

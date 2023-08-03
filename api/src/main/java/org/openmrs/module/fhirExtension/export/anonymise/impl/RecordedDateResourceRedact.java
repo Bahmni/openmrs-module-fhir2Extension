@@ -21,6 +21,7 @@ public class RecordedDateResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
+		
 		private static final RecordedDateResourceRedact INSTANCE = new RecordedDateResourceRedact();
 	}
 }
