@@ -21,6 +21,7 @@ public class RecorderResourceRedact implements ResourceRedact {
 	}
 	
 	private static class SingletonHelper {
+		
 		private static final RecorderResourceRedact INSTANCE = new RecorderResourceRedact();
 	}
 }
