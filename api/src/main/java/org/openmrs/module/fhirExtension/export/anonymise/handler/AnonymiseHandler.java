@@ -50,7 +50,7 @@ public class AnonymiseHandler {
             if (REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
                 RedactFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).redact(iBaseResource);
             } else if (RANDOMISE_METHOD_NAMES.contains(fieldConfig.getMethod())) {
-                RandomiseFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).randomise(iBaseResource, fieldConfig.getFieldName());
+                RandomiseFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).randomise(iBaseResource, fieldConfig.getValue());
             }
         });
     }
