@@ -1,6 +1,11 @@
 package org.openmrs.module.fhirExtension.service;
 
+import ca.uhn.fhir.rest.api.server.IBundleProvider;
+import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Condition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +27,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -74,37 +81,58 @@ public class ExportAsyncServiceTest {
 	}
 	
 	@Test
-	public void shouldChangeFhirTaskStatusToRejected_whenInvalidDateRangeProvided() {
-		List<Exporter> exporters = new ArrayList<>();
-		exporters.add(new ConditionExport(fhirConditionService));
-		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
+    public void shouldChangeFhirTaskStatusToRejected_whenInvalidDateRangeProvided() {
+        List<Exporter> exporters = new ArrayList<>();
+        exporters.add(new ConditionExport(fhirConditionService));
+        when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 
-		FhirTask fhirTask = mockFhirTask();
+        FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), "", false);
+        exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), "", false);
 
-		assertEquals(FhirTask.TaskStatus.REJECTED, fhirTask.getStatus());
-		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
-	}
+        assertEquals(FhirTask.TaskStatus.REJECTED, fhirTask.getStatus());
+        verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
+    }
 	
 	@Test
-	public void shouldCallAnonymiseHandler_whenValidDateRangeProvided() {
-		List<Exporter> exporters = new ArrayList<>();
-		exporters.add(new ConditionExport(fhirConditionService));
-		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
+    public void shouldCallAnonymiseHandler_whenValidDateRangeProvided() {
+        List<Exporter> exporters = new ArrayList<>();
+        exporters.add(new ConditionExport(fhirConditionService));
+        when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
+        when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getMockConditionBundle(1));
 
-		FhirTask fhirTask = mockFhirTask();
+        FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", true);
+        exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", true);
 
-		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
-		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
-		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
-	}
+        assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
+        verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
+        verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
+    }
 	
 	private FhirTask mockFhirTask() {
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setStatus(FhirTask.TaskStatus.ACCEPTED);
 		return fhirTask;
+	}
+	
+	private IBundleProvider getMockConditionBundle(int count) {
+		Condition activeConditionResource = new Condition();
+		CodeableConcept activeClinicalStatus = new CodeableConcept();
+		activeClinicalStatus.setCoding(Collections.singletonList(new Coding("dummy", "active", "active")));
+		activeConditionResource.setClinicalStatus(activeClinicalStatus);
+		Condition inactiveConditionResource = new Condition();
+		CodeableConcept inactiveClinicalStatus = new CodeableConcept();
+		inactiveClinicalStatus.setCoding(Collections.singletonList(new Coding("dummy", "history", "history")));
+		inactiveConditionResource.setClinicalStatus(inactiveClinicalStatus);
+		
+		IBundleProvider iBundleProvider = null;
+		if (count == 1) {
+			iBundleProvider = new SimpleBundleProvider(Arrays.asList(activeConditionResource));
+		} else {
+			iBundleProvider = new SimpleBundleProvider(Arrays.asList(activeConditionResource, inactiveConditionResource));
+		}
+		
+		return iBundleProvider;
 	}
 }
