@@ -70,7 +70,7 @@ public class ConditionExportTest {
 		assertNotNull(conditionResources);
 		assertEquals(1, conditionResources.size());
 	}
-
+	
 	private IBundleProvider getMockConditionBundle(int count) {
 		Condition activeConditionResource = new Condition();
 		CodeableConcept activeClinicalStatus = new CodeableConcept();

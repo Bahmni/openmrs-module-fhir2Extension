@@ -95,24 +95,24 @@ public class AnonymiseHandlerTest {
 		assertEquals(1, patient.getDeceasedDateTimeType().getDay());
 		assertEquals(Calendar.JANUARY, patient.getDeceasedDateTimeType().getMonth());
 	}
+	
 	@Test
 	public void shouldAnonymisePatientResourceWithRandomise_WhenPatientResourceAndPatientResourceTypePassed() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir-random.json");
+		when(adminService.getGlobalProperty(any())).thenReturn(
+		    "src/test/resources/FHIR Export/config/anonymise-fhir-random.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		Patient patient = mockPatientResource();
 		boolean isAddressPresentInitially = patient.hasAddress();
 		boolean isTelecomPresentInitially = patient.hasTelecom();
-
+		
 		anonymiseHandler.anonymise(patient, "patient");
-
-
+		
 		assertTrue(patient.hasAddress());
 		assertTrue(isAddressPresentInitially);
-
-
+		
 		assertTrue(patient.hasTelecom());
 		assertTrue(isTelecomPresentInitially);
-
+		
 		Address address = patient.getAddress().get(0);
 		Extension extension = address.getExtension().get(0);
 		assertNotEquals(address.getCity(), "previousDummyValue");
@@ -123,16 +123,18 @@ public class AnonymiseHandlerTest {
 		assertNotEquals(contactPoint.getValue(), "0123456789");
 		assertTrue(contactPoint.getValue().matches("-?\\d+(\\.\\d+)?"));
 	}
+	
 	@Test
 	public void shouldAnonymisePatientResourceWithFixed_WhenPatientResourceAndPatientResourceTypePassed() {
-		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir-fixed.json");
+		when(adminService.getGlobalProperty(any())).thenReturn(
+		    "src/test/resources/FHIR Export/config/anonymise-fhir-fixed.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		Patient patient = mockPatientResource();
 		boolean isAddressPresentInitially = patient.hasAddress();
 		boolean isTelecomPresentInitially = patient.hasTelecom();
-
+		
 		anonymiseHandler.anonymise(patient, "patient");
-
+		
 		assertTrue(patient.hasAddress());
 		assertTrue(isAddressPresentInitially);
 		Address address = patient.getAddress().get(0);
@@ -143,7 +145,7 @@ public class AnonymiseHandlerTest {
 		assertEquals(extension.getValue().primitiveValue(), "fixedDummyValue");
 		ContactPoint contactPoint = patient.getTelecom().get(0);
 		assertEquals(contactPoint.getValue(), "9876543210");
-
+		
 		assertTrue(patient.hasTelecom());
 		assertTrue(isTelecomPresentInitially);
 	}

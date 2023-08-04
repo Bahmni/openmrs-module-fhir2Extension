@@ -115,7 +115,7 @@ public class DiagnosisExportTest {
 		assertEquals(1, diagnosisResources.size());
 		
 	}
-
+	
 	@Test
 	public void shouldThrowException_whenInvalidStartDateProvided() {
 		thrown.expect(RuntimeException.class);

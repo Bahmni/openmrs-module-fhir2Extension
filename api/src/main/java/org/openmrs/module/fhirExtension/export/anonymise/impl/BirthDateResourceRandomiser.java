@@ -26,7 +26,7 @@ public class BirthDateResourceRandomiser implements ResourceRandomise {
 	}
 	
 	private static class SingletonHelper {
-
+		
 		private static final BirthDateResourceRandomiser INSTANCE = new BirthDateResourceRandomiser();
 	}
 	
