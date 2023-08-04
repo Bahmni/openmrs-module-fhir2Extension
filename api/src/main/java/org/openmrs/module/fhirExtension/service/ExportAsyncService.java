@@ -55,7 +55,8 @@ public class ExportAsyncService {
 			fileExportService.createDirectory(fhirTask.getUuid());
 			anonymiseHandler.loadAnonymiserConfig(isAnonymise);
 			for (Exporter fhirExporter : fhirExporters) {
-				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate, isAnonymise);
+				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
+				anonymise(fhirResources, fhirExporter.getResourceType(), isAnonymise);
 				fileExportService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
 			}
 			
@@ -84,5 +85,11 @@ public class ExportAsyncService {
 		fhirTaskOutput.setValueText(downloadUrl + "?file=" + fhirTask.getUuid());
 		fhirTaskOutput.setType(conceptService.getConceptByName(DOWNLOAD_URL));
 		return fhirTaskOutput;
+	}
+	
+	private void anonymise(List<IBaseResource> iBaseResources, String resourceType, boolean isAnonymise) {
+		if(isAnonymise) {
+			iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, resourceType));
+		}
 	}
 }

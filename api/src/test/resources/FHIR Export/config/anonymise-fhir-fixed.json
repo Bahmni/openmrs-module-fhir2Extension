@@ -1,0 +1,16 @@
+{
+  "config": {
+    "patient": [
+      {
+        "fieldName": "address",
+        "method": "random",
+        "value": "fixedDummyValue"
+      },
+      {
+        "fieldName": "telecom",
+        "method": "random",
+        "value": "9876543210"
+      }
+    ]
+  }
+}

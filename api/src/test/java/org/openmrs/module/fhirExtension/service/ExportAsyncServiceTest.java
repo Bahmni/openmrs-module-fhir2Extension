@@ -1,5 +1,6 @@
 package org.openmrs.module.fhirExtension.service;
 
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -74,7 +76,7 @@ public class ExportAsyncServiceTest {
 	@Test
 	public void shouldChangeFhirTaskStatusToRejected_whenInvalidDateRangeProvided() {
 		List<Exporter> exporters = new ArrayList<>();
-		exporters.add(new ConditionExport(fhirConditionService, anonymiseHandler));
+		exporters.add(new ConditionExport(fhirConditionService));
 		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 
 		FhirTask fhirTask = mockFhirTask();
@@ -82,6 +84,21 @@ public class ExportAsyncServiceTest {
 		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), "", false);
 
 		assertEquals(FhirTask.TaskStatus.REJECTED, fhirTask.getStatus());
+		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
+	}
+	
+	@Test
+	public void shouldCallAnonymiseHandler_whenValidDateRangeProvided() {
+		List<Exporter> exporters = new ArrayList<>();
+		exporters.add(new ConditionExport(fhirConditionService));
+		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
+
+		FhirTask fhirTask = mockFhirTask();
+
+		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", true);
+
+		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
+		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
 	}
 	

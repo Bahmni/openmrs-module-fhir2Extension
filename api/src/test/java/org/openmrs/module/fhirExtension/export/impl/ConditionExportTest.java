@@ -38,15 +38,12 @@ public class ConditionExportTest {
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
 	
-	@Mock
-	private AnonymiseHandler anonymiseHandler;
-	
 	@Test
 	public void shouldExportConditions_whenValidDateRangeProvided() {
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(getMockConditionBundle(2));
 		
-		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", "2023-05-31", false);
+		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", "2023-05-31");
 		
 		assertNotNull(conditionResources);
 		assertEquals(2, conditionResources.size());
@@ -57,7 +54,7 @@ public class ConditionExportTest {
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(getMockConditionBundle(1));
 		
-		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", null, false);
+		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", null);
 		
 		assertNotNull(conditionResources);
 		assertEquals(1, conditionResources.size());
@@ -68,36 +65,12 @@ public class ConditionExportTest {
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
 		        .thenReturn(getMockConditionBundle(1));
 		
-		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31", false);
+		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31");
 		
 		assertNotNull(conditionResources);
 		assertEquals(1, conditionResources.size());
 	}
-	
-	@Test
-	public void shouldExportAnonymisedConditions_whenValidParamsProvided() {
-		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-		        .thenReturn(getMockConditionBundle(1));
-		
-		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31", true);
-		
-		assertNotNull(conditionResources);
-		assertEquals(1, conditionResources.size());
-		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
-	}
-	
-	@Test
-	public void shouldExportAnonymisedConditions_whenValidParamsProvided() {
-		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-		        .thenReturn(getMockConditionBundle(1));
-		
-		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31", true);
-		
-		assertNotNull(conditionResources);
-		assertEquals(1, conditionResources.size());
-		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
-	}
-	
+
 	private IBundleProvider getMockConditionBundle(int count) {
 		Condition activeConditionResource = new Condition();
 		CodeableConcept activeClinicalStatus = new CodeableConcept();

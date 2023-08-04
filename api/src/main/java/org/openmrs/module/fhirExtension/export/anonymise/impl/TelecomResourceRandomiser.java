@@ -1,5 +1,7 @@
 package org.openmrs.module.fhirExtension.export.anonymise.impl;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Patient;
@@ -8,25 +10,41 @@ import org.openmrs.module.fhirExtension.export.anonymise.ResourceRandomise;
 import java.util.List;
 
 public class TelecomResourceRandomiser implements ResourceRandomise {
-    private TelecomResourceRandomiser() {
-
+	
+	private TelecomResourceRandomiser() {
+		
+	}
+	
+	@Override
+	public void randomise(IBaseResource iBaseResource, String fixedValue) {
+		Patient patient = (Patient) iBaseResource;
+		if (fixedValue != null && patient.hasTelecom()) {
+			fixedTelecomHandler(fixedValue, patient);
+			return;
+		}
+		randomTelecomHandler(patient);
+	}
+	
+	private void randomTelecomHandler(Patient patient) {
+        List<ContactPoint> contactPoints = patient.getTelecom();
+        contactPoints.forEach(contactPoint -> {
+            contactPoint.setValue(getRandomNumericCharacters(contactPoint.getValue().length()));
+        });
     }
-    @Override
-    public void randomise(IBaseResource iBaseResource, String fixedValue) {
-        Patient patient = (Patient) iBaseResource;
-        if(fixedValue != null && patient.hasTelecom()) {
-            List<ContactPoint> contactPoints = patient.getTelecom();
-            contactPoints.forEach(contactPoint -> {
-                contactPoint.setValue(fixedValue);
-            });
-        }
+	
+	private  void fixedTelecomHandler(String fixedValue, Patient patient) {
+        List<ContactPoint> contactPoints = patient.getTelecom();
+        contactPoints.forEach(contactPoint -> {
+            contactPoint.setValue(fixedValue);
+        });
     }
-    private static class SingletonHelper {
-
-        private static final TelecomResourceRandomiser INSTANCE = new TelecomResourceRandomiser();
-    }
-
-    public static TelecomResourceRandomiser getInstance() {
-        return TelecomResourceRandomiser.SingletonHelper.INSTANCE;
-    }
+	
+	private static class SingletonHelper {
+		
+		private static final TelecomResourceRandomiser INSTANCE = new TelecomResourceRandomiser();
+	}
+	
+	public static TelecomResourceRandomiser getInstance() {
+		return TelecomResourceRandomiser.SingletonHelper.INSTANCE;
+	}
 }

@@ -48,9 +48,6 @@ public class ProcedureOrderExportTest {
 	@Mock
 	private AnonymiseHandler anonymiseHandler;
 	
-	@Mock
-	private AnonymiseHandler anonymiseHandler;
-	
 	@InjectMocks
 	private ProcedureOrderExport procedureOrderExport;
 	
@@ -63,7 +60,7 @@ public class ProcedureOrderExportTest {
 		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
 		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", false);
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31");
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
 	}
@@ -72,7 +69,7 @@ public class ProcedureOrderExportTest {
 	public void shouldNotExportProcedureData_whenProcedureOrderTypeUnavailable() {
 		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(null);
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", false);
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31");
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -84,7 +81,7 @@ public class ProcedureOrderExportTest {
 		
 		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-AB-CD", "2023-05-31", false);
+		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-AB-CD", "2023-05-31");
 		
 		assertEquals(0, procedureResources.size());
 	}
@@ -95,35 +92,9 @@ public class ProcedureOrderExportTest {
 		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
 		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
 		
-		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null, false);
+		List<IBaseResource> procedureResources = procedureOrderExport.export(null, null);
 		assertNotNull(procedureResources);
 		assertEquals(1, procedureResources.size());
-	}
-	
-	@Test
-	public void shouldExportAnonymisedProcedureDataInFhirFormat_whenValidDateRangeProvided() {
-		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
-		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
-		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
-		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", true);
-		assertNotNull(procedureResources);
-		assertEquals(1, procedureResources.size());
-		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("serviceRequest"));
-		
-	}
-	
-	@Test
-	public void shouldExportAnonymisedProcedureDataInFhirFormat_whenValidDateRangeProvided() {
-		when(orderService.getOrderTypeByName(PROCEDURE_ORDER)).thenReturn(new OrderType());
-		when(conceptTranslator.toFhirResource(any())).thenReturn(getCodeableConcept());
-		when(orderService.getOrders(any(OrderSearchCriteria.class))).thenReturn(getMockOpenmrsProcedureOrders());
-		
-		List<IBaseResource> procedureResources = procedureOrderExport.export("2023-05-01", "2023-05-31", true);
-		assertNotNull(procedureResources);
-		assertEquals(1, procedureResources.size());
-		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("serviceRequest"));
-		
 	}
 	
 	private List<Order> getMockOpenmrsProcedureOrders() {
