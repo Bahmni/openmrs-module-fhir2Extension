@@ -27,7 +27,7 @@ public class AnonymiseHandler {
 	
 	private static final String REDACT_METHOD_NAME = "redact";
 	
-	private static final List<String> RANDOMISE_METHOD_NAMES = Arrays.asList("random", "firstOfMonth");;
+	private static final List<String> RANDOMISE_METHOD_NAMES = Arrays.asList("random", "firstOfMonth", "fixed");;
 	
 	private final AdministrationService adminService;
 	
@@ -50,7 +50,7 @@ public class AnonymiseHandler {
             if (REDACT_METHOD_NAME.equalsIgnoreCase(fieldConfig.getMethod())) {
                 RedactFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).redact(iBaseResource);
             } else if (RANDOMISE_METHOD_NAMES.contains(fieldConfig.getMethod())) {
-                RandomiseFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).randomise(iBaseResource);
+                RandomiseFieldHandlerSingletonFactory.getInstance(fieldConfig.getFieldName()).randomise(iBaseResource, fieldConfig.getFieldName());
             }
         });
     }

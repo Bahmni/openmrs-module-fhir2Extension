@@ -3,12 +3,12 @@
     "patient": [
       {
         "fieldName": "address",
-        "method": "random",
+        "method": "fixed",
         "value": "fixedDummyValue"
       },
       {
         "fieldName": "telecom",
-        "method": "random",
+        "method": "fixed",
         "value": "9876543210"
       }
     ]
