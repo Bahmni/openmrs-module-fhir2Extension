@@ -25,16 +25,12 @@ public class TelecomResourceRandomiser implements ResourceRandomise {
 	
 	private void randomTelecomHandler(Patient patient) {
         List<ContactPoint> contactPoints = patient.getTelecom();
-        contactPoints.forEach(contactPoint -> {
-            contactPoint.setValue(getRandomNumber(contactPoint.getValue()));
-        });
+        contactPoints.forEach(contactPoint -> contactPoint.setValue(getRandomNumber(contactPoint.getValue())));
     }
 	
 	private  void fixedTelecomHandler(String fixedValue, Patient patient) {
         List<ContactPoint> contactPoints = patient.getTelecom();
-        contactPoints.forEach(contactPoint -> {
-            contactPoint.setValue(fixedValue);
-        });
+        contactPoints.forEach(contactPoint -> contactPoint.setValue(fixedValue));
     }
 	
 	private static class SingletonHelper {

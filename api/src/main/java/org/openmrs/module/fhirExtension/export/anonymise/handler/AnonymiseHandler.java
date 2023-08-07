@@ -27,7 +27,7 @@ public class AnonymiseHandler {
 	
 	private static final String REDACT_METHOD_NAME = "redact";
 	
-	private static final List<String> RANDOMISE_METHOD_NAMES = Arrays.asList("random", "firstOfMonth", "fixed");;
+	private static final List<String> RANDOMISE_METHOD_NAMES = Arrays.asList("random", "firstOfMonth", "fixed");
 	
 	private final AdministrationService adminService;
 	
