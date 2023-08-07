@@ -53,20 +53,20 @@ public class AnonymiseHandlerTest {
 	private AdministrationService adminService;
 	
 	@Test
-	public void shouldDoNothing_whenLoadingConfigForNonAnonymisedData() {
+	public void shouldNotLoadAnonymizeConfig_whenAnonymizeIsDisabled() {
 		anonymiseHandler.loadAnonymiserConfig(false);
 		verify(adminService, times(0)).getGlobalProperty(any());
 	}
 	
 	@Test
-	public void shouldLoadConfig_whenLoadingConfigForAnonymisedDataAndValidConfigPathProvided() {
+	public void shouldLoadAnonymizeConfig_whenAnonymizeIsEnabled() {
 		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		verify(adminService, times(1)).getGlobalProperty(any());
 	}
 	
 	@Test
-	public void shouldAnonymisePatientResource_WhenPatientResourceAndPatientResourceTypePassed() {
+	public void shouldAnonymisePatientResourceWithRedact_WhenPatientResourceTypeFieldsAreConfiguredWithMethodAsRedact() {
 		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		Patient patient = mockPatientResource();
@@ -97,7 +97,7 @@ public class AnonymiseHandlerTest {
 	}
 	
 	@Test
-	public void shouldAnonymisePatientResourceWithRandomise_WhenPatientResourceAndPatientResourceTypePassed() {
+	public void shouldAnonymisePatientResourceWithRandomValue_WhenPatientResourceTypeFieldsAreConfiguredWithMethodAsRandom() {
 		when(adminService.getGlobalProperty(any())).thenReturn(
 		    "src/test/resources/FHIR Export/config/anonymise-fhir-random.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
@@ -125,7 +125,7 @@ public class AnonymiseHandlerTest {
 	}
 	
 	@Test
-	public void shouldAnonymisePatientResourceWithFixed_WhenPatientResourceAndPatientResourceTypePassed() {
+	public void shouldAnonymisePatientResourceWithGivenFixedValue_WhenPatientResourceTypeFieldsAreConfiguredWithMethodAsFixed() {
 		when(adminService.getGlobalProperty(any())).thenReturn(
 		    "src/test/resources/FHIR Export/config/anonymise-fhir-fixed.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
@@ -151,7 +151,7 @@ public class AnonymiseHandlerTest {
 	}
 	
 	@Test
-	public void shouldAnonymiseConditionResource_WhenConditionResourceAndConditionResourceTypePassed() {
+	public void shouldAnonymiseConditionResource_WhenConditionResourceTypeFieldsAreConfigured() {
 		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		
@@ -173,7 +173,7 @@ public class AnonymiseHandlerTest {
 	}
 	
 	@Test
-	public void shouldAnonymiseMedicationRequestResource_WhenMedicationRequestResourceAndMedicationRequestResourceTypePassed() {
+	public void shouldAnonymiseMedicationRequestResource_WhenMedicationRequestResourceTypeFieldsAreConfigured() {
 		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		
@@ -203,7 +203,7 @@ public class AnonymiseHandlerTest {
 	}
 	
 	@Test
-	public void shouldAnonymiseServiceRequestResource_WhenServiceRequestResourceAndServiceRequestResourceTypePassed() {
+	public void shouldAnonymiseServiceRequestResource_WhenServiceRequestResourceTypeFieldsAreConfigured() {
 		when(adminService.getGlobalProperty(any())).thenReturn("src/test/resources/FHIR Export/config/anonymise-fhir.json");
 		anonymiseHandler.loadAnonymiserConfig(true);
 		
