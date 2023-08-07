@@ -36,19 +36,11 @@ public class AddressResourceRandomiser implements ResourceRandomise {
     }
 	
 	private void randomAddressHandler(Address address) {
-        if (address.hasDistrict()) {
-            address.setDistrict(getRandomAlphaCharacters(address.getDistrict().length()));
-        }
-        if (address.hasCity()) {
+        address.setDistrict(getRandomAlphabets(address.getDistrict()));
+        address.setCity(getRandomAlphabets(address.getCity()));
+        address.setState(getRandomAlphabets(address.getState()));
+        address.setCountry(getRandomAlphabets(address.getCountry()));
 
-            address.setCity(getRandomAlphaCharacters(address.getCity().length()));
-        }
-        if (address.hasState()) {
-            address.setState(getRandomAlphaCharacters(address.getState().length()));
-        }
-        if (address.hasCountry()) {
-            address.setCountry(getRandomAlphaCharacters(address.getCountry().length()));
-        }
         if (address.hasExtension()) {
             address.getExtension().forEach(this::randomAddressExtensionHandler);
         }
@@ -59,7 +51,7 @@ public class AddressResourceRandomiser implements ResourceRandomise {
             extension.getExtension().forEach(this::randomAddressExtensionHandler);
         }
         if (extension.hasValue()) {
-            extension.setValue(new StringType(getRandomAlphaNumericCharacters(extension.getValue().primitiveValue().length())));
+            extension.setValue(new StringType(getRandomAlphaNumeric(extension.getValue().primitiveValue())));
         }
     }
 	

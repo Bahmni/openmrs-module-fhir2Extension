@@ -1,7 +1,5 @@
 package org.openmrs.module.fhirExtension.export.anonymise.impl;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Patient;
@@ -28,7 +26,7 @@ public class TelecomResourceRandomiser implements ResourceRandomise {
 	private void randomTelecomHandler(Patient patient) {
         List<ContactPoint> contactPoints = patient.getTelecom();
         contactPoints.forEach(contactPoint -> {
-            contactPoint.setValue(getRandomNumericCharacters(contactPoint.getValue().length()));
+            contactPoint.setValue(getRandomNumber(contactPoint.getValue()));
         });
     }
 	
