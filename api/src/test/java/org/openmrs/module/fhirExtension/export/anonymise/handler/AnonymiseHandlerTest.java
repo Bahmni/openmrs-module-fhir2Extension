@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.openmrs.api.AdministrationService;
+import org.openmrs.module.fhirExtension.export.anonymise.impl.CorrelationCache;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +53,9 @@ public class AnonymiseHandlerTest {
 	
 	@Mock
 	private AdministrationService adminService;
+	
+	@Mock
+	private CorrelationCache correlationCache;
 	
 	@Test
 	public void shouldNotLoadAnonymizeConfig_whenAnonymizeIsDisabled() {
@@ -218,6 +223,34 @@ public class AnonymiseHandlerTest {
 	}
 	
 	@Test
+	public void shouldAnonymisePatientResourceWithCorrelation_WhenAllResourceTypesAreConfiguredWithMethodAsCorrelate() {
+		when(adminService.getGlobalProperty(any())).thenReturn(
+		    "src/test/resources/FHIR Export/config/anonymise-fhir-correlate.json");
+		when(correlationCache.readDigest(anyString(), any())).thenReturn("newDummyId");
+		
+		anonymiseHandler.loadAnonymiserConfig(true);
+		Patient patient = mockPatientResource();
+		Condition condition = mockConditionResource();
+		MedicationRequest medicationRequest = mockMedicationRequestResource();
+		ServiceRequest serviceRequest = mockServiceRequestResource();
+		
+		assertEquals(patient.getId(), "DummyId");
+		assertEquals(condition.getSubject().getReference(), "Patient/DummyId");
+		assertEquals(medicationRequest.getSubject().getReference(), "Patient/DummyId");
+		assertEquals(serviceRequest.getSubject().getReference(), "Patient/DummyId");
+		
+		anonymiseHandler.anonymise(patient, "patient");
+		anonymiseHandler.anonymise(condition, "condition");
+		anonymiseHandler.anonymise(medicationRequest, "medicationRequest");
+		anonymiseHandler.anonymise(serviceRequest, "serviceRequest");
+		
+		assertEquals(patient.getId(), "newDummyId");
+		assertEquals(condition.getSubject().getReference(), "Patient/newDummyId");
+		assertEquals(medicationRequest.getSubject().getReference(), "Patient/newDummyId");
+		assertEquals(serviceRequest.getSubject().getReference(), "Patient/newDummyId");
+	}
+	
+	@Test
     public void shouldThrowException_WhenInvalidConfigFilePathProvided() {
         when(adminService.getGlobalProperty(any())).thenReturn("dummyPath");
         assertThrows(RuntimeException.class, () -> anonymiseHandler.loadAnonymiserConfig(true));
@@ -225,6 +258,7 @@ public class AnonymiseHandlerTest {
 	
 	private Patient mockPatientResource() {
         Patient patient = new Patient();
+		patient.setId("DummyId");
         List<Identifier> identifiers = new ArrayList<>();
         identifiers.add(new Identifier());
         identifiers.add(new Identifier());
@@ -250,6 +284,7 @@ public class AnonymiseHandlerTest {
 	
 	private MedicationRequest mockMedicationRequestResource() {
 		MedicationRequest medicationRequest = new MedicationRequest();
+		medicationRequest.setSubject(mockSubjectReferenceWith("DummyId"));
 		medicationRequest.setEncounter(new Reference(MOCK_REFERENCE_ID));
 		medicationRequest.setAuthoredOn(new Date());
 		Dosage dosage = new Dosage();
@@ -266,6 +301,7 @@ public class AnonymiseHandlerTest {
 	
 	private Condition mockConditionResource() {
 		Condition condition = new Condition();
+		condition.setSubject(mockSubjectReferenceWith("DummyId"));
 		condition.setEncounter(new Reference(MOCK_REFERENCE_ID));
 		condition.setRecorder(new Reference(MOCK_REFERENCE_ID));
 		condition.setRecordedDate(new Date());
@@ -274,7 +310,13 @@ public class AnonymiseHandlerTest {
 	
 	private ServiceRequest mockServiceRequestResource() {
 		ServiceRequest serviceRequest = new ServiceRequest();
+		serviceRequest.setSubject(mockSubjectReferenceWith("DummyId"));
 		serviceRequest.setEncounter(new Reference(MOCK_REFERENCE_ID));
 		return serviceRequest;
+	}
+	
+	private Reference mockSubjectReferenceWith(String id) {
+		String subjectReferenceStr = new StringBuilder("Patient/").append(id).toString();
+		return new Reference(subjectReferenceStr);
 	}
 }

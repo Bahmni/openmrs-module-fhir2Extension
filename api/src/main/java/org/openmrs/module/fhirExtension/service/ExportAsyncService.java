@@ -10,11 +10,13 @@ import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskOutput;
 import org.openmrs.module.fhirExtension.export.Exporter;
 import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
+import org.openmrs.module.fhirExtension.export.anonymise.impl.CorrelationCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,13 +35,19 @@ public class ExportAsyncService {
 	
 	private AnonymiseHandler anonymiseHandler;
 	
+	private List<Exporter> fhirExporters;
+	
+	private CorrelationCache correlationCache;
+	
 	@Autowired
 	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, FileExportService fileExportService,
-	    AnonymiseHandler anonymiseHandler) {
+	    AnonymiseHandler anonymiseHandler, List<Exporter> fhirExporters, CorrelationCache correlationCache) {
 		this.fhirTaskDao = fhirTaskDao;
 		this.conceptService = conceptService;
 		this.fileExportService = fileExportService;
 		this.anonymiseHandler = anonymiseHandler;
+		this.fhirExporters = fhirExporters;
+		this.correlationCache = correlationCache;
 	}
 	
 	@Async("export-fhir-data-threadPoolTaskExecutor")
@@ -51,15 +59,14 @@ public class ExportAsyncService {
 			Context.openSession();
 			Context.setUserContext(userContext);
 			
-			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
-			fileExportService.createDirectory(fhirTask.getUuid());
-			anonymiseHandler.loadAnonymiserConfig(isAnonymise);
-			for (Exporter fhirExporter : fhirExporters) {
+			initialize(fhirTask, isAnonymise);
+
+			fhirExporters.forEach( fhirExporter -> {
 				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
 				anonymise(fhirResources, fhirExporter.getResourceType(), isAnonymise);
 				fileExportService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
-			}
-			
+			});
+
 			fileExportService.createZipWithExportedNdjsonFiles(fhirTask.getUuid());
 			FhirTaskOutput fhirTaskOutput = getFhirTaskOutput(fhirTask, downloadUrl);
 			fhirTask.setOutput(Collections.singleton(fhirTaskOutput));
@@ -76,6 +83,12 @@ public class ExportAsyncService {
 			fhirTask.setStatus(taskStatus);
 			fhirTaskDao.createOrUpdate(fhirTask);
 		}
+	}
+	
+	private void initialize(FhirTask fhirTask, boolean isAnonymise) {
+		fileExportService.createDirectory(fhirTask.getUuid());
+		correlationCache.reset();
+		anonymiseHandler.loadAnonymiserConfig(isAnonymise);
 	}
 	
 	private FhirTaskOutput getFhirTaskOutput(FhirTask fhirTask, String downloadUrl) {
