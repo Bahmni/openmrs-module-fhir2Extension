@@ -1,6 +1,7 @@
 package org.openmrs.module.fhirExtension.export.impl;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
@@ -63,7 +64,7 @@ public class DiagnosisExport implements Exporter {
 
 		try {
 			Date startDate = getFormattedDate(startDateStr);
-			Date endDate = getFormattedDate(endDateStr);
+			Date endDate = addDays(getFormattedDate(endDateStr), 1);
 			Concept visitDiagnosesConcept = conceptService.getConceptByName(VISIT_DIAGNOSES);
 			List<Obs> visitDiagnosesObs = obsService.getObservations(null, null, Arrays.asList(visitDiagnosesConcept), null, null,
 					null, null, null, null, startDate, endDate, false);
@@ -131,5 +132,12 @@ public class DiagnosisExport implements Exporter {
 		Coding coding = new Coding("http://terminology.hl7.org/CodeSystem/condition-category", "encounter-diagnosis",
 		        "Encounter Diagnosis");
 		return Collections.singletonList(codeableConcept.addCoding(coding));
+	}
+
+	private Date addDays(Date date, int numberOfDays) {
+		if(date == null) {
+			return null;
+		}
+		return DateUtils.addDays(date, numberOfDays);
 	}
 }
