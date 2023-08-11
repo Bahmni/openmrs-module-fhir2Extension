@@ -10,6 +10,8 @@ import java.util.Map;
 @Setter
 public class AnonymiseConfig {
 	
-	private Map<String, List<AnonymiseResourceConfig>> config;
+	private Map<String, List<FieldConfig>> resources;
+	
+	private Map<String, String> parameters;
 	
 }
