@@ -64,7 +64,8 @@ public class DiagnosisExport implements Exporter {
 
 		try {
 			Date startDate = getFormattedDate(startDateStr);
-			Date endDate = addDays(getFormattedDate(endDateStr), 1);
+			Date endDate = getFormattedDate(endDateStr);
+			endDate = endDate != null ? getNextDay(endDate) : null;
 			Concept visitDiagnosesConcept = conceptService.getConceptByName(VISIT_DIAGNOSES);
 			List<Obs> visitDiagnosesObs = obsService.getObservations(null, null, Arrays.asList(visitDiagnosesConcept), null, null,
 					null, null, null, null, startDate, endDate, false);
@@ -134,10 +135,7 @@ public class DiagnosisExport implements Exporter {
 		return Collections.singletonList(codeableConcept.addCoding(coding));
 	}
 
-	private Date addDays(Date date, int numberOfDays) {
-		if(date == null) {
-			return null;
-		}
-		return DateUtils.addDays(date, numberOfDays);
+	private Date getNextDay(Date date) {
+		return DateUtils.addDays(date, 1);
 	}
 }
