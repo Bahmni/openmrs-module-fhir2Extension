@@ -18,6 +18,7 @@ import org.openmrs.module.fhirExtension.export.Exporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,8 +65,7 @@ public class DiagnosisExport implements Exporter {
 
 		try {
 			Date startDate = getFormattedDate(startDateStr);
-			Date endDate = getFormattedDate(endDateStr);
-			endDate = endDate != null ? getNextDay(endDate) : null;
+			Date endDate = getNextDay(endDateStr);
 			Concept visitDiagnosesConcept = conceptService.getConceptByName(VISIT_DIAGNOSES);
 			List<Obs> visitDiagnosesObs = obsService.getObservations(null, null, Arrays.asList(visitDiagnosesConcept), null, null,
 					null, null, null, null, startDate, endDate, false);
@@ -134,8 +134,9 @@ public class DiagnosisExport implements Exporter {
 		        "Encounter Diagnosis");
 		return Collections.singletonList(codeableConcept.addCoding(coding));
 	}
-
-	private Date getNextDay(Date date) {
-		return DateUtils.addDays(date, 1);
+	
+	private Date getNextDay(String dateString) throws ParseException {
+		Date date = getFormattedDate(dateString);
+		return date != null ? DateUtils.addDays(date, 1) : null;
 	}
 }
