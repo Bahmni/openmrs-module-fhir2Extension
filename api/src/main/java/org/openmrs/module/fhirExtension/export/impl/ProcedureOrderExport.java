@@ -12,7 +12,6 @@ import org.openmrs.api.ConceptService;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
-import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.openmrs.parameter.OrderSearchCriteria;
 import org.openmrs.parameter.OrderSearchCriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,19 +36,20 @@ public class ProcedureOrderExport implements Exporter {
 	
 	private final ConceptTranslator conceptTranslator;
 	
-	private AnonymiseHandler anonymiseHandler;
-	
 	@Autowired
-	public ProcedureOrderExport(OrderService orderService, ConceptService conceptService,
-	    ConceptTranslator conceptTranslator, AnonymiseHandler anonymiseHandler) {
+	public ProcedureOrderExport(OrderService orderService, ConceptService conceptService, ConceptTranslator conceptTranslator) {
 		this.orderService = orderService;
 		this.conceptService = conceptService;
 		this.conceptTranslator = conceptTranslator;
-		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Override
-    public List<IBaseResource> export(String startDate, String endDate, boolean isAnonymise) {
+	public String getResourceType() {
+		return "serviceRequest";
+	}
+	
+	@Override
+    public List<IBaseResource> export(String startDate, String endDate) {
         List<IBaseResource> procedureResources = new ArrayList<>();
         OrderType procedureOrderType = orderService.getOrderTypeByName(PROCEDURE_ORDER);
         if (procedureOrderType == null) {
@@ -59,7 +59,7 @@ public class ProcedureOrderExport implements Exporter {
         OrderSearchCriteria orderSearchCriteria = getOrderSearchCriteria(procedureOrderType, startDate, endDate);
         List<Order> orders = orderService.getOrders(orderSearchCriteria);
         orders.stream().map(this::convertToFhirResource).forEach(procedureResources :: add);
-        return isAnonymise ? anonymise(procedureResources) : procedureResources;
+		return procedureResources;
     }
 	
 	private ServiceRequest convertToFhirResource(Order order) {
@@ -100,8 +100,4 @@ public class ProcedureOrderExport implements Exporter {
 		return orderSearchCriteriaBuilder.build();
 	}
 	
-	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
-		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "serviceRequest"));
-		return iBaseResources;
-	}
 }

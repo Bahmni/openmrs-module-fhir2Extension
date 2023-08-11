@@ -8,7 +8,6 @@ import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
 import org.openmrs.module.fhir2.api.FhirConditionService;
 import org.openmrs.module.fhirExtension.export.Exporter;
-import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,22 +20,23 @@ public class ConditionExport implements Exporter {
 	
 	private FhirConditionService fhirConditionService;
 	
-	private AnonymiseHandler anonymiseHandler;
-	
 	@Autowired
-	public ConditionExport(FhirConditionService fhirConditionService, AnonymiseHandler anonymiseHandler) {
+	public ConditionExport(FhirConditionService fhirConditionService) {
 		this.fhirConditionService = fhirConditionService;
-		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Override
-    public List<IBaseResource> export(String startDate, String endDate, boolean isAnonymise) {
+    public List<IBaseResource> export(String startDate, String endDate) {
         DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
         IBundleProvider iBundleProvider = fhirConditionService.searchConditions(null, null, null, null, null, null, null,
                 lastUpdated, null, null);
-        List<IBaseResource> conditionList = iBundleProvider.getAllResources().stream().map(this::addCategory).collect(Collectors.toList());
-        return isAnonymise ? anonymise(conditionList) : conditionList;
+        return iBundleProvider.getAllResources().stream().map(this::addCategory).collect(Collectors.toList());
     }
+	
+	@Override
+	public String getResourceType() {
+		return "condition";
+	}
 	
 	private Condition addCategory(IBaseResource baseResource) {
 		Condition condition = (Condition) baseResource;
@@ -45,10 +45,5 @@ public class ConditionExport implements Exporter {
 		        "Problem List Item");
 		condition.setCategory(Collections.singletonList(codeableConcept.addCoding(coding)));
 		return condition;
-	}
-	
-	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
-		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
-		return iBaseResources;
 	}
 }

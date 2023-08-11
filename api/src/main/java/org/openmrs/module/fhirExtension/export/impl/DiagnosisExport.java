@@ -14,7 +14,6 @@ import org.openmrs.api.ObsService;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhir2.api.translators.ConditionClinicalStatusTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
-import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,21 +42,23 @@ public class DiagnosisExport implements Exporter {
 	
 	private ConditionClinicalStatusTranslator conditionClinicalStatusTranslator;
 	
-	private AnonymiseHandler anonymiseHandler;
-	
 	@Autowired
 	public DiagnosisExport(ConceptTranslator conceptTranslator,
 	    ConditionClinicalStatusTranslator conditionClinicalStatusTranslator, ConceptService conceptService,
-	    ObsService obsService, AnonymiseHandler anonymiseHandler) {
+	    ObsService obsService) {
 		this.conceptTranslator = conceptTranslator;
 		this.conditionClinicalStatusTranslator = conditionClinicalStatusTranslator;
 		this.conceptService = conceptService;
 		this.obsService = obsService;
-		this.anonymiseHandler = anonymiseHandler;
 	}
 	
 	@Override
-	public List<IBaseResource> export(String startDateStr, String endDateStr, boolean isAnonymise) {
+	public String getResourceType() {
+		return "condition";
+	}
+	
+	@Override
+	public List<IBaseResource> export(String startDateStr, String endDateStr) {
 		List<IBaseResource> fhirResources = new ArrayList<>();
 
 		try {
@@ -75,7 +76,7 @@ public class DiagnosisExport implements Exporter {
 			throw new RuntimeException(e);
 		}
 		
-		return isAnonymise ? anonymise(fhirResources) : fhirResources;
+		return  fhirResources;
 	}
 	
 	private Condition convertDiagnosisAsFhirCondition(Obs visitDiagnosisObsGroup) {
@@ -130,10 +131,5 @@ public class DiagnosisExport implements Exporter {
 		Coding coding = new Coding("http://terminology.hl7.org/CodeSystem/condition-category", "encounter-diagnosis",
 		        "Encounter Diagnosis");
 		return Collections.singletonList(codeableConcept.addCoding(coding));
-	}
-	
-	private List<IBaseResource> anonymise(List<IBaseResource> iBaseResources) {
-		iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, "condition"));
-		return iBaseResources;
 	}
 }

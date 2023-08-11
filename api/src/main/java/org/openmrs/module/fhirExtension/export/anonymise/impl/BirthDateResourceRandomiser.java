@@ -15,7 +15,7 @@ public class BirthDateResourceRandomiser implements ResourceRandomise {
 	}
 	
 	@Override
-	public void randomise(IBaseResource iBaseResource) {
+	public void randomise(IBaseResource iBaseResource, String fixedValue) {
 		Patient patient = (Patient) iBaseResource;
 		DateType dateElement = patient.getBirthDateElement();
 		if (dateElement != null) {

@@ -95,7 +95,7 @@ public class DiagnosisExportTest {
 		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(visitDiagnosesObs);
 		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31", false);
+		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31");
 		
 		assertNotNull(diagnosisResources);
 		assertEquals(2, diagnosisResources.size());
@@ -109,27 +109,10 @@ public class DiagnosisExportTest {
 		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
 		        anyBoolean())).thenReturn(visitDiagnosesObs);
 		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export(null, null, false);
+		List<IBaseResource> diagnosisResources = diagnosisExport.export(null, null);
 		
 		assertNotNull(diagnosisResources);
 		assertEquals(1, diagnosisResources.size());
-		
-	}
-	
-	@Test
-	public void shouldExportAnonymisedDiagnosis_whenValidDateRangeProvided() {
-		List<Obs> visitDiagnosesObs = Stream
-		        .concat(getVisitDiagnosesObs().stream(), getInactiveVisitDiagnosesObs().stream()).collect(
-		            Collectors.toList());
-		when(
-		    obsService.getObservations(any(), any(), anyList(), any(), any(), any(), any(), any(), any(), any(), any(),
-		        anyBoolean())).thenReturn(visitDiagnosesObs);
-		
-		List<IBaseResource> diagnosisResources = diagnosisExport.export("2023-05-01", "2023-05-31", true);
-		
-		assertNotNull(diagnosisResources);
-		assertEquals(2, diagnosisResources.size());
-		verify(anonymiseHandler, times(2)).anonymise(any(IBaseResource.class), eq("condition"));
 		
 	}
 	
@@ -138,7 +121,7 @@ public class DiagnosisExportTest {
 		thrown.expect(RuntimeException.class);
 		thrown.expectMessage("java.text.ParseException: Unable to parse the date: 2023-AB-CD");
 		
-		diagnosisExport.export("2023-AB-CD", "2023-05-31", false);
+		diagnosisExport.export("2023-AB-CD", "2023-05-31");
 	}
 	
 	@Test
@@ -146,7 +129,7 @@ public class DiagnosisExportTest {
 		thrown.expect(RuntimeException.class);
 		thrown.expectMessage("java.text.ParseException: Unable to parse the date: 2023-AB-CD");
 		
-		diagnosisExport.export("2023-05-01", "2023-AB-CD", false);
+		diagnosisExport.export("2023-05-01", "2023-AB-CD");
 	}
 	
 	private List<Obs> getVisitDiagnosesObs() {
