@@ -10,6 +10,7 @@ import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskOutput;
 import org.openmrs.module.fhirExtension.export.Exporter;
 import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
+import org.openmrs.module.fhirExtension.export.anonymise.impl.CorrelationCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -33,13 +34,16 @@ public class ExportAsyncService {
 	
 	private AnonymiseHandler anonymiseHandler;
 	
+	private CorrelationCache correlationCache;
+	
 	@Autowired
 	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, FileExportService fileExportService,
-	    AnonymiseHandler anonymiseHandler) {
+	    AnonymiseHandler anonymiseHandler, CorrelationCache correlationCache) {
 		this.fhirTaskDao = fhirTaskDao;
 		this.conceptService = conceptService;
 		this.fileExportService = fileExportService;
 		this.anonymiseHandler = anonymiseHandler;
+		this.correlationCache = correlationCache;
 	}
 	
 	@Async("export-fhir-data-threadPoolTaskExecutor")
@@ -50,10 +54,9 @@ public class ExportAsyncService {
 		try {
 			Context.openSession();
 			Context.setUserContext(userContext);
-			
 			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
-			fileExportService.createDirectory(fhirTask.getUuid());
-			anonymiseHandler.loadAnonymiserConfig(isAnonymise);
+			initialize(fhirTask, isAnonymise);
+			
 			for (Exporter fhirExporter : fhirExporters) {
 				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
 				anonymise(fhirResources, fhirExporter.getResourceType(), isAnonymise);
@@ -76,6 +79,12 @@ public class ExportAsyncService {
 			fhirTask.setStatus(taskStatus);
 			fhirTaskDao.createOrUpdate(fhirTask);
 		}
+	}
+	
+	private void initialize(FhirTask fhirTask, boolean isAnonymise) {
+		fileExportService.createDirectory(fhirTask.getUuid());
+		correlationCache.reset();
+		anonymiseHandler.loadAnonymiserConfig(isAnonymise);
 	}
 	
 	private FhirTaskOutput getFhirTaskOutput(FhirTask fhirTask, String downloadUrl) {

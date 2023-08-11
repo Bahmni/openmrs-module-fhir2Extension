@@ -1,0 +1,31 @@
+{
+    "resources": {
+      "patient": [
+        {
+          "fieldName": "id",
+          "method": "correlate"
+        }
+      ],
+      "condition": [
+        {
+          "fieldName": "subject",
+          "method": "correlate"
+        }
+      ],
+      "medicationRequest": [
+        {
+          "fieldName": "subject",
+          "method": "correlate"
+        }
+      ],
+      "serviceRequest": [
+        {
+          "fieldName": "subject",
+          "method": "correlate"
+        }
+      ]
+    },
+    "parameters": {
+      "oneWayHashSalt": "Bahmni123"
+    }
+}
