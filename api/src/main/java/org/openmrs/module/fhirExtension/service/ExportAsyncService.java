@@ -35,18 +35,15 @@ public class ExportAsyncService {
 	
 	private AnonymiseHandler anonymiseHandler;
 	
-	private List<Exporter> fhirExporters;
-	
 	private CorrelationCache correlationCache;
 	
 	@Autowired
 	public ExportAsyncService(FhirTaskDao fhirTaskDao, ConceptService conceptService, FileExportService fileExportService,
-	    AnonymiseHandler anonymiseHandler, List<Exporter> fhirExporters, CorrelationCache correlationCache) {
+	    AnonymiseHandler anonymiseHandler, CorrelationCache correlationCache) {
 		this.fhirTaskDao = fhirTaskDao;
 		this.conceptService = conceptService;
 		this.fileExportService = fileExportService;
 		this.anonymiseHandler = anonymiseHandler;
-		this.fhirExporters = fhirExporters;
 		this.correlationCache = correlationCache;
 	}
 	
@@ -58,7 +55,7 @@ public class ExportAsyncService {
 		try {
 			Context.openSession();
 			Context.setUserContext(userContext);
-			
+			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
 			initialize(fhirTask, isAnonymise);
 
 			fhirExporters.forEach( fhirExporter -> {
