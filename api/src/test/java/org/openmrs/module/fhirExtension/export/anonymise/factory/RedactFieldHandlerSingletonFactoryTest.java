@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class RedactFieldHandlerSingletonFactoryTest {
 	
 	@Test
-	public void shouldReturnRedactHandlerWhenFieldNameIsPassed() {
+	public void shouldReturnRedactHandlerWhenValidFieldNameIsPassed() {
 		String fieldName_1 = "identifier";
 		String fieldName_2 = "name";
 		ResourceRedact redact_1 = RedactFieldHandlerSingletonFactory.getInstance(fieldName_1);

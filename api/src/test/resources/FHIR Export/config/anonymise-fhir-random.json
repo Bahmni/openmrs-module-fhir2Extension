@@ -1,0 +1,14 @@
+{
+  "config": {
+    "patient": [
+      {
+        "fieldName": "address",
+        "method": "random"
+      },
+      {
+        "fieldName": "telecom",
+        "method": "random"
+      }
+    ]
+  }
+}

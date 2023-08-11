@@ -15,7 +15,7 @@ public class DeceasedDateTimeResourceRandomiser implements ResourceRandomise {
 	}
 	
 	@Override
-	public void randomise(IBaseResource iBaseResource) {
+	public void randomise(IBaseResource iBaseResource, String fixedValue) {
 		Patient patient = (Patient) iBaseResource;
 		Type deceasedType = patient.getDeceased();
 		if (deceasedType instanceof DateTimeType) {

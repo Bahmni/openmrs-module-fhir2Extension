@@ -14,7 +14,8 @@ public interface Exporter extends BeanPostProcessor {
 
 	String DATE_FORMAT = "yyyy-MM-dd";
 	
-	List<IBaseResource> export(String startDate, String endDate, boolean isAnonymise);
+	List<IBaseResource> export(String startDate, String endDate);
+	String getResourceType();
 
 	 default DateRangeParam getLastUpdated(String startDate, String endDate) {
 		DateRangeParam lastUpdated = new DateRangeParam();
