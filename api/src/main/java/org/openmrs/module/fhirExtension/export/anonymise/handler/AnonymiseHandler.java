@@ -30,7 +30,7 @@ public class AnonymiseHandler {
 	private static final String REDACT_METHOD_NAME = "redact";
 	
 	private static final List<String> RANDOMISE_METHOD_NAMES = Arrays.asList("random", "firstOfMonth", "fixed");
-
+	
 	private static final String CORRELATE_METHOD_NAME = "correlate";
 	
 	private final AdministrationService adminService;
@@ -38,9 +38,9 @@ public class AnonymiseHandler {
 	private AnonymiseConfig anonymiseConfig;
 	
 	private CorrelationCache correlationCache;
-
+	
 	private byte[] salt;
-
+	
 	@Autowired
 	public AnonymiseHandler(AdministrationService adminService, CorrelationCache correlationCache) {
 		this.adminService = adminService;
@@ -83,7 +83,7 @@ public class AnonymiseHandler {
         try (InputStream configFile = Files.newInputStream(configFilePath)) {
             ObjectMapper mapper = new ObjectMapper();
             anonymiseConfig = mapper.readValue(configFile, AnonymiseConfig.class);
-            if(anonymiseConfig.getParameters()!=null && anonymiseConfig.getParameters().containsKey("oneWayHashSalt")) {
+            if (anonymiseConfig.getParameters() != null && anonymiseConfig.getParameters().containsKey("oneWayHashSalt")) {
                 String saltStr = anonymiseConfig.getParameters().get("oneWayHashSalt");
                 salt = saltStr.getBytes();
             }

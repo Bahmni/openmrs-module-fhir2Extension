@@ -13,10 +13,6 @@ public class TelecomResourceRandomiser implements ResourceRandomise {
 		
 	}
 	
-	public static TelecomResourceRandomiser getInstance() {
-		return TelecomResourceRandomiser.SingletonHelper.INSTANCE;
-	}
-	
 	@Override
 	public void randomise(IBaseResource iBaseResource, String fixedValue) {
 		Patient patient = (Patient) iBaseResource;
@@ -28,17 +24,21 @@ public class TelecomResourceRandomiser implements ResourceRandomise {
 	}
 	
 	private void randomTelecomHandler(Patient patient) {
-        List<ContactPoint> contactPoints = patient.getTelecom();
-        contactPoints.forEach(contactPoint -> contactPoint.setValue(getRandomNumber(contactPoint.getValue())));
-    }
+		List<ContactPoint> contactPoints = patient.getTelecom();
+		contactPoints.forEach(contactPoint -> contactPoint.setValue(getRandomNumber(contactPoint.getValue())));
+	}
 	
-	private void fixedTelecomHandler(String fixedValue, Patient patient) {
-        List<ContactPoint> contactPoints = patient.getTelecom();
-        contactPoints.forEach(contactPoint -> contactPoint.setValue(fixedValue));
-    }
+	private  void fixedTelecomHandler(String fixedValue, Patient patient) {
+		List<ContactPoint> contactPoints = patient.getTelecom();
+		contactPoints.forEach(contactPoint -> contactPoint.setValue(fixedValue));
+	}
 	
 	private static class SingletonHelper {
 		
 		private static final TelecomResourceRandomiser INSTANCE = new TelecomResourceRandomiser();
+	}
+	
+	public static TelecomResourceRandomiser getInstance() {
+		return TelecomResourceRandomiser.SingletonHelper.INSTANCE;
 	}
 }

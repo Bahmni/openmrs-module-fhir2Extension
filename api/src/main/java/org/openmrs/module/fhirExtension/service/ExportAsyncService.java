@@ -16,7 +16,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,13 +56,13 @@ public class ExportAsyncService {
 			Context.setUserContext(userContext);
 			List<Exporter> fhirExporters = Context.getRegisteredComponents(Exporter.class);
 			initialize(fhirTask, isAnonymise);
-
-			fhirExporters.forEach( fhirExporter -> {
+			
+			for (Exporter fhirExporter : fhirExporters) {
 				List<IBaseResource> fhirResources = fhirExporter.export(startDate, endDate);
 				anonymise(fhirResources, fhirExporter.getResourceType(), isAnonymise);
 				fileExportService.createAndWriteToFile(fhirResources, fhirTask.getUuid());
-			});
-
+			}
+			
 			fileExportService.createZipWithExportedNdjsonFiles(fhirTask.getUuid());
 			FhirTaskOutput fhirTaskOutput = getFhirTaskOutput(fhirTask, downloadUrl);
 			fhirTask.setOutput(Collections.singleton(fhirTaskOutput));
