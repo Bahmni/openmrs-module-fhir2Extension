@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -161,8 +162,13 @@ public class DiagnosticReportObsLabResultTranslatorTest {
 	@Test
 	public void givenObs_WhenAbnormalLabResultIsPresent_ShouldTranslateToLabResult() {
 		Concept testConcept = new Concept();
-		
-		LabResult labResult = LabResult.builder().interpretationOfLabResultValue(Obs.Interpretation.ABNORMAL)
+		HashMap<Concept, Obs.Interpretation> interpretationValueMap = new HashMap<Concept, Obs.Interpretation>() {
+			
+			{
+				put(testConcept, Obs.Interpretation.ABNORMAL);
+			}
+		};
+		LabResult labResult = LabResult.builder().interpretationOfLabResultValue(interpretationValueMap)
 		        .concept(testConcept).obsFactory(groupedObsFunction()).build();
 		mockConceptServiceGetConceptByName();
 		

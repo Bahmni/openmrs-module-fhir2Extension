@@ -6,7 +6,9 @@ import org.openmrs.Concept;
 import org.openmrs.ConceptDatatype;
 import org.openmrs.Obs;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -22,9 +24,9 @@ public class LabResult {
 	
 	private String labReportNotes;
 	
-	private Object labResultValue;
+	private Map<Concept, Object> labResultValue;
 	
-	private Obs.Interpretation interpretationOfLabResultValue;
+	private Map<Concept, Obs.Interpretation> interpretationOfLabResultValue;
 	
 	private BiFunction<Concept, Object, Obs> obsFactory;
 	
@@ -93,26 +95,33 @@ public class LabResult {
 			return this;
 		}
 		
-		public LabResultBuilder setLabResultValue(Obs obs) {
-			if (obs.getInterpretation() != null) {
-				Obs.Interpretation interpretation = obs.getInterpretation();
-				this.interpretationOfLabResultValue = interpretation;
+		public LabResultBuilder setLabResultValue(List<Obs> obsList) {
+			HashMap<Concept, Object> labResultMap = new HashMap<>();
+			HashMap<Concept,Obs.Interpretation> interpretationLabResultMap = new HashMap<>();
+
+			for (Obs obs : obsList) {
+				String datatype = obs.getConcept().getDatatype().getHl7Abbreviation();
+				if (datatype.equals(ConceptDatatype.NUMERIC))
+					labResultMap.put(obs.getConcept(), obs.getValueNumeric().toString());
+				else if (datatype.equals(ConceptDatatype.CODED)) {
+					labResultMap.put(obs.getConcept(), obs.getValueCoded());
+				} else if (datatype.equals(ConceptDatatype.BOOLEAN)) {
+					labResultMap.put(obs.getConcept(), obs.getValueBoolean());
+				} else if (datatype.equals(ConceptDatatype.DATETIME)) {
+					labResultMap.put(obs.getConcept(), obs.getValueDatetime());
+				} else if (datatype.equals(ConceptDatatype.DATE)) {
+					labResultMap.put(obs.getConcept(), obs.getValueDate());
+				} else if (datatype.equals(ConceptDatatype.TIME)) {
+					labResultMap.put(obs.getConcept(), obs.getValueTime());
+				} else
+					labResultMap.put(obs.getConcept(), obs.getValueText());
+				if (obs.getInterpretation() != null) {
+					Obs.Interpretation interpretation = obs.getInterpretation();
+					interpretationLabResultMap.put(obs.getConcept(),interpretation);
+				}
 			}
-			String datatype = obs.getConcept().getDatatype().getHl7Abbreviation();
-			if (datatype.equals(ConceptDatatype.NUMERIC))
-				this.labResultValue = obs.getValueNumeric().toString();
-			else if (datatype.equals(ConceptDatatype.CODED)) {
-				this.labResultValue = obs.getValueCoded();
-			} else if (datatype.equals(ConceptDatatype.BOOLEAN)) {
-				this.labResultValue = obs.getValueBoolean();
-			} else if (datatype.equals(ConceptDatatype.DATETIME)) {
-				this.labResultValue = obs.getValueDatetime();
-			} else if (datatype.equals(ConceptDatatype.DATE)) {
-				this.labResultValue = obs.getValueDate();
-			} else if (datatype.equals(ConceptDatatype.TIME)) {
-				this.labResultValue = obs.getValueTime();
-			} else
-				this.labResultValue = obs.getValueText();
+			this.labResultValue = labResultMap;
+			this.interpretationOfLabResultValue = interpretationLabResultMap;
 			return this;
 		}
 	}

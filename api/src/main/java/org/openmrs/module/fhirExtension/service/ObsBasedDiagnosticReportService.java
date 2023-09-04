@@ -164,9 +164,8 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 
 			fhirDiagnosticReport.setEncounter(encounter);
 			if (attachmentObs.isEmpty()) {
-				Obs obs = reportResults.get(0);
 				LabResult labResult = LabResult.builder()
-						.setLabResultValue(obs)
+						.setLabResultValue(reportResults)
 						.concept(fhirDiagnosticReport.getCode())
 						.obsFactory(newObs(fhirDiagnosticReport.getSubject(), fhirDiagnosticReport.getIssued()))
 						.build();

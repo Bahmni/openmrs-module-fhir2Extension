@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map;
 
 @Component
 public class DiagnosticReportObsLabResultTranslatorImpl implements DiagnosticReportObsLabResultTranslator {
@@ -51,7 +52,7 @@ public class DiagnosticReportObsLabResultTranslatorImpl implements DiagnosticRep
 	}
 	
 	private Obs createTestObs(LabResult labResult, Concept testConcept) {
-        Set<Obs> labResultObs = createLabResultObs(labResult);
+        Set<Obs> labResultObs = createLabResultObs(labResult, testConcept);
         if(CollectionUtils.isNotEmpty(labResultObs)){
             Obs topLevelObs = labResult.newObs(testConcept);
             Obs labObs = labResult.newObs(testConcept);
@@ -63,7 +64,7 @@ public class DiagnosticReportObsLabResultTranslatorImpl implements DiagnosticRep
         return null;
     }
 	
-	private Set<Obs> createLabResultObs(LabResult labResult) {
+	private Set<Obs> createLabResultObs(LabResult labResult, Concept testConcept) {
         Set<Obs> labResultObs = new HashSet<>();
         labResult.newValueObs(conceptService.getConceptByName(LAB_REPORT_CONCEPT), labResult.getLabReportUrl())
                 .ifPresent(labResultObs::add);
@@ -71,10 +72,13 @@ public class DiagnosticReportObsLabResultTranslatorImpl implements DiagnosticRep
                 .ifPresent(labResultObs::add);
         labResult.newValueObs(conceptService.getConceptByName(LAB_NOTES_CONCEPT), labResult.getLabReportNotes())
                 .ifPresent(labResultObs::add);
-		labResult.newValueObs(labResult.getConcept(), labResult.getLabResultValue())
-					.ifPresent(labResultObs::add);
+		Map<Concept, Object> labResultValue = labResult.getLabResultValue();
+        if(labResultValue!=null)
+         labResult.newValueObs(testConcept, labResultValue.get(testConcept))
+				.ifPresent(labResultObs::add);
+
 		if(labResult.getInterpretationOfLabResultValue() != null) {
-			labResult.newValueObs(conceptService.getConceptByName(LAB_ABNORMAL), labResult.getInterpretationOfLabResultValue() == Obs.Interpretation.ABNORMAL)
+			labResult.newValueObs(conceptService.getConceptByName(LAB_ABNORMAL), labResult.getInterpretationOfLabResultValue().get(testConcept) == Obs.Interpretation.ABNORMAL)
 					.ifPresent(labResultObs::add);
 		}
         return labResultObs;

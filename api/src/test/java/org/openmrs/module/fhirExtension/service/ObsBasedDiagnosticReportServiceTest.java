@@ -645,7 +645,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		
 		assertEquals(diagnosticReportToCreate, actualDiagnosticReport);
 		
-		assertEquals(labResult.getLabResultValue(), "10.0");
+		assertEquals(labResult.getLabResultValue().get(concept), "10.0");
 		
 		assertEquals(patient, resultObs.getPerson());
 		
@@ -740,7 +740,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		
 		assertEquals(diagnosticReportToCreate, actualDiagnosticReport);
 		
-		assertEquals(labResult.getLabResultValue(), testConcept);
+		assertEquals(labResult.getLabResultValue().get(concept), testConcept);
 		
 		assertEquals(patient, resultObs.getPerson());
 		
@@ -777,7 +777,7 @@ public class ObsBasedDiagnosticReportServiceTest {
 		
 		Patient patient = new Patient(123);
 		Concept concept = new Concept(12);
-		Concept testConcept = new Concept();
+		Concept testConcept = new Concept(12);
 		concept.setUuid(orderUuid);
 		ConceptDatatype conceptDatatype = new ConceptDatatype();
 		conceptDatatype.setHl7Abbreviation(ConceptDatatype.CODED);
@@ -840,9 +840,9 @@ public class ObsBasedDiagnosticReportServiceTest {
 		
 		assertEquals(diagnosticReportToCreate, actualDiagnosticReport);
 		
-		assertEquals(labResult.getLabResultValue(), testConcept);
+		assertEquals(labResult.getLabResultValue().get(concept), testConcept);
 		
-		assertEquals(labResult.getInterpretationOfLabResultValue(), interpretation);
+		assertEquals(labResult.getInterpretationOfLabResultValue().get(concept), interpretation);
 		
 		assertEquals(patient, resultObs.getPerson());
 		
