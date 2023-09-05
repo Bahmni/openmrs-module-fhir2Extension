@@ -3,7 +3,6 @@ package org.openmrs.module.fhirExtension.export.impl;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Medication;
 import org.hl7.fhir.r4.model.MedicationRequest;
 import org.hl7.fhir.r4.model.Reference;
 import org.junit.Test;
@@ -11,6 +10,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openmrs.Drug;
 import org.openmrs.DrugOrder;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.FhirMedicationRequestService;
@@ -25,9 +25,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -50,8 +47,7 @@ public class MedicationRequestExportTest {
 	
 	@Test
 	public void shouldExportMedicationRequest_whenValidDateRangeProvided() {
-		when(orderService.getOrderByUuid(anyString())).thenReturn(new DrugOrder());
-		when(medicationTranslator.toFhirResource(any())).thenReturn(new Medication());
+		when(orderService.getOrderByUuid(anyString())).thenReturn(getMockDrugOrder());
 		when(
 		    fhirMedicationRequestService.searchForMedicationRequests(any(), any(), any(), any(), any(), any(), any(), any(),
 		        any(), any(), any())).thenReturn(getMockMedicationRequestBundle());
@@ -70,5 +66,15 @@ public class MedicationRequestExportTest {
 		IBundleProvider iBundleProvider = new SimpleBundleProvider(Arrays.asList(medicationRequest));
 		;
 		return iBundleProvider;
+	}
+	
+	private DrugOrder getMockDrugOrder() {
+		DrugOrder drugOrder = new DrugOrder();
+		
+		Drug drug = new Drug();
+		drug.setDrugId(1);
+		
+		drugOrder.setDrug(drug);
+		return drugOrder;
 	}
 }
