@@ -849,7 +849,140 @@ public class ObsBasedDiagnosticReportServiceTest {
 		assertEquals(issuedDate, resultObs.getObsDatetime());
 		assertEquals(concept, resultObs.getConcept());
 	}
-	
+
+	@Test
+	public void shouldSaveAndUpdateObsWithPerson_IssuedDate_LabResultForPanelTests() {
+		DiagnosticReport diagnosticReportToCreate = new DiagnosticReport();
+		FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
+
+		Observation observationOne = new Observation();
+		observationOne.setId("test");
+		observationOne.setStatus(Observation.ObservationStatus.FINAL);
+		Type type = new StringType("20");
+		observationOne.setValue(type);
+
+		Observation observationTwo = new Observation();
+		observationTwo.setId("test");
+		observationOne.setStatus(Observation.ObservationStatus.FINAL);
+		observationOne.setValue(new StringType("30"));
+
+		Reference referenceOne = new Reference();
+		referenceOne.setReference("#test");
+		referenceOne.setType("Observation");
+		referenceOne.setResource(observationOne);
+
+		Reference referenceTwo = new Reference();
+		referenceTwo.setReference("#test");
+		referenceTwo.setType("Observation");
+		referenceTwo.setResource(observationTwo);
+
+		diagnosticReportToCreate.setResult(Arrays.asList(referenceOne,referenceTwo));
+
+		String orderUuid = "uuid-12";
+		List<Reference> basedOn = mockBasedOn(orderUuid);
+		diagnosticReportToCreate.setBasedOn(basedOn);
+		Date issuedDate = new Date();
+
+		CodeableConcept conceptFromTheRequest = new CodeableConcept();
+		conceptFromTheRequest.setCoding(Collections.singletonList(new Coding("HL7", orderUuid, "Test1")));
+		diagnosticReportToCreate.setCode(conceptFromTheRequest);
+
+		Patient patient = new Patient(123);
+		Concept panelConcept = new Concept(12);
+		Concept subConceptOne = new Concept(13);
+		Concept subConceptTwo = new Concept(14);
+		panelConcept.setUuid(orderUuid);
+		subConceptOne.setUuid("uuid-13");
+		subConceptTwo.setUuid("uuid-14");
+		ConceptDatatype conceptDatatype = new ConceptDatatype();
+		conceptDatatype.setHl7Abbreviation(ConceptDatatype.NUMERIC);
+		subConceptOne.setDatatype(conceptDatatype);
+		subConceptTwo.setDatatype(conceptDatatype);
+
+		Obs topLevelObs = new Obs();
+		Obs labObs = new Obs();
+		labObs.setGroupMembers(of(childObs("", "20.0"), childObs("", "30.0")).collect(toSet()));
+		topLevelObs.addGroupMember(labObs);
+
+		fhirDiagnosticReport.setSubject(patient);
+		fhirDiagnosticReport.setCode(panelConcept);
+		fhirDiagnosticReport.setIssued(issuedDate);
+
+		Order order1 = new Order();
+		order1.setConcept(panelConcept);
+		order1.setUuid("uuid1");
+		CareSetting careSetting = new CareSetting();
+		OrderType orderType = new OrderType(1);
+		String careSettingName = CareSetting.CareSettingType.OUTPATIENT.toString();
+
+		User authenticatedUser = new User();
+		authenticatedUser.setPerson(new Person());
+		UserContext mockUserContext = mock(UserContext.class);
+		when(mockUserContext.getAuthenticatedUser()).thenReturn(authenticatedUser);
+		when(mockUserContext.getLocation()).thenReturn(new Location());
+		Context.setUserContext(mockUserContext);
+
+		Obs obs1 = new Obs();
+		obs1.setPerson(patient);
+		obs1.setConcept(panelConcept);
+		obs1.setOrder(order1);
+
+
+		Obs obs2 = new Obs();
+		obs2.setValueNumeric(20.0);
+		obs2.setPerson(patient);
+		obs2.setConcept(subConceptOne);
+		obs2.setOrder(order1);
+
+
+		Obs obs3 = new Obs();
+		obs3.setValueNumeric(30.0);
+		obs3.setPerson(patient);
+		obs3.setConcept(subConceptTwo);
+		obs3.setOrder(order1);
+
+		when(orderService.getCareSettingByName(careSettingName)).thenReturn(careSetting);
+		when(orderService.getOrderTypeByName("Lab Order")).thenReturn(orderType);
+		when(orderService.getOrderByUuid("uuid-12")).thenReturn(order1);
+		when(orderService.getOrders(patient, careSetting, orderType, false)).thenReturn(Arrays.asList(order1));
+		when(translator.toOpenmrsType(diagnosticReportToCreate)).thenReturn(fhirDiagnosticReport);
+		doNothing().when(diagnosticReportObsValidator).validate(fhirDiagnosticReport);
+		when(dao.createOrUpdate(fhirDiagnosticReport)).thenReturn(fhirDiagnosticReport);
+		when(translator.toFhirResource(fhirDiagnosticReport)).thenReturn(
+				diagnosticReportToCreate);
+		when(observationTranslator.toOpenmrsType(
+				(Observation) diagnosticReportToCreate.getResult().get(0).getResource())).thenReturn(obs2);
+		when(observationTranslator.toOpenmrsType(
+				(Observation) diagnosticReportToCreate.getResult().get(1).getResource())).thenReturn(obs3);
+		when(diagnosticReportObsLabResultTranslator.toOpenmrsType(any(LabResult.class))).thenReturn(topLevelObs);
+
+		when(encounterService.getEncounterType("LAB_RESULT")).thenReturn(new EncounterType());
+		when(visitService.getActiveVisitsByPatient(patient)).thenReturn(Collections.singletonList(new Visit()));
+
+		DiagnosticReport actualDiagnosticReport = obsBasedDiagnosticReportService.create(diagnosticReportToCreate);
+
+		verify(obsService, times(1)).saveObs(any(Obs.class), eq(SAVE_OBS_MESSAGE));
+		verify(diagnosticReportObsLabResultTranslator).toOpenmrsType(labResultArgumentCaptor.capture());
+
+		LabResult labResult = labResultArgumentCaptor.getValue();
+		BiFunction<Concept, Object, Obs> obsFactory = labResult.getObsFactory();
+		Obs resultObsOne = obsFactory.apply(subConceptOne, "20.0");
+		Obs resultObsTwo = obsFactory.apply(subConceptTwo, "30.0");
+
+		assertEquals(diagnosticReportToCreate, actualDiagnosticReport);
+
+		assertEquals(labResult.getConcept(), panelConcept);
+		assertEquals(labResult.getLabResultValue().get(subConceptOne), "20.0");
+		assertEquals(labResult.getLabResultValue().get(subConceptTwo), "30.0");
+
+		assertEquals(patient, resultObsOne.getPerson());
+
+		assertEquals(issuedDate, resultObsOne.getObsDatetime());
+
+		assertEquals(subConceptOne, resultObsOne.getConcept());
+		assertEquals(subConceptTwo, resultObsTwo.getConcept());
+	}
+
 	private List<Reference> mockBasedOn() {
 		return mockBasedOn("order-uuid");
 	}
