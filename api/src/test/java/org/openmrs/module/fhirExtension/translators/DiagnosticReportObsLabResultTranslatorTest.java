@@ -173,7 +173,7 @@ public class DiagnosticReportObsLabResultTranslatorTest {
 		List<Obs> obsList = new ArrayList<>();
 		obsList.add(obs);
 
-		LabResult labResult = LabResult.builder().setLabResultValue(obsList).concept(testConcept).obsFactory(groupedObsFunction())
+		LabResult labResult = LabResult.builder().setLabResultValues(obsList).concept(testConcept).obsFactory(groupedObsFunction())
 		        .build();
 		mockConceptServiceGetConceptByName();
 

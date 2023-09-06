@@ -24,7 +24,7 @@ public class LabResult {
 	
 	private String labReportNotes;
 	
-	private Map<Concept, Object> labResultValue;
+	private Map<Concept, Object> labResultValues;
 	
 	private Map<Concept, Obs.Interpretation> interpretationOfLabResultValue;
 	
@@ -95,7 +95,7 @@ public class LabResult {
 			return this;
 		}
 		
-		public LabResultBuilder setLabResultValue(List<Obs> obsList) {
+		public LabResultBuilder setLabResultValues(List<Obs> obsList) {
 			HashMap<Concept, Object> labResultMap = new HashMap<>();
 			HashMap<Concept,Obs.Interpretation> interpretationLabResultMap = new HashMap<>();
 
@@ -120,7 +120,7 @@ public class LabResult {
 					interpretationLabResultMap.put(obs.getConcept(),interpretation);
 				}
 			}
-			this.labResultValue = labResultMap;
+			this.labResultValues = labResultMap;
 			this.interpretationOfLabResultValue = interpretationLabResultMap;
 			return this;
 		}
