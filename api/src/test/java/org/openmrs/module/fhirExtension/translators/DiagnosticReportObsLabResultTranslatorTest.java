@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openmrs.Concept;
+import org.openmrs.ConceptDatatype;
 import org.openmrs.ConceptSet;
 import org.openmrs.Obs;
 import org.openmrs.api.ConceptService;
@@ -16,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -160,18 +160,23 @@ public class DiagnosticReportObsLabResultTranslatorTest {
 	}
 	
 	@Test
-	public void givenObs_WhenAbnormalLabResultIsPresent_ShouldTranslateToLabResult() {
-		Concept testConcept = new Concept();
-		HashMap<Concept, Obs.Interpretation> interpretationValueMap = new HashMap<Concept, Obs.Interpretation>() {
-			
-			{
-				put(testConcept, Obs.Interpretation.ABNORMAL);
-			}
-		};
-		LabResult labResult = LabResult.builder().interpretationOfLabResultValue(interpretationValueMap)
-		        .concept(testConcept).obsFactory(groupedObsFunction()).build();
+	public void givenObs_WhenAbnormalLabResultIsPresent_ShouldTranslateToObs() {
+		Concept testConcept = new Concept(12);
+		ConceptDatatype conceptDatatype = new ConceptDatatype();
+		conceptDatatype.setHl7Abbreviation(ConceptDatatype.NUMERIC);
+		testConcept.setDatatype(conceptDatatype);
+
+		Obs obs = new Obs(5);
+		obs.setInterpretation(Obs.Interpretation.ABNORMAL);
+		obs.setConcept(testConcept);
+		obs.setValueNumeric(10.0);
+		List<Obs> obsList = new ArrayList<>();
+		obsList.add(obs);
+
+		LabResult labResult = LabResult.builder().setLabResultValue(obsList).concept(testConcept).obsFactory(groupedObsFunction())
+		        .build();
 		mockConceptServiceGetConceptByName();
-		
+
 		Obs obsModel = diagnosticReportObsResultTranslatorHelper.toOpenmrsType(labResult);
 		
 		assertEquals(testConcept, obsModel.getConcept());
@@ -179,14 +184,13 @@ public class DiagnosticReportObsLabResultTranslatorTest {
 		assertEquals(1, obsGroupMembersTopLevel.size());
 		
 		Obs obsModelSecondLevel = obsGroupMembersTopLevel.iterator().next();
-		
 		assertEquals(testConcept, obsModelSecondLevel.getConcept());
+
 		Set<Obs> obsGroupMembersSecondLevel = obsModelSecondLevel.getGroupMembers();
-		obsGroupMembersSecondLevel.iterator().next().setInterpretation(Obs.Interpretation.ABNORMAL);
-		assertEquals(1, obsGroupMembersSecondLevel.size());
+		assertEquals(2, obsGroupMembersSecondLevel.size());
 		
 		Obs reportObs = fetchObs(obsGroupMembersSecondLevel, "LAB_ABNORMAL");
-		assertEquals(Obs.Interpretation.ABNORMAL, reportObs.getInterpretation());
+		assertNotNull(reportObs);
 	}
 	
 	private BiFunction<Concept, Object, Obs> groupedObsFunction() {

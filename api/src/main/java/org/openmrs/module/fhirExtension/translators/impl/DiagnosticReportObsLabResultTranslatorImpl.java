@@ -73,13 +73,14 @@ public class DiagnosticReportObsLabResultTranslatorImpl implements DiagnosticRep
         labResult.newValueObs(conceptService.getConceptByName(LAB_NOTES_CONCEPT), labResult.getLabReportNotes())
                 .ifPresent(labResultObs::add);
 		Map<Concept, Object> labResultValue = labResult.getLabResultValue();
-        if(labResultValue!=null)
-         labResult.newValueObs(testConcept, labResultValue.get(testConcept))
-				.ifPresent(labResultObs::add);
+		if(labResultValue!=null) {
+			if (!labResultValue.isEmpty())
+				labResult.newValueObs(testConcept, labResultValue.get(testConcept)).ifPresent(labResultObs::add);
 
-		if(labResult.getInterpretationOfLabResultValue() != null) {
-			labResult.newValueObs(conceptService.getConceptByName(LAB_ABNORMAL), labResult.getInterpretationOfLabResultValue().get(testConcept) == Obs.Interpretation.ABNORMAL)
-					.ifPresent(labResultObs::add);
+			if (labResult.getInterpretationOfLabResultValue().get(testConcept) != null) {
+				labResult.newValueObs(conceptService.getConceptByName(LAB_ABNORMAL), labResult.getInterpretationOfLabResultValue().get(testConcept) == Obs.Interpretation.ABNORMAL)
+						.ifPresent(labResultObs::add);
+			}
 		}
         return labResultObs;
     }
