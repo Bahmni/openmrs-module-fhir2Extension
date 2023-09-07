@@ -132,6 +132,13 @@ public class ObsBasedDiagnosticReportServiceTest {
 		DiagnosticReport diagnosticReportToCreate = new DiagnosticReport();
 		FhirDiagnosticReport fhirDiagnosticReport = new FhirDiagnosticReport();
 		
+		Observation observation = new Observation();
+		observation.setId("test");
+		Reference reference = new Reference("#test");
+		reference.setType("Observation");
+		reference.setResource(observation);
+		diagnosticReportToCreate.setResult(Collections.singletonList(reference));
+		
 		Obs topLevelObs = new Obs();
 		Obs labObs = new Obs();
 		labObs.setGroupMembers(of(childObs(LAB_REPORT_CONCEPT, REPORT_URL), childObs(LAB_RESULT_CONCEPT, REPORT_NAME),
@@ -201,6 +208,14 @@ public class ObsBasedDiagnosticReportServiceTest {
 		String orderUuid = "uuid-12";
 		List<Reference> basedOn = mockBasedOn(orderUuid);
 		diagnosticReportToCreate.setBasedOn(basedOn);
+		
+		Observation observation = new Observation();
+		observation.setId("test");
+		Reference reference = new Reference("#test");
+		reference.setType("Observation");
+		reference.setResource(observation);
+		diagnosticReportToCreate.setResult(Collections.singletonList(reference));
+		
 		CodeableConcept conceptFromTheRequest = new CodeableConcept();
 		conceptFromTheRequest.setCoding(Collections.singletonList(new Coding("HL7", orderUuid, "Test1")));
 		diagnosticReportToCreate.setCode(conceptFromTheRequest);
@@ -253,6 +268,14 @@ public class ObsBasedDiagnosticReportServiceTest {
 		String orderUuid = "uuid-12";
 		List<Reference> basedOn = mockBasedOn(orderUuid);
 		diagnosticReportToCreate.setBasedOn(basedOn);
+		
+		Observation observation = new Observation();
+		observation.setId("test");
+		Reference reference = new Reference("#test");
+		reference.setType("Observation");
+		reference.setResource(observation);
+		diagnosticReportToCreate.setResult(Collections.singletonList(reference));
+		
 		CodeableConcept conceptFromTheRequest = new CodeableConcept();
 		conceptFromTheRequest.setCoding(Collections.singletonList(new Coding("HL7", orderUuid, "Test1")));
 		diagnosticReportToCreate.setCode(conceptFromTheRequest);
