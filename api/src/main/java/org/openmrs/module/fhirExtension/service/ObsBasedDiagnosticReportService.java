@@ -157,16 +157,15 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			diagnosticReport.setResult(Collections.emptyList());
 
 			FhirDiagnosticReport fhirDiagnosticReport = obsBasedDiagnosticReportTranslator.toOpenmrsType(diagnosticReport);
-			Set<Obs> attachmentObs = fhirDiagnosticReport.getResults();
+			boolean hasResults = fhirDiagnosticReport.getResults().isEmpty();
 
 			Order order = getOrder(diagnosticReport, fhirDiagnosticReport);
 			Encounter encounter = createNewEncounterForReport(fhirDiagnosticReport, order);
 
 			fhirDiagnosticReport.setEncounter(encounter);
-			if (attachmentObs.isEmpty()) {
-				Obs obs = reportResults.get(0);
+			if (hasResults) {
 				LabResult labResult = LabResult.builder()
-						.setLabResultValue(obs)
+						.setLabResultValues(reportResults)
 						.concept(fhirDiagnosticReport.getCode())
 						.obsFactory(newObs(fhirDiagnosticReport.getSubject(), fhirDiagnosticReport.getIssued()))
 						.build();
