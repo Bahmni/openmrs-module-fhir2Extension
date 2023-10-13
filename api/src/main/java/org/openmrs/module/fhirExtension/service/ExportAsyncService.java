@@ -2,6 +2,7 @@ package org.openmrs.module.fhirExtension.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.openmrs.Concept;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.UserContext;
@@ -31,12 +32,6 @@ public class ExportAsyncService {
 	public static final String END_DATE_CONCEPT = "FHIR Export End Date";
 	
 	public static final String ANONYMISE_CONCEPT = "FHIR Export Anonymise Flag";
-	
-	public static final String START_DATE_DISPLAY_STR = "Start Date of FHIR Export";
-	
-	public static final String END_DATE_DISPLAY_STR = "End Date of FHIR Export";
-	
-	public static final String ANONYMISE_DISPLAY_STR = "Is FHIR Export Anonymised?";
 	
 	private FhirTaskDao fhirTaskDao;
 	
@@ -102,18 +97,22 @@ public class ExportAsyncService {
 	}
 	
 	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
-        FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, START_DATE_DISPLAY_STR, startDate, START_DATE_CONCEPT);
-        FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, END_DATE_DISPLAY_STR, endDate, END_DATE_CONCEPT);
-        FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ANONYMISE_DISPLAY_STR, Boolean.toString(isAnonymise), ANONYMISE_CONCEPT);
+        FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, START_DATE_CONCEPT, startDate);
+        FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, END_DATE_CONCEPT, endDate);
+        FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));
         return new HashSet<>(Arrays.asList(startDateFhirTaskInput, endDateFhirTaskInput, anonymiseFhirTaskInput));
     }
 	
-	private FhirTaskInput createFHIRTaskInput(FhirTask fhirTask, String conceptName, String valueText, String conceptNameType) {
+	private FhirTaskInput createFHIRTaskInput(FhirTask fhirTask, String conceptName, String valueText) {
+		Concept concept = conceptService.getConceptByName(conceptName);
+		if (concept == null) {
+			throw new RuntimeException("Concept with name " + conceptName + " not found");
+		}
 		FhirTaskInput fhirTaskInput = new FhirTaskInput();
 		fhirTaskInput.setName(conceptName);
 		fhirTaskInput.setTask(fhirTask);
 		fhirTaskInput.setValueText(valueText);
-		fhirTaskInput.setType(conceptService.getConceptByName(conceptNameType));
+		fhirTaskInput.setType(concept);
 		return fhirTaskInput;
 	}
 	
