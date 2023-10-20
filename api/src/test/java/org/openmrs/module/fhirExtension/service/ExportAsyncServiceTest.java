@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.openmrs.Concept;
 import org.openmrs.Person;
 import org.openmrs.User;
 import org.openmrs.api.ConceptService;
@@ -76,7 +77,7 @@ public class ExportAsyncServiceTest {
 	@Test
 	public void shouldExportPatientDataAndUpdateFhirTaskStatusToCompleted_whenValidDateRangeProvided() {
 		FhirTask fhirTask = mockFhirTask();
-		
+		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
 		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", false);
 		
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
@@ -104,6 +105,7 @@ public class ExportAsyncServiceTest {
 		exporters.add(new ConditionExport(fhirConditionService));
 		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getMockConditionBundle(1));
+		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
 
 		FhirTask fhirTask = mockFhirTask();
 
