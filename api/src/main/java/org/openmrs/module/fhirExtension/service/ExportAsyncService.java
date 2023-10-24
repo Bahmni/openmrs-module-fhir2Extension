@@ -27,6 +27,8 @@ public class ExportAsyncService {
 	
 	public static final String DOWNLOAD_URL = "Download URL";
 	
+	public static final String USER_NAME_CONCEPT = "FHIR Export User Name";
+	
 	public static final String START_DATE_CONCEPT = "FHIR Export Start Date";
 	
 	public static final String END_DATE_CONCEPT = "FHIR Export End Date";
@@ -97,10 +99,11 @@ public class ExportAsyncService {
 	}
 	
 	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
+		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, USER_NAME_CONCEPT,	Context.getAuthenticatedUser().getUsername());
         FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, START_DATE_CONCEPT, startDate);
         FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, END_DATE_CONCEPT, endDate);
         FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));
-        return new HashSet<>(Arrays.asList(startDateFhirTaskInput, endDateFhirTaskInput, anonymiseFhirTaskInput));
+        return new HashSet<>(Arrays.asList(userNameFhirTaskInput, startDateFhirTaskInput, endDateFhirTaskInput, anonymiseFhirTaskInput));
     }
 	
 	private FhirTaskInput createFHIRTaskInput(FhirTask fhirTask, String conceptName, String valueText) {
