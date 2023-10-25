@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.openmrs.Concept;
 import org.openmrs.Person;
 import org.openmrs.User;
 import org.openmrs.api.ConceptService;
@@ -18,6 +19,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.api.FhirConditionService;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
 import org.openmrs.module.fhir2.model.FhirTask;
+import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhirExtension.export.Exporter;
 import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.openmrs.module.fhirExtension.export.anonymise.impl.CorrelationCache;
@@ -27,10 +29,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
@@ -70,16 +69,18 @@ public class ExportAsyncServiceTest {
 		PowerMockito.mockStatic(Context.class);
 		User authenticatedUser = new User();
 		authenticatedUser.setPerson(new Person());
+		authenticatedUser.setUsername("dummy");
 		when(Context.getAuthenticatedUser()).thenReturn(authenticatedUser);
 	}
 	
 	@Test
 	public void shouldExportPatientDataAndUpdateFhirTaskStatusToCompleted_whenValidDateRangeProvided() {
 		FhirTask fhirTask = mockFhirTask();
-		
+		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
 		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", false);
 		
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
+		assertEquals(4, fhirTask.getInput().size());
 		verify(conceptService, times(1)).getConceptByName("Download URL");
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
 	}
@@ -104,6 +105,7 @@ public class ExportAsyncServiceTest {
 		exporters.add(new ConditionExport(fhirConditionService));
 		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(getMockConditionBundle(1));
+		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
 
 		FhirTask fhirTask = mockFhirTask();
 
@@ -117,7 +119,25 @@ public class ExportAsyncServiceTest {
 	private FhirTask mockFhirTask() {
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setStatus(FhirTask.TaskStatus.ACCEPTED);
+		fhirTask.setInput(getFhirTaskInputs(fhirTask, "2023-01-01", "2023-12-31", true));
 		return fhirTask;
+	}
+	
+	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
+		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.USER_NAME_CONCEPT,	"dummy");
+		FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.START_DATE_CONCEPT, startDate);
+		FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.END_DATE_CONCEPT, endDate);
+		FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));
+		return new HashSet<>(Arrays.asList(userNameFhirTaskInput, startDateFhirTaskInput, endDateFhirTaskInput, anonymiseFhirTaskInput));
+	}
+	
+	private FhirTaskInput createFHIRTaskInput(FhirTask fhirTask, String conceptName, String valueText) {
+		FhirTaskInput fhirTaskInput = new FhirTaskInput();
+		fhirTaskInput.setName(conceptName);
+		fhirTaskInput.setTask(fhirTask);
+		fhirTaskInput.setValueText(valueText);
+		fhirTaskInput.setType(new Concept());
+		return fhirTaskInput;
 	}
 	
 	private IBundleProvider getMockConditionBundle(int count) {
