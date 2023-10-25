@@ -2,11 +2,13 @@ package org.openmrs.module.fhirExtension.service;
 
 import lombok.extern.log4j.Log4j2;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.openmrs.Concept;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.UserContext;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
 import org.openmrs.module.fhir2.model.FhirTask;
+import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhir2.model.FhirTaskOutput;
 import org.openmrs.module.fhirExtension.export.Exporter;
 import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
@@ -16,8 +18,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Log4j2
 @Component
@@ -25,6 +26,14 @@ import java.util.List;
 public class ExportAsyncService {
 	
 	public static final String DOWNLOAD_URL = "Download URL";
+	
+	public static final String USER_NAME_CONCEPT = "FHIR Export User Name";
+	
+	public static final String START_DATE_CONCEPT = "FHIR Export Start Date";
+	
+	public static final String END_DATE_CONCEPT = "FHIR Export End Date";
+	
+	public static final String ANONYMISE_CONCEPT = "FHIR Export Anonymise Flag";
 	
 	private FhirTaskDao fhirTaskDao;
 	
@@ -66,6 +75,8 @@ public class ExportAsyncService {
 			fileExportService.createZipWithExportedNdjsonFiles(fhirTask.getUuid());
 			FhirTaskOutput fhirTaskOutput = getFhirTaskOutput(fhirTask, downloadUrl);
 			fhirTask.setOutput(Collections.singleton(fhirTaskOutput));
+			Set<FhirTaskInput> fhirTaskInputs = getFhirTaskInputs(fhirTask, startDate, endDate, isAnonymise);
+			fhirTask.setInput(fhirTaskInputs);
 			fileExportService.deleteDirectory(fhirTask.getUuid());
 		}
 		catch (Exception exception) {
@@ -87,6 +98,27 @@ public class ExportAsyncService {
 		anonymiseHandler.loadAnonymiserConfig(isAnonymise);
 	}
 	
+	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
+		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, USER_NAME_CONCEPT,	Context.getAuthenticatedUser().getUsername());
+        FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, START_DATE_CONCEPT, startDate);
+        FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, END_DATE_CONCEPT, endDate);
+        FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));
+        return new HashSet<>(Arrays.asList(userNameFhirTaskInput, startDateFhirTaskInput, endDateFhirTaskInput, anonymiseFhirTaskInput));
+    }
+	
+	private FhirTaskInput createFHIRTaskInput(FhirTask fhirTask, String conceptName, String valueText) {
+		Concept concept = conceptService.getConceptByName(conceptName);
+		if (concept == null) {
+			throw new RuntimeException("Concept with name " + conceptName + " not found");
+		}
+		FhirTaskInput fhirTaskInput = new FhirTaskInput();
+		fhirTaskInput.setName(conceptName);
+		fhirTaskInput.setTask(fhirTask);
+		fhirTaskInput.setValueText(valueText);
+		fhirTaskInput.setType(concept);
+		return fhirTaskInput;
+	}
+	
 	private FhirTaskOutput getFhirTaskOutput(FhirTask fhirTask, String downloadUrl) {
 		FhirTaskOutput fhirTaskOutput = new FhirTaskOutput();
 		fhirTaskOutput.setName("Download Link Name");
@@ -97,8 +129,8 @@ public class ExportAsyncService {
 	}
 	
 	private void anonymise(List<IBaseResource> iBaseResources, String resourceType, boolean isAnonymise) {
-		if(isAnonymise) {
-			iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, resourceType));
-		}
-	}
+        if (isAnonymise) {
+            iBaseResources.forEach(iBaseResource -> anonymiseHandler.anonymise(iBaseResource, resourceType));
+        }
+    }
 }
