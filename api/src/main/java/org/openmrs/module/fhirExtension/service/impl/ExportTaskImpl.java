@@ -2,11 +2,8 @@ package org.openmrs.module.fhirExtension.service.impl;
 
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.time.DateUtils;
-import org.openmrs.User;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
-import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.service.ExportTask;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,10 +35,6 @@ public class ExportTaskImpl implements ExportTask {
 		fhirTask.setName(logMessage);
 		log.info(logMessage);
 		fhirTask.setIntent(FhirTask.TaskIntent.ORDER);
-		FhirReference fhirReference = new FhirReference();
-		fhirReference.setReference(FhirConstants.PRACTITIONER + "/" + Context.getAuthenticatedUser().getUsername());
-		fhirReference.setType(FhirConstants.PRACTITIONER);
-		fhirTask.setOwnerReference(fhirReference);
 		
 		fhirTaskDao.createOrUpdate(fhirTask);
 		
