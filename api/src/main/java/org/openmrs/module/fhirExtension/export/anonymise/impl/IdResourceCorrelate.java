@@ -1,7 +1,11 @@
 package org.openmrs.module.fhirExtension.export.anonymise.impl;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.MedicationRequest;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.ServiceRequest;
 
 public class IdResourceCorrelate {
 	
@@ -52,6 +56,7 @@ public class IdResourceCorrelate {
 		String patientRef = subjectRef.getReference();
 		String[] patientRefTokens = patientRef.split("/");
 		subjectRef.setReference(patientRefTokens[0] + "/" + correlationCache.readDigest(patientRefTokens[1], salt));
+		subjectRef.setDisplay(null);
 	}
 	
 	private static class SingletonHelper {
