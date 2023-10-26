@@ -52,6 +52,7 @@ public class IdResourceCorrelate {
 		String patientRef = subjectRef.getReference();
 		String[] patientRefTokens = patientRef.split("/");
 		subjectRef.setReference(patientRefTokens[0] + "/" + correlationCache.readDigest(patientRefTokens[1], salt));
+		subjectRef.setDisplay(null);
 	}
 	
 	private static class SingletonHelper {
