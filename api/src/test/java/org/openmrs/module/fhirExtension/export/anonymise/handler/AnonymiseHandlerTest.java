@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -83,7 +84,7 @@ public class AnonymiseHandlerTest {
 		anonymiseHandler.anonymise(patient, "patient");
 		
 		assertEquals(2, initialIdentifierSize);
-		assertEquals(1, patient.getIdentifier().size());
+		assertEquals(0, patient.getIdentifier().size());
 		
 		assertFalse(patient.hasAddress());
 		assertTrue(isAddressPresentInitially);
@@ -246,6 +247,7 @@ public class AnonymiseHandlerTest {
 		
 		assertEquals(patient.getId(), "newDummyId");
 		assertEquals(condition.getSubject().getReference(), "Patient/newDummyId");
+		assertNull(condition.getSubject().getDisplay());
 		assertEquals(medicationRequest.getSubject().getReference(), "Patient/newDummyId");
 		assertEquals(serviceRequest.getSubject().getReference(), "Patient/newDummyId");
 	}
@@ -258,26 +260,26 @@ public class AnonymiseHandlerTest {
 	
 	private Patient mockPatientResource() {
         Patient patient = new Patient();
-		patient.setId("DummyId");
+        patient.setId("DummyId");
         List<Identifier> identifiers = new ArrayList<>();
-        identifiers.add(new Identifier());
-        identifiers.add(new Identifier());
+        identifiers.add(new Identifier().setValue("DummyValue1"));
+        identifiers.add(new Identifier().setValue("DummyValue2"));
         patient.setIdentifier(identifiers);
         List<HumanName> names = new ArrayList<>();
         names.add(new HumanName().addGiven("Dummy"));
         patient.setName(names);
         List<Address> addresses = Collections.singletonList(new Address().setCity("previousDummyValue").setCountry("previousDummyValue").setDistrict("previousDummyValue"));
-		List<Extension> extensions = Collections.singletonList(new Extension("dummyUrl", new StringType("dummyExtensionValue")));
-		addresses.get(0).setExtension(extensions);
+        List<Extension> extensions = Collections.singletonList(new Extension("dummyUrl", new StringType("dummyExtensionValue")));
+        addresses.get(0).setExtension(extensions);
         patient.setAddress(addresses);
         List<ContactPoint> contactPoints = new ArrayList<>();
         ContactPoint contactPoint = new ContactPoint();
         contactPoints.add(contactPoint.setValue("0123456789"));
         patient.setTelecom(contactPoints);
 
-		DateType birthDateElement = new DateType("2000-05-03");
-		patient.setBirthDateElement(birthDateElement);
-		patient.setDeceased(new DateTimeType("2023-07-31T00:00:00.000+00:00"));
+        DateType birthDateElement = new DateType("2000-05-03");
+        patient.setBirthDateElement(birthDateElement);
+        patient.setDeceased(new DateTimeType("2023-07-31T00:00:00.000+00:00"));
 
         return patient;
     }
@@ -317,6 +319,6 @@ public class AnonymiseHandlerTest {
 	
 	private Reference mockSubjectReferenceWith(String id) {
 		String subjectReferenceStr = new StringBuilder("Patient/").append(id).toString();
-		return new Reference(subjectReferenceStr);
+		return new Reference(subjectReferenceStr).setDisplay("Dummy Display");
 	}
 }
