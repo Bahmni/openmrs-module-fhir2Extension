@@ -44,7 +44,7 @@ public class ExportTaskTest {
 	public void shouldCreateFhirTask_whenRequestedForPatientDataExport() {
 		when(fhirTaskDao.createOrUpdate(any(FhirTask.class))).thenReturn(mockFhirTask());
 		
-		FhirTask initialTaskResponse = exportTask.getInitialTaskResponse();
+		FhirTask initialTaskResponse = exportTask.getInitialTaskResponse(false);
 		
 		assertNotNull(initialTaskResponse);
 		assertEquals(FhirTask.TaskStatus.ACCEPTED, initialTaskResponse.getStatus());

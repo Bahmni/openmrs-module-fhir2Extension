@@ -44,6 +44,11 @@ public class ProcedureOrderExport implements Exporter {
 	}
 	
 	@Override
+	public String getResourceType() {
+		return "serviceRequest";
+	}
+	
+	@Override
     public List<IBaseResource> export(String startDate, String endDate) {
         List<IBaseResource> procedureResources = new ArrayList<>();
         OrderType procedureOrderType = orderService.getOrderTypeByName(PROCEDURE_ORDER);
@@ -54,7 +59,7 @@ public class ProcedureOrderExport implements Exporter {
         OrderSearchCriteria orderSearchCriteria = getOrderSearchCriteria(procedureOrderType, startDate, endDate);
         List<Order> orders = orderService.getOrders(orderSearchCriteria);
         orders.stream().map(this::convertToFhirResource).forEach(procedureResources :: add);
-        return procedureResources;
+		return procedureResources;
     }
 	
 	private ServiceRequest convertToFhirResource(Order order) {
@@ -67,6 +72,7 @@ public class ProcedureOrderExport implements Exporter {
 		serviceRequest.setCode(codeableConcept);
 		serviceRequest.setSubject(getSubjectReference(order.getPatient().getUuid()));
 		serviceRequest.setEncounter(getEncounterReference(order.getEncounter().getUuid()));
+		serviceRequest.setAuthoredOn(order.getDateCreated());
 		
 		Concept surgicalProcedureConcept = conceptService.getConceptByName(SURGICAL_PROCEDURE);
 		CodeableConcept serviceRequestCategory = conceptTranslator.toFhirResource(surgicalProcedureConcept);
@@ -93,4 +99,5 @@ public class ProcedureOrderExport implements Exporter {
 		
 		return orderSearchCriteriaBuilder.build();
 	}
+	
 }

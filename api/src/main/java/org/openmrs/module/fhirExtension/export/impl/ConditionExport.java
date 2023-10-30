@@ -30,9 +30,13 @@ public class ConditionExport implements Exporter {
         DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
         IBundleProvider iBundleProvider = fhirConditionService.searchConditions(null, null, null, null, null, null, null,
                 lastUpdated, null, null);
-        List<IBaseResource> conditionList = iBundleProvider.getAllResources().stream().map(this::addCategory).collect(Collectors.toList());
-        return conditionList;
+        return iBundleProvider.getAllResources().stream().map(this::addCategory).collect(Collectors.toList());
     }
+	
+	@Override
+	public String getResourceType() {
+		return "condition";
+	}
 	
 	private Condition addCategory(IBaseResource baseResource) {
 		Condition condition = (Condition) baseResource;
@@ -42,5 +46,4 @@ public class ConditionExport implements Exporter {
 		condition.setCategory(Collections.singletonList(codeableConcept.addCoding(coding)));
 		return condition;
 	}
-	
 }

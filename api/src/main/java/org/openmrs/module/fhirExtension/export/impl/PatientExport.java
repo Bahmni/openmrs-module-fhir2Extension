@@ -22,6 +22,11 @@ public class PatientExport implements Exporter {
 	}
 	
 	@Override
+	public String getResourceType() {
+		return "patient";
+	}
+	
+	@Override
 	public List<IBaseResource> export(String startDate, String endDate) {
 		DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
 		PatientSearchParams patientSearchParams = new PatientSearchParams(null, null, null, null, null, null, null, null,
@@ -29,4 +34,5 @@ public class PatientExport implements Exporter {
 		IBundleProvider iBundleProvider = fhirPatientService.searchForPatients(patientSearchParams);
 		return iBundleProvider.getAllResources();
 	}
+	
 }

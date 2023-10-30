@@ -93,6 +93,10 @@
 		<name>Export Patient Data</name>
 		<description>Ability to export patient data in FHIR format</description>
 	</privilege>
+	<privilege>
+		<name>Export Non Anonymised Patient Data</name>
+		<description>Ability to bulk-export patient data that has NOT been anonymised, in FHIR JSON format</description>
+	</privilege>
 
 	<globalProperty>
 		<property>labEntry.visitType</property>
@@ -110,5 +114,11 @@
 		<property>fhir.export.procedure.template</property>
 		<defaultValue></defaultValue>
 		<description>Properties file path for procedure template</description>
+	</globalProperty>
+
+	<globalProperty>
+		<property>fhir.export.anonymise.config.path</property>
+		<defaultValue></defaultValue>
+		<description>Path of the config file that controls the anonymisation mechanism during bulk-export of patient data.</description>
 	</globalProperty>
 </module>

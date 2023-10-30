@@ -1,0 +1,16 @@
+{
+  "resources": {
+    "patient": [
+      {
+        "fieldName": "address",
+        "method": "fixed",
+        "value": "fixedDummyValue"
+      },
+      {
+        "fieldName": "telecom",
+        "method": "fixed",
+        "value": "9876543210"
+      }
+    ]
+  }
+}

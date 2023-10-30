@@ -1,6 +1,7 @@
 package org.openmrs.module.fhirExtension.export.impl;
 
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
@@ -17,6 +18,7 @@ import org.openmrs.module.fhirExtension.export.Exporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,12 +55,17 @@ public class DiagnosisExport implements Exporter {
 	}
 	
 	@Override
+	public String getResourceType() {
+		return "condition";
+	}
+	
+	@Override
 	public List<IBaseResource> export(String startDateStr, String endDateStr) {
 		List<IBaseResource> fhirResources = new ArrayList<>();
 
 		try {
 			Date startDate = getFormattedDate(startDateStr);
-			Date endDate = getFormattedDate(endDateStr);
+			Date endDate = getNextDay(endDateStr);
 			Concept visitDiagnosesConcept = conceptService.getConceptByName(VISIT_DIAGNOSES);
 			List<Obs> visitDiagnosesObs = obsService.getObservations(null, null, Arrays.asList(visitDiagnosesConcept), null, null,
 					null, null, null, null, startDate, endDate, false);
@@ -71,7 +78,7 @@ public class DiagnosisExport implements Exporter {
 			throw new RuntimeException(e);
 		}
 		
-		return fhirResources;
+		return  fhirResources;
 	}
 	
 	private Condition convertDiagnosisAsFhirCondition(Obs visitDiagnosisObsGroup) {
@@ -83,6 +90,7 @@ public class DiagnosisExport implements Exporter {
 		condition.setCategory(getCategory());
 		condition.setClinicalStatus(clinicalStatus);
 		condition.setOnset(new DateTimeType().setValue(codedDiagnosisObs.getObsDatetime()));
+		condition.setRecordedDate(codedDiagnosisObs.getDateCreated());
 		condition.setCode(codeableConcept);
 		condition.setSubject(getSubjectReference(codedDiagnosisObs.getPerson().getUuid()));
 		condition.setEncounter(getEncounterReference(codedDiagnosisObs.getEncounter().getUuid()));
@@ -125,5 +133,10 @@ public class DiagnosisExport implements Exporter {
 		Coding coding = new Coding("http://terminology.hl7.org/CodeSystem/condition-category", "encounter-diagnosis",
 		        "Encounter Diagnosis");
 		return Collections.singletonList(codeableConcept.addCoding(coding));
+	}
+	
+	private Date getNextDay(String dateString) throws ParseException {
+		Date date = getFormattedDate(dateString);
+		return date != null ? DateUtils.addDays(date, 1) : null;
 	}
 }

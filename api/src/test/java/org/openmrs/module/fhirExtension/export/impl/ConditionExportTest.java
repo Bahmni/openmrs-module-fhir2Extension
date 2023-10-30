@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.module.fhir2.api.FhirConditionService;
+import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,6 +21,9 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -30,6 +34,9 @@ public class ConditionExportTest {
 	
 	@InjectMocks
 	private ConditionExport conditionExport;
+	
+	@Mock
+	private AnonymiseHandler anonymiseHandler;
 	
 	@Test
 	public void shouldExportConditions_whenValidDateRangeProvided() {

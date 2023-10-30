@@ -6,7 +6,7 @@ import org.openmrs.module.fhir2.model.FhirTask;
 public interface ExportTask {
 	
 	@Authorized(value = { "Export Patient Data" })
-	FhirTask getInitialTaskResponse();
+	FhirTask getInitialTaskResponse(boolean isAnonymise);
 	
 	@Authorized(value = { "Export Patient Data" })
 	String validateParams(String startDate, String endDate);

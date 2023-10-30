@@ -61,7 +61,10 @@ public class ProcedureFormExport implements Exporter {
 
 		Arrays.stream(ProcedureAttribute.values()).forEach(procedureAttribute -> procedureConfigurationKeys.add(procedureAttribute.getMapping()));
 	}
-	
+	@Override
+	public String getResourceType() {
+		return "procedure";
+	}
 	@Override
 	public List<IBaseResource> export(String startDateStr, String endDateStr) {
 		List<IBaseResource> procedureResources = new ArrayList<>();
