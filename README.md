@@ -9,6 +9,11 @@ This module's objective is to provide specific implementation extensions. To sta
 Description
 -----------
 
+Configuration
+-----------
+This module supports a configuration property (`fhir.export.files.directory`) 
+to specify the directory where exported FHIR data will be stored. By default, 
+the export path is set to `/openmrs/data/fhirExports`. This directory can be customized based on your requirements.
 
 Building from Source
 --------------------
