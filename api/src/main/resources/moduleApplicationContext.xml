@@ -25,6 +25,7 @@
         <property name="target">
             <bean class="org.openmrs.module.fhirExtension.service.impl.ExportTaskImpl">
                 <constructor-arg ref="fhirTaskDaoImpl"/>
+                <constructor-arg ref="conceptServiceImpl"/>
             </bean>
         </property>
     </bean>
