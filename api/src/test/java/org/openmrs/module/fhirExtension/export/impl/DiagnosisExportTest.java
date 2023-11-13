@@ -13,6 +13,8 @@ import org.openmrs.ConceptName;
 import org.openmrs.Encounter;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
+import org.openmrs.Person;
+import org.openmrs.User;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.ObsService;
@@ -152,6 +154,11 @@ public class DiagnosisExportTest {
 		codedDiagnosisObs.setPerson(patient);
 		codedDiagnosisObs.setEncounter(encounter);
 		visitDiagnosisObs.addGroupMember(codedDiagnosisObs);
+		
+		User user = new User();
+		user.setPerson(new Person());
+		user.setUsername("dummy");
+		codedDiagnosisObs.setCreator(user);
 		return Collections.singletonList(visitDiagnosisObs);
 	}
 	

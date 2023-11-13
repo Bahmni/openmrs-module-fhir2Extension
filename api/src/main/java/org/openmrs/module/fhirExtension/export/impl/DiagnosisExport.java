@@ -7,11 +7,14 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Reference;
 import org.openmrs.Concept;
 import org.openmrs.ConditionClinicalStatus;
 import org.openmrs.Obs;
+import org.openmrs.User;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.ObsService;
+import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.module.fhir2.api.translators.ConditionClinicalStatusTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
@@ -91,11 +94,20 @@ public class DiagnosisExport implements Exporter {
 		condition.setClinicalStatus(clinicalStatus);
 		condition.setOnset(new DateTimeType().setValue(codedDiagnosisObs.getObsDatetime()));
 		condition.setRecordedDate(codedDiagnosisObs.getDateCreated());
+		condition.setRecorder(getPractitionerReference(codedDiagnosisObs.getCreator()));
 		condition.setCode(codeableConcept);
 		condition.setSubject(getSubjectReference(codedDiagnosisObs.getPerson().getUuid()));
 		condition.setEncounter(getEncounterReference(codedDiagnosisObs.getEncounter().getUuid()));
 		condition.getMeta().setLastUpdated(codedDiagnosisObs.getObsDatetime());
 		return condition;
+	}
+	
+	private Reference getPractitionerReference(User user) {
+		Reference practionerReference = new Reference();
+		practionerReference.setType(FhirConstants.PRACTITIONER);
+		practionerReference.setReference(FhirConstants.PRACTITIONER + "/" + user.getUuid());
+		practionerReference.setDisplay(user.getDisplayString());
+		return practionerReference;
 	}
 	
 	private boolean isActiveDiagnosis(Obs visitDiagnosisObsGroup) {
