@@ -77,11 +77,10 @@ public class ExportAsyncServiceTest {
 	public void shouldExportPatientDataAndUpdateFhirTaskStatusToCompleted_whenValidDateRangeProvided() {
 		FhirTask fhirTask = mockFhirTask();
 		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
-		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", false);
+		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), false);
 		
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
 		assertEquals(4, fhirTask.getInput().size());
-		verify(conceptService, times(1)).getConceptByName("Download URL");
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
 	}
 	
@@ -93,7 +92,7 @@ public class ExportAsyncServiceTest {
 
 		FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), "", false);
+		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), false);
 
 		assertEquals(FhirTask.TaskStatus.REJECTED, fhirTask.getStatus());
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
@@ -109,7 +108,7 @@ public class ExportAsyncServiceTest {
 
 		FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), "", true);
+		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), true);
 
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
 		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
@@ -124,10 +123,10 @@ public class ExportAsyncServiceTest {
 	}
 	
 	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
-		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.USER_NAME_CONCEPT,	"dummy");
-		FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.START_DATE_CONCEPT, startDate);
-		FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.END_DATE_CONCEPT, endDate);
-		FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ExportAsyncService.ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));
+		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.USER_NAME_CONCEPT,	"dummy");
+		FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.START_DATE_CONCEPT, startDate);
+		FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.END_DATE_CONCEPT, endDate);
+		FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));
 		return new HashSet<>(Arrays.asList(userNameFhirTaskInput, startDateFhirTaskInput, endDateFhirTaskInput, anonymiseFhirTaskInput));
 	}
 	
