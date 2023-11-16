@@ -59,7 +59,7 @@ public class ExportTaskTest {
 		verify(conceptService, times(1)).getConceptByName("FHIR Export User Name");
 		verify(conceptService, times(1)).getConceptByName("FHIR Export Start Date");
 		verify(conceptService, times(1)).getConceptByName("FHIR Export End Date");
-		verify(conceptService, times(1)).getConceptByName("FHIR Export Anonymise Flag");
+		verify(conceptService, times(2)).getConceptByName("FHIR Export Anonymise Flag");
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
 		assertEquals(FhirTask.TaskStatus.ACCEPTED, initialTaskResponse.getStatus());
 	}
