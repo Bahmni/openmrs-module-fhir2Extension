@@ -5,7 +5,9 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.openmrs.Concept;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
+import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhir2.model.FhirTaskOutput;
@@ -50,6 +52,11 @@ public class ExportTaskImpl implements ExportTask {
 		fhirTask.setOutput(Collections.singleton(fhirTaskOutput));
 		Set<FhirTaskInput> fhirTaskInputs = getFhirTaskInputs(fhirTask, startDate, endDate, isAnonymise);
 		fhirTask.setInput(fhirTaskInputs);
+		FhirReference basedOnReference = new FhirReference();
+		basedOnReference.setType(FhirConstants.SERVICE_REQUEST);
+		basedOnReference.setReference(conceptService.getConceptByName(ANONYMISE_CONCEPT).getUuid()); // Assume concept uuid is 8741c3e7-a250-4808-977c-a89459bb6c9d
+		basedOnReference.setName("Patient Data Export");
+		fhirTask.setBasedOnReferences(Collections.singleton(basedOnReference));
 		fhirTaskDao.createOrUpdate(fhirTask);
 		
 		return fhirTask;
