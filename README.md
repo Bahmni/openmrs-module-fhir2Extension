@@ -1,17 +1,15 @@
-openmrs-module-fhir2Extension
-==========================
+# openmrs-module-fhir2Extension
 
 This module's objective is to provide specific implementation extensions. To start with
 1. DiagnosticReport - using the obs model as basis of DiagnosticReport (compatible with the datastructures used by EMRAPI and Bahmni)
 2. FHIR Export - Exports Patient data in FHIR format
 
 
-Description
------------
+# Description
 
-# FHIR Export
+## FHIR Export
+
 ### Configuration
-
 1. This module supports a configuration property (`fhir.export.files.directory`) 
 to specify the directory where exported FHIR data will be stored in the server. By default,
 the export path is set to `/openmrs/data/fhirExports`. This directory can be customized based on your requirements.
@@ -20,14 +18,12 @@ the export path is set to `/openmrs/data/fhirExports`. This directory can be cus
 path of the configuration file controlling the anonymization mechanism during bulk-export of patient data. 
 If left blank (default), anonymization will not be applied.
 
-Building from Source
---------------------
+## Building from Source
 You will need to have Java 1.8+ and Maven 2.x+ installed.  Use the command 'mvn package' to 
 compile and package the module.  The .omod file will be in the omod/target folder.
 
 
-Installation
-------------
+## Installation
 1. Build the module to produce the .omod file.
 2. Use the OpenMRS Administration > Manage Modules screen to upload and install the .omod file.
 
