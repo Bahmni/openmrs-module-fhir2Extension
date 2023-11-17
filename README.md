@@ -13,7 +13,7 @@ Description
 ### Configuration
 
 1. This module supports a configuration property (`fhir.export.files.directory`) 
-to specify the directory where exported FHIR data will be stored. By default, 
+to specify the directory where exported FHIR data will be stored in the server. By default,
 the export path is set to `/openmrs/data/fhirExports`. This directory can be customized based on your requirements.
 
 2. Additionally, the module includes the `fhir.export.anonymise.config.path` property for defining the 
