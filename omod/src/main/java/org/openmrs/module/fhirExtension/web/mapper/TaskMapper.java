@@ -3,12 +3,15 @@ package org.openmrs.module.fhirExtension.web.mapper;
 import org.openmrs.Encounter;
 import org.openmrs.Patient;
 import org.openmrs.api.EncounterService;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
+import org.openmrs.module.webservices.rest.web.ConversionUtil;
+import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +26,7 @@ public class TaskMapper {
 		Task task = new Task();
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setName(taskRequest.getName());
+		fhirTask.setTaskCode(Context.getConceptService().getConceptByName(taskRequest.getTaskType()));
 		
 		FhirReference forReference = new FhirReference();
 		forReference.setType(Patient.class.getTypeName());
@@ -59,6 +63,8 @@ public class TaskMapper {
 		response.setPatientUuid(task.getFhirTask().getForReference().getTargetUuid());
 		response.setRequestedStartTime(task.getFhirTaskRequestedPeriod().getRequestedStartTime());
 		response.setRequestedEndTime(task.getFhirTaskRequestedPeriod().getRequestedEndTime());
+		response.setCreator(ConversionUtil.convertToRepresentation(task.getFhirTask().getCreator(), Representation.REF));
+		response.setTaskType(ConversionUtil.convertToRepresentation(task.getFhirTask().getTaskCode(), Representation.REF));
 		return response;
 	}
 	
