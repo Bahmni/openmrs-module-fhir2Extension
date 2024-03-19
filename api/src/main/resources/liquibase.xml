@@ -23,26 +23,5 @@
         </preConditions>
         <dropColumn tableName="fhir_diagnostic_report" columnName="name"/>
     </changeSet>
-
-    <changeSet id="add_requested_period_reference_join_table_20200311" author="r.kalai">
-        <preConditions onFail="MARK_RAN" onError="WARN">
-            <not>
-                <tableExists tableName="fhir_task_requested_period"/>
-            </not>
-            <tableExists tableName="fhir_task"/>
-            <tableExists tableName="fhir_reference"/>
-        </preConditions>
-        <createTable tableName="fhir_task_requested_period">
-            <column name="task_id" type="int">
-                <constraints nullable="false"/>
-            </column>
-            <column name="requested_start_time" type="datetime"/>
-            <column name="requested_end_time" type="datetime"/>
-        </createTable>
-        <addForeignKeyConstraint baseTableName="fhir_task_requested_period" baseColumnNames="task_id"
-                                 constraintName="task_requested_period_fk"
-                                 referencedTableName="fhir_task"
-                                 referencedColumnNames="task_id"/>
-    </changeSet>
  
 </databaseChangeLog>
