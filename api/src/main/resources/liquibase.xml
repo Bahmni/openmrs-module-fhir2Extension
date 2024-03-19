@@ -44,30 +44,5 @@
                                  referencedTableName="fhir_task"
                                  referencedColumnNames="task_id"/>
     </changeSet>
-
-    <changeSet id="nursing_activity_concept_202307271045" author="tw">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">
-                SELECT COUNT(*) FROM concept where short_name='Nursing Activity' and description='Nursing Activity Task Type';
-            </sqlCheck>
-            <sqlCheck expectedResult="0">
-                SELECT COUNT(*) FROM concept_name where name ='nursing_activity';
-            </sqlCheck>
-        </preConditions>
-        <comment>Add concept Medication Request</comment>
-        <sql>
-            insert into concept (retired, short_name, description, datatype_id, class_id, is_set, creator, date_created,
-            changed_by, date_changed, uuid)
-            values (0, 'Nursing Activity', 'Nursing Activity Task Type',
-            (select concept_datatype_id from concept_datatype where name = 'Text'),
-            (select concept_class_id from concept_class where name = 'Misc'),
-            0, 1, now(), 1, now(), uuid());
-
-            insert into concept_name (concept_id, name, locale, locale_preferred, creator, date_created,
-            concept_name_type, voided, uuid)
-            values ((select concept_id from concept where short_name='Nursing Activity'),
-            'nursing_activity', 'en', 1, 1, now(), 'FULLY_SPECIFIED', 0, uuid());
-        </sql>
-    </changeSet>
  
 </databaseChangeLog>

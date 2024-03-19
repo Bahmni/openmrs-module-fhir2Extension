@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.openmrs.module.fhir2.model.FhirTask;
 
 import java.util.Date;
-import java.util.List;
 
 @Getter
 @Setter
@@ -22,12 +21,6 @@ public class TaskResponse {
 	private Date requestedStartTime;
 	
 	private Date requestedEndTime;
-	
-	private List<String> partOf;
-	
-	private Object taskType;
-	
-	private Object creator;
 	
 	private FhirTask.TaskStatus status;
 	
