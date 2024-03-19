@@ -13,6 +13,7 @@ import org.openmrs.Order;
 import org.openmrs.api.OrderService;
 import org.openmrs.module.fhir2.api.FhirConceptSourceService;
 import org.openmrs.module.fhir2.api.FhirMedicationRequestService;
+import org.openmrs.module.fhir2.api.search.param.MedicationRequestSearchParams;
 import org.openmrs.module.fhir2.api.translators.MedicationTranslator;
 import org.openmrs.module.fhirExtension.export.Exporter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,8 +54,8 @@ public class MedicationRequestExport implements Exporter {
 	@Override
 	public List<IBaseResource> export(String startDate, String endDate) {
 		DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
-		IBundleProvider iBundleProvider = fhirMedicationRequestService.searchForMedicationRequests(null, null, null, null,
-		    null, null, null, null, lastUpdated, null, null);
+		MedicationRequestSearchParams medicationRequestSearchParams=MedicationRequestSearchParams.builder().lastUpdated(lastUpdated).build();
+		IBundleProvider iBundleProvider = fhirMedicationRequestService.searchForMedicationRequests(medicationRequestSearchParams);
         return iBundleProvider.getAllResources().stream().map(this::addMedicationInfo).collect(Collectors.toList());
 	}
 	
