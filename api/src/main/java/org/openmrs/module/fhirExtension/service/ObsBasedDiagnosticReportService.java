@@ -40,7 +40,6 @@ import org.openmrs.module.fhir2.api.dao.FhirDiagnosticReportDao;
 import org.openmrs.module.fhir2.api.impl.BaseFhirService;
 import org.openmrs.module.fhir2.api.search.SearchQuery;
 import org.openmrs.module.fhir2.api.search.SearchQueryInclude;
-import org.openmrs.module.fhir2.api.search.param.DiagnosticReportSearchParams;
 import org.openmrs.module.fhir2.api.search.param.SearchParameterMap;
 import org.openmrs.module.fhir2.api.translators.ObservationTranslator;
 import org.openmrs.module.fhir2.api.translators.OpenmrsFhirTranslator;
@@ -355,21 +354,19 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 	}
 	
 	@Override
-	public IBundleProvider searchForDiagnosticReports(DiagnosticReportSearchParams diagnosticReportSearchParams) {
+	public IBundleProvider searchForDiagnosticReports(ReferenceAndListParam encounterReference,
+	        ReferenceAndListParam patientReference, DateRangeParam issueDate, TokenAndListParam code,
+	        ReferenceAndListParam result, TokenAndListParam id, DateRangeParam lastUpdated, SortSpec sort,
+	        HashSet<Include> includes) {
 		SearchParameterMap theParams = new SearchParameterMap()
-		        .addParameter(FhirConstants.ENCOUNTER_REFERENCE_SEARCH_HANDLER,
-		            diagnosticReportSearchParams.getEncounterReference())
-		        .addParameter(FhirConstants.PATIENT_REFERENCE_SEARCH_HANDLER,
-		            diagnosticReportSearchParams.getPatientReference())
-		        .addParameter(FhirConstants.DATE_RANGE_SEARCH_HANDLER, diagnosticReportSearchParams.getIssueDate())
-		        .addParameter(FhirConstants.CODED_SEARCH_HANDLER, diagnosticReportSearchParams.getIssueDate())
-		        .addParameter(FhirConstants.RESULT_SEARCH_HANDLER, diagnosticReportSearchParams.getResult())
-		        .addParameter(FhirConstants.COMMON_SEARCH_HANDLER, FhirConstants.ID_PROPERTY,
-		            diagnosticReportSearchParams.getId())
-		        .addParameter(FhirConstants.COMMON_SEARCH_HANDLER, FhirConstants.LAST_UPDATED_PROPERTY,
-		            diagnosticReportSearchParams.getLastUpdated())
-		        .addParameter(FhirConstants.INCLUDE_SEARCH_HANDLER, diagnosticReportSearchParams.getIncludes())
-		        .setSortSpec(diagnosticReportSearchParams.getSort());
+		        .addParameter(FhirConstants.ENCOUNTER_REFERENCE_SEARCH_HANDLER, encounterReference)
+		        .addParameter(FhirConstants.PATIENT_REFERENCE_SEARCH_HANDLER, patientReference)
+		        .addParameter(FhirConstants.DATE_RANGE_SEARCH_HANDLER, issueDate)
+		        .addParameter(FhirConstants.CODED_SEARCH_HANDLER, code)
+		        .addParameter(FhirConstants.RESULT_SEARCH_HANDLER, result)
+		        .addParameter(FhirConstants.COMMON_SEARCH_HANDLER, FhirConstants.ID_PROPERTY, id)
+		        .addParameter(FhirConstants.COMMON_SEARCH_HANDLER, FhirConstants.LAST_UPDATED_PROPERTY, lastUpdated)
+		        .addParameter(FhirConstants.INCLUDE_SEARCH_HANDLER, includes).setSortSpec(sort);
 		return searchQuery.getQueryResults(theParams, fhirDiagnosticReportDao, obsBasedDiagnosticReportTranslator,
 		    searchQueryInclude);
 	}

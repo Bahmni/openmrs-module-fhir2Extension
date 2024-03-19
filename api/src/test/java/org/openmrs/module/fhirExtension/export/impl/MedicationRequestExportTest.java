@@ -48,7 +48,9 @@ public class MedicationRequestExportTest {
 	@Test
 	public void shouldExportMedicationRequest_whenValidDateRangeProvided() {
 		when(orderService.getOrderByUuid(anyString())).thenReturn(getMockDrugOrder());
-		when(fhirMedicationRequestService.searchForMedicationRequests(any())).thenReturn(getMockMedicationRequestBundle());
+		when(
+		    fhirMedicationRequestService.searchForMedicationRequests(any(), any(), any(), any(), any(), any(), any(), any(),
+		        any(), any(), any())).thenReturn(getMockMedicationRequestBundle());
 		
 		List<IBaseResource> medicationRequestResources = medicationRequestExport.export("2023-05-01", "2023-05-31");
 		

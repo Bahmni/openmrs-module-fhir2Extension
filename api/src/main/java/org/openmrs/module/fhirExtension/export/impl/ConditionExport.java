@@ -7,7 +7,6 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
 import org.openmrs.module.fhir2.api.FhirConditionService;
-import org.openmrs.module.fhir2.api.search.param.ConditionSearchParams;
 import org.openmrs.module.fhirExtension.export.Exporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,8 +28,8 @@ public class ConditionExport implements Exporter {
 	@Override
     public List<IBaseResource> export(String startDate, String endDate) {
         DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
-		ConditionSearchParams conditionSearchParams=ConditionSearchParams.builder().lastUpdated(lastUpdated).build();
-        IBundleProvider iBundleProvider = fhirConditionService.searchConditions(conditionSearchParams);
+        IBundleProvider iBundleProvider = fhirConditionService.searchConditions(null, null, null, null, null, null, null,
+                lastUpdated, null, null);
         return iBundleProvider.getAllResources().stream().map(this::addCategory).collect(Collectors.toList());
     }
 	

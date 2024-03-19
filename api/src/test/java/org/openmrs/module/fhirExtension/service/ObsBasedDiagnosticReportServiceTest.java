@@ -36,7 +36,6 @@ import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.api.dao.FhirDiagnosticReportDao;
 import org.openmrs.module.fhir2.api.search.SearchQuery;
 import org.openmrs.module.fhir2.api.search.SearchQueryInclude;
-import org.openmrs.module.fhir2.api.search.param.DiagnosticReportSearchParams;
 import org.openmrs.module.fhir2.api.search.param.SearchParameterMap;
 import org.openmrs.module.fhir2.api.translators.ObservationTranslator;
 import org.openmrs.module.fhir2.model.FhirDiagnosticReport;
@@ -471,9 +470,9 @@ public class ObsBasedDiagnosticReportServiceTest {
 	@Test
 	public void shouldCallQueryResultsWithProperParameters_whenSearchNeedsToBePerformedForPatient() {
 		ReferenceAndListParam patientReference = new ReferenceAndListParam();
-		DiagnosticReportSearchParams diagnosticReportSearchParams = DiagnosticReportSearchParams.builder()
-		        .patientReference(patientReference).build();
-		obsBasedDiagnosticReportService.searchForDiagnosticReports(diagnosticReportSearchParams);
+		
+		obsBasedDiagnosticReportService.searchForDiagnosticReports(null, patientReference, null, null, null, null, null,
+		    null, null);
 		
 		ArgumentCaptor<SearchParameterMap> searchParameterArgumentCaptor = ArgumentCaptor.forClass(SearchParameterMap.class);
 		ArgumentCaptor<FhirDiagnosticReportDao> daoArgumentCaptor = ArgumentCaptor.forClass(FhirDiagnosticReportDao.class);
