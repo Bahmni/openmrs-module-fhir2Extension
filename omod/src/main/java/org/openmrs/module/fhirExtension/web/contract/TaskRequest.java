@@ -18,6 +18,8 @@ public class TaskRequest {
 	
 	private String encounterUuid;
 	
+	private String taskType;
+	
 	private Date requestedStartTime;
 	
 	private Date requestedEndTime;
