@@ -2,6 +2,10 @@ package org.openmrs.module.fhirExtension.web;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Patient;
+import org.openmrs.Visit;
+import org.openmrs.api.PatientService;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.Task;
@@ -21,6 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +40,12 @@ public class TaskController extends BaseRestController {
 	
 	@Autowired
 	private TaskService taskService;
+	
+	@Autowired
+	private VisitService visitService;
+	
+	@Autowired
+	private PatientService patientService;
 	
 	@Autowired
 	private TaskMapper taskMapper;
@@ -55,17 +66,31 @@ public class TaskController extends BaseRestController {
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, params = {"visitUuid", "startTime", "endTime"})
+	@RequestMapping(method = RequestMethod.GET, params = {"visitUuid", "startTime", "endTime", "patientIds"})
 	@ResponseBody
-	public ResponseEntity<Object> getSlotsForPatientsAndTime(@RequestParam(value = "visitUuid") String visitUuid,
+	public ResponseEntity<Object> getSlotsForPatientsAndTime(@RequestParam(value = "visitUuid", required = false) String visitUuid,
 															 @RequestParam(value = "startTime") Long startTime,
-															 @RequestParam(value = "endTime") Long endTime) throws IOException{
+															 @RequestParam(value = "endTime") Long endTime,
+															 @RequestParam(value = "patientIds", required = false) List<String> patientIds) throws IOException{
 		try {
-			 List<Task> tasks=taskService.getTasksByVisitFilteredByTimeFrame(visitUuid,new Date(startTime),new Date(endTime));
-			 return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
+			if((patientIds == null || patientIds.isEmpty()) && !(visitUuid == null || visitUuid.isEmpty())) {
+				List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visitUuid,new Date(startTime),new Date(endTime));
+				return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
+			}
+			else if ((visitUuid == null || visitUuid.isEmpty()) && !(patientIds == null || patientIds.isEmpty())){
+				for (String patientId: patientIds) {
+					Patient patient = patientService.getPatientByUuid(patientId);
+					List<Visit> visit = visitService.getActiveVisitsByPatient(patient);
+					System.out.println(visit);
+					List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visit.get(0).getUuid(),new Date(startTime),new Date(endTime));
+				}
+				return null;
+			}
+
 		} catch (Exception e) {
 			log.error("Runtime error while fetching patient medication summaries", e);
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), BAD_REQUEST);
 		}
+		return null;
 	}
 }
