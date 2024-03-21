@@ -15,4 +15,6 @@ public interface TaskService {
 	Task saveTask(Task task);
 	
 	List<Task> getTasksByVisitFilteredByTimeFrame(String visitUuid, Date startTime, Date endTime);
+	
+	List<Object> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
 }

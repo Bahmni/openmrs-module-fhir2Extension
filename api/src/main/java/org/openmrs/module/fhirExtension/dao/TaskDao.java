@@ -11,4 +11,5 @@ public interface TaskDao {
 	
 	List<Task> getTasksByVisitFilteredByTimeFrame(Visit visit, Date startTime, Date endTime);
 	
+	List<Object> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
 }
