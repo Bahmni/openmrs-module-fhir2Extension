@@ -1,15 +1,9 @@
 package org.openmrs.module.fhirExtension.dao.impl;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
 import org.openmrs.Encounter;
+import org.openmrs.Patient;
 import org.openmrs.Visit;
-import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.dao.TaskDao;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
@@ -20,7 +14,6 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -64,27 +57,36 @@ public class TaskDaoImpl implements TaskDao {
 	}
 	
 	@Override
-	public List<Object> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
+	public List<Task> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
 		try {
 			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
-			CriteriaQuery<Object[]> criteriaQuery = criteriaBuilder.createQuery(Object[].class);
-			Root<FhirTask> taskRoot = criteriaQuery.from(FhirTask.class);
-			Join<FhirTask, FhirReference> referenceJoin = taskRoot.join("reference_id");
-			Join<FhirTask, FhirTaskRequestedPeriod> requestedPeriodJoin = taskRoot.join("task_id");
 
-			criteriaQuery.select(criteriaBuilder.array(taskRoot, referenceJoin));
-			Predicate[] predicates = new Predicate[4];
-			predicates[0] = criteriaBuilder.greaterThanOrEqualTo(requestedPeriodJoin.get("requested_start_time"), startTime);
-			predicates[1] = criteriaBuilder.lessThanOrEqualTo(requestedPeriodJoin.get("requested_end_time"), endTime);
-			predicates[2] = criteriaBuilder.equal(taskRoot.get("retired"), 0);
-			predicates[3] = referenceJoin.get("target_uuid").in(patientUuids);
+			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
+			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
+			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
 
-			criteriaQuery.where(predicates);
+			Subquery<String> encounterSubQuery = criteriaQuery.subquery(String.class);
+			Root<Encounter> encounterRoot = encounterSubQuery.from(Encounter.class);
+			Join<Encounter, Visit> visitJoin = encounterRoot.join("visit");
+			Join<Visit, Patient> patientJoin = visitJoin.join("patient");
+			encounterSubQuery.select(encounterRoot.get("uuid"));
+			encounterSubQuery.where(criteriaBuilder.in(patientJoin.get("uuid")).value(patientUuids));
 
-			Query<Object[]> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
-			return Collections.singletonList(query.getResultList());
-		} catch (Exception ex) {
-			System.out.println("Error " + ex);
+			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod));
+			criteriaQuery.where(
+					criteriaBuilder.and(
+							criteriaBuilder.in(fhirTaskJoin.get("encounterReference").get("targetUuid")).value(encounterSubQuery),
+							criteriaBuilder.between(fhirTaskRequestedPeriod.get("requestedStartTime"), startTime, endTime)
+					)
+			);
+
+			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
+
+			return query.getResultList();
+
+		}
+		catch (Exception ex){
+			System.out.println("Error "+ ex);
 		}
 		return new ArrayList<>();
 	}

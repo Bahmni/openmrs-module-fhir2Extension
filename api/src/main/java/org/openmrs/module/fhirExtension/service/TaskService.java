@@ -1,6 +1,5 @@
 package org.openmrs.module.fhirExtension.service;
 
-import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,5 +15,5 @@ public interface TaskService {
 	
 	List<Task> getTasksByVisitFilteredByTimeFrame(String visitUuid, Date startTime, Date endTime);
 	
-	List<Object> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
+	List<Task> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
 }

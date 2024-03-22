@@ -67,5 +67,4 @@ public class TaskMapper {
 		response.setTaskType(ConversionUtil.convertToRepresentation(task.getFhirTask().getTaskCode(), Representation.REF));
 		return response;
 	}
-	
 }

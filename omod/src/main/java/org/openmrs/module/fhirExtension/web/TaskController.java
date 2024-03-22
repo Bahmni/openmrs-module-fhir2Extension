@@ -7,6 +7,7 @@ import org.openmrs.api.VisitService;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.service.TaskService;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
+import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.mapper.TaskMapper;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.RestUtil;
@@ -20,7 +21,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -66,9 +69,8 @@ public class TaskController extends BaseRestController {
 				List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visitUuid, new Date(startTime), new Date(endTime));
 				return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
 			} else if ((visitUuid == null || visitUuid.isEmpty()) && !(patientUuids == null || patientUuids.isEmpty())) {
-				List<Object> response;
-				response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, new Date(startTime), new Date(endTime));
-				return new ResponseEntity<>(response, HttpStatus.OK);
+				Map<String, List<TaskResponse>> groupedResponses = constructGroupedResponses(patientUuids, startTime, endTime);
+				return new ResponseEntity<>(groupedResponses, HttpStatus.OK);
 			}
 			else {
 				throw new Exception();
@@ -77,5 +79,18 @@ public class TaskController extends BaseRestController {
 			log.error("Runtime error while fetching patient medication summaries", e);
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
+	}
+	
+	private Map<String, List<TaskResponse>> constructGroupedResponses(List<String> patientUuids, Long startTime, Long endTime) {
+		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, new Date(startTime), new Date(endTime));
+		Map<String, List<Task>> groupedResponses = response.stream()
+				.collect(Collectors.groupingBy(task -> task.getFhirTask().getForReference().getTargetUuid()));
+
+		Map<String, List<TaskResponse>> groupedTaskResponses = new HashMap<>();
+		groupedResponses.forEach((uuid, tasks) -> {
+			List<TaskResponse> taskResponses = tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList());
+			groupedTaskResponses.put(uuid, taskResponses);
+		});
+		return groupedTaskResponses;
 	}
 }
