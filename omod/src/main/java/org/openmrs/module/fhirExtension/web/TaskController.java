@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Controller
@@ -66,10 +67,10 @@ public class TaskController extends BaseRestController {
 															 @RequestParam(value = "patientUuids", required = false) List<String> patientUuids) throws IOException {
 		try {
 			if ((patientUuids == null || patientUuids.isEmpty()) && !(visitUuid == null || visitUuid.isEmpty())) {
-				List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visitUuid, new Date(startTime), new Date(endTime));
+				List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visitUuid, new Date(TimeUnit.SECONDS.toMillis(startTime)), new Date(TimeUnit.SECONDS.toMillis(endTime)));
 				return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
 			} else if ((visitUuid == null || visitUuid.isEmpty()) && !(patientUuids == null || patientUuids.isEmpty())) {
-				Map<String, List<TaskResponse>> groupedResponses = constructGroupedResponses(patientUuids, startTime, endTime);
+				Map<String, List<TaskResponse>> groupedResponses = constructGroupedResponses(patientUuids, new Date(TimeUnit.SECONDS.toMillis(startTime)), new Date(TimeUnit.SECONDS.toMillis(endTime)));
 				return new ResponseEntity<>(groupedResponses, HttpStatus.OK);
 			}
 			else {
@@ -81,8 +82,8 @@ public class TaskController extends BaseRestController {
 		}
 	}
 	
-	private Map<String, List<TaskResponse>> constructGroupedResponses(List<String> patientUuids, Long startTime, Long endTime) {
-		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, new Date(startTime), new Date(endTime));
+	private Map<String, List<TaskResponse>> constructGroupedResponses(List<String> patientUuids, Date startTime, Date endTime) {
+		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, startTime, endTime);
 		Map<String, List<Task>> groupedResponses = response.stream()
 				.collect(Collectors.groupingBy(task -> task.getFhirTask().getForReference().getTargetUuid()));
 
