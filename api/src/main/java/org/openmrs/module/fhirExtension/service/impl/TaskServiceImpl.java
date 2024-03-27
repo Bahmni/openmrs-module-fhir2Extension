@@ -2,10 +2,8 @@ package org.openmrs.module.fhirExtension.service.impl;
 
 import org.openmrs.api.VisitService;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
-import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.dao.TaskDao;
 import org.openmrs.module.fhirExtension.dao.TaskRequestedPeriodDao;
-import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,5 +41,10 @@ public class TaskServiceImpl implements TaskService {
 	@Override
 	public List<Task> getTasksByVisitFilteredByTimeFrame(String visitUuid, Date startTime, Date endTime) {
 		return taskDao.getTasksByVisitFilteredByTimeFrame(visitService.getVisitByUuid(visitUuid), startTime, endTime);
+	}
+	
+	@Override
+	public List<Task> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
+		return taskDao.getTasksByPatientUuidsFilteredByTimeFrame(patientUuids, startTime, endTime);
 	}
 }
