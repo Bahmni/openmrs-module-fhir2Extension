@@ -10,6 +10,8 @@ import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
+import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
+import org.openmrs.module.fhirExtension.web.contract.TaskUpdateResponse;
 import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,4 +70,22 @@ public class TaskMapper {
 		return response;
 	}
 	
+	public void fromRequest(TaskUpdateRequest taskUpdateRequest, Task task) {
+		FhirTask fhirTask = task.getFhirTask();
+		
+		fhirTask.setStatus(taskUpdateRequest.getStatus());
+		fhirTask.setExecutionStartTime(taskUpdateRequest.getExecutionStartTime());
+		fhirTask.setExecutionEndTime(taskUpdateRequest.getExecutionEndTime());
+	}
+	
+	public TaskUpdateResponse constructUpdateResponse(Task task) {
+		TaskUpdateResponse taskUpdateResponse = new TaskUpdateResponse();
+		taskUpdateResponse.setUuid(task.getFhirTask().getUuid());
+		taskUpdateResponse.setStatus(task.getFhirTask().getStatus());
+		taskUpdateResponse.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
+		taskUpdateResponse.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
+		taskUpdateResponse.setName(task.getFhirTask().getName());
+		
+		return taskUpdateResponse;
+	}
 }
