@@ -1,7 +1,6 @@
 package org.openmrs.module.fhirExtension.dao;
 
 import org.openmrs.Visit;
-import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.Task;
 
 import java.util.Date;
@@ -11,5 +10,7 @@ public interface TaskDao {
 	
 	List<Task> getTasksByVisitFilteredByTimeFrame(Visit visit, Date startTime, Date endTime);
 	
+	List<Task> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
+
 	List<Task> getTaskByUuid(List<String> listOfUuids);
 }

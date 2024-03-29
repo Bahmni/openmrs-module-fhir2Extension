@@ -1,15 +1,9 @@
 package org.openmrs.module.fhirExtension.dao.impl;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
 import org.openmrs.Encounter;
+import org.openmrs.Patient;
 import org.openmrs.Visit;
-import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.dao.TaskDao;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
@@ -61,7 +55,42 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return new ArrayList<>();
 	}
-	
+
+	@Override
+	public List<Task> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
+		try {
+			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
+
+			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
+			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
+			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
+
+			Subquery<String> encounterSubQuery = criteriaQuery.subquery(String.class);
+			Root<Encounter> encounterRoot = encounterSubQuery.from(Encounter.class);
+			Join<Encounter, Visit> visitJoin = encounterRoot.join("visit");
+			Join<Visit, Patient> patientJoin = visitJoin.join("patient");
+			encounterSubQuery.select(encounterRoot.get("uuid"));
+			encounterSubQuery.where(criteriaBuilder.in(patientJoin.get("uuid")).value(patientUuids));
+
+			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod));
+			criteriaQuery.where(
+					criteriaBuilder.and(
+							criteriaBuilder.in(fhirTaskJoin.get("encounterReference").get("targetUuid")).value(encounterSubQuery),
+							criteriaBuilder.between(fhirTaskRequestedPeriod.get("requestedStartTime"), startTime, endTime)
+					)
+			);
+
+			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
+
+			return query.getResultList();
+
+		}
+		catch (Exception ex){
+			System.out.println("Error "+ ex);
+		}
+		return new ArrayList<>();
+	}
+
 	@Override
 	public List<Task> getTaskByUuid(List<String> listOfUuids) {
 		try {
@@ -69,11 +98,11 @@ public class TaskDaoImpl implements TaskDao {
 			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
 			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
 			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
-			
+
 			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(
 			fhirTaskJoin.get("uuid").in(listOfUuids));
 			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
-			
+
 			return query.getResultList();
 		}
 		catch (Exception e) {

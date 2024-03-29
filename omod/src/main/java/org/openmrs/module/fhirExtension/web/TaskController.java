@@ -2,9 +2,13 @@ package org.openmrs.module.fhirExtension.web;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.api.PatientService;
+import org.openmrs.api.VisitService;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.service.TaskService;
+import org.openmrs.module.fhirExtension.web.contract.PatientTaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
+import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
 import org.openmrs.module.fhirExtension.web.mapper.TaskMapper;
 import org.openmrs.module.webservices.rest.web.RestConstants;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -32,6 +37,12 @@ public class TaskController extends BaseRestController {
 	@Autowired
 	private TaskService taskService;
 	
+	@Autowired
+	private VisitService visitService;
+
+	@Autowired
+	private PatientService patientService;
+
 	@Autowired
 	private TaskMapper taskMapper;
 	
@@ -51,20 +62,29 @@ public class TaskController extends BaseRestController {
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, params = {"visitUuid", "startTime", "endTime"})
+	@RequestMapping(method = RequestMethod.GET, params = {"startTime", "endTime"})
 	@ResponseBody
-	public ResponseEntity<Object> getSlotsForPatientsAndTime(@RequestParam(value = "visitUuid") String visitUuid,
-															 @RequestParam(value = "startTime") Long startTime,
-															 @RequestParam(value = "endTime") Long endTime) throws IOException{
+	public ResponseEntity<Object> getSlotsForPatientsAndTime(@RequestParam(value = "startTime") Long startTime,
+															 @RequestParam(value = "endTime") Long endTime,
+															 @RequestParam(value = "visitUuid", required = false) String visitUuid,
+															 @RequestParam(value = "patientUuids", required = false) List<String> patientUuids) throws IOException {
 		try {
-			 List<Task> tasks=taskService.getTasksByVisitFilteredByTimeFrame(visitUuid,new Date(startTime),new Date(endTime));
-			 return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
+			if ((patientUuids == null || patientUuids.isEmpty()) && !(visitUuid == null || visitUuid.isEmpty())) {
+				List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visitUuid, new Date(startTime), new Date(endTime));
+				return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
+			} else if ((visitUuid == null || visitUuid.isEmpty()) && !(patientUuids == null || patientUuids.isEmpty())) {
+				List<PatientTaskResponse> groupedResponses = constructGroupedResponses(patientUuids, new Date(startTime), new Date(endTime));
+				return new ResponseEntity<>(groupedResponses, HttpStatus.OK);
+			}
+			else {
+				throw new Exception();
+			}
 		} catch (Exception e) {
 			log.error("Runtime error while fetching patient medication summaries", e);
-			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), BAD_REQUEST);
+			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
-	
+
 	@RequestMapping(method = RequestMethod.PUT)
 	@ResponseBody
 	public ResponseEntity<Object> updateTask(@Valid @RequestBody ArrayList<TaskUpdateRequest> taskUpdateRequests) throws IOException {
@@ -88,5 +108,19 @@ public class TaskController extends BaseRestController {
 			log.error("One or more task(s) uuid is not valid", e);
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
+	}
+
+	private List<PatientTaskResponse> constructGroupedResponses(List<String> patientUuids, Date startTime, Date endTime) {
+		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, startTime, endTime);
+		Map<String, List<Task>> groupedResponses = response.stream()
+				.collect(Collectors.groupingBy(task -> task.getFhirTask().getForReference().getTargetUuid()));
+
+		List<PatientTaskResponse> patientTaskResponses = new ArrayList<>();
+		groupedResponses.forEach((uuid, tasks) -> {
+			List<TaskResponse> taskResponses = tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList());
+			PatientTaskResponse patientTaskResponse = new PatientTaskResponse(uuid, taskResponses);
+			patientTaskResponses.add(patientTaskResponse);
+		});
+		return patientTaskResponses;
 	}
 }
