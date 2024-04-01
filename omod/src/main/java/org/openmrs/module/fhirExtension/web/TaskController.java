@@ -90,14 +90,14 @@ public class TaskController extends BaseRestController {
 	public ResponseEntity<Object> updateTask(@Valid @RequestBody ArrayList<TaskUpdateRequest> taskUpdateRequests) throws IOException {
 		try {
 			List<String> listOfUuid = taskUpdateRequests.stream().map(task -> task.getUuid()).collect(Collectors.toList());
-			List<Task> tasks = taskService.getTaskByUuid(listOfUuid);
+			List<Task> tasks = taskService.getTasksByUuids(listOfUuid);
 			if(tasks.size() == listOfUuid.size()) {
 				taskUpdateRequests.forEach(taskUpdateRequest -> {
-					List<Task> taskToBeUpdated = tasks.stream().filter(task -> task.getFhirTask().getUuid().equals( taskUpdateRequest.getUuid())).collect(Collectors.toList());
-					taskMapper.fromRequest(taskUpdateRequest, taskToBeUpdated.get(0));
-					taskService.saveTask(taskToBeUpdated.get(0));
+					Optional<Task> taskToBeUpdated = tasks.stream().filter(task -> task.getFhirTask().getUuid().equals(taskUpdateRequest.getUuid())).findFirst();
+					taskMapper.fromRequest(taskUpdateRequest, taskToBeUpdated.get());
+					taskService.saveTask(taskToBeUpdated.get());
 				});
-			return new ResponseEntity<>(tasks.stream().map(taskMapper::constructUpdateResponse).collect(Collectors.toList()), HttpStatus.OK);
+			return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
 			}
 			throw new Exception();
 		}

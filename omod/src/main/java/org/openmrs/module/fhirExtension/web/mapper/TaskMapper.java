@@ -67,6 +67,8 @@ public class TaskMapper {
 		response.setRequestedEndTime(task.getFhirTaskRequestedPeriod().getRequestedEndTime());
 		response.setCreator(ConversionUtil.convertToRepresentation(task.getFhirTask().getCreator(), Representation.REF));
 		response.setTaskType(ConversionUtil.convertToRepresentation(task.getFhirTask().getTaskCode(), Representation.REF));
+		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
+		response.setRequestedEndTime(task.getFhirTask().getExecutionEndTime());
 		return response;
 	}
 	
@@ -78,14 +80,4 @@ public class TaskMapper {
 		fhirTask.setExecutionEndTime(taskUpdateRequest.getExecutionEndTime());
 	}
 	
-	public TaskUpdateResponse constructUpdateResponse(Task task) {
-		TaskUpdateResponse taskUpdateResponse = new TaskUpdateResponse();
-		taskUpdateResponse.setUuid(task.getFhirTask().getUuid());
-		taskUpdateResponse.setStatus(task.getFhirTask().getStatus());
-		taskUpdateResponse.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
-		taskUpdateResponse.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
-		taskUpdateResponse.setName(task.getFhirTask().getName());
-		
-		return taskUpdateResponse;
-	}
 }

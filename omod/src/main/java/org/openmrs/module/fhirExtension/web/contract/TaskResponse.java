@@ -33,4 +33,7 @@ public class TaskResponse {
 	
 	private Object creator;
 	
+	private Date executionStartTime;
+	
+	private Date executionEndTime;
 }

@@ -49,7 +49,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 
 	@Override
-	public List<Task> getTaskByUuid(List<String> listOdUuids) {
-		return taskDao.getTaskByUuid(listOdUuids);
+	public List<Task> getTasksByUuids(List<String> listOdUuids) {
+		return taskDao.getTasksByUuids(listOdUuids);
 	}
 }

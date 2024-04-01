@@ -92,7 +92,7 @@ public class TaskDaoImpl implements TaskDao {
 	}
 
 	@Override
-	public List<Task> getTaskByUuid(List<String> listOfUuids) {
+	public List<Task> getTasksByUuids(List<String> listOfUuids) {
 		try {
 			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
 			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
