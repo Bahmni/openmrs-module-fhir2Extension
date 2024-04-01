@@ -55,7 +55,7 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return new ArrayList<>();
 	}
-	
+
 	@Override
 	public List<Task> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
 		try {
@@ -89,5 +89,25 @@ public class TaskDaoImpl implements TaskDao {
 			System.out.println("Error "+ ex);
 		}
 		return new ArrayList<>();
+	}
+
+	@Override
+	public List<Task> getTasksByUuids(List<String> listOfUuids) {
+		try {
+			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
+			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
+			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
+			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
+
+			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(
+			fhirTaskJoin.get("uuid").in(listOfUuids));
+			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
+
+			return query.getResultList();
+		}
+		catch (Exception e) {
+			System.out.println("Error " + e);
+		}
+		return null;
 	}
 }

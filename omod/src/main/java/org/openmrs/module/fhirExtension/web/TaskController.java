@@ -9,6 +9,7 @@ import org.openmrs.module.fhirExtension.service.TaskService;
 import org.openmrs.module.fhirExtension.web.contract.PatientTaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
+import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
 import org.openmrs.module.fhirExtension.web.mapper.TaskMapper;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.RestUtil;
@@ -22,7 +23,12 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Controller
 @RequestMapping(value = "/rest/" + RestConstants.VERSION_1 + "/tasks")
@@ -33,10 +39,10 @@ public class TaskController extends BaseRestController {
 	
 	@Autowired
 	private VisitService visitService;
-	
+
 	@Autowired
 	private PatientService patientService;
-	
+
 	@Autowired
 	private TaskMapper taskMapper;
 	
@@ -78,7 +84,32 @@ public class TaskController extends BaseRestController {
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
-	
+
+	@RequestMapping(method = RequestMethod.PUT)
+	@ResponseBody
+	public ResponseEntity<Object> updateTask(@Valid @RequestBody ArrayList<TaskUpdateRequest> taskUpdateRequests) throws IOException {
+		try {
+			List<String> listOfUuid = taskUpdateRequests.stream().map(task -> task.getUuid()).collect(Collectors.toList());
+			List<Task> tasks = taskService.getTasksByUuids(listOfUuid);
+			if(tasks.size() == listOfUuid.size()) {
+				taskUpdateRequests.forEach(taskUpdateRequest -> {
+					Optional<Task> taskToBeUpdated = tasks.stream().filter(task -> task.getFhirTask().getUuid().equals(taskUpdateRequest.getUuid())).findFirst();
+					taskMapper.fromRequest(taskUpdateRequest, taskToBeUpdated.get());
+					taskService.saveTask(taskToBeUpdated.get());
+				});
+			return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
+			}
+			throw new Exception();
+		}
+		catch (RuntimeException ex) {
+			log.error("Runtime error while updating a task", ex);
+			return new ResponseEntity<>(RestUtil.wrapErrorResponse(ex, ex.getMessage()), HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			log.error("One or more task(s) uuid is not valid", e);
+			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
+		}
+	}
+
 	private List<PatientTaskResponse> constructGroupedResponses(List<String> patientUuids, Date startTime, Date endTime) {
 		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, startTime, endTime);
 		Map<String, List<Task>> groupedResponses = response.stream()
