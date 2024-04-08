@@ -25,7 +25,10 @@ public class TaskRequest {
 	private Date requestedEndTime;
 	
 	private FhirTask.TaskStatus status;
-	
+
 	private FhirTask.TaskIntent intent;
-	
+
+	private String comment;
+
+
 }

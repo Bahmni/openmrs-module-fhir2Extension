@@ -36,4 +36,6 @@ public class TaskResponse {
 	private Date executionStartTime;
 	
 	private Date executionEndTime;
+
+	private String comment;
 }
