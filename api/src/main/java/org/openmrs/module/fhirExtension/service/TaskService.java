@@ -18,4 +18,7 @@ public interface TaskService {
 	List<Task> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
 	
 	List<Task> getTasksByUuids(List<String> listOdUuids);
+	
+	List<Task> getTasksByNameAndStatus(List<String> taskNames, String taskStatus);
+	
 }

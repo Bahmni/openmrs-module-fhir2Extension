@@ -52,4 +52,9 @@ public class TaskServiceImpl implements TaskService {
 	public List<Task> getTasksByUuids(List<String> listOdUuids) {
 		return taskDao.getTasksByUuids(listOdUuids);
 	}
+	
+	@Override
+	public List<Task> getTasksByNameAndStatus(List<String> taskNames, String taskStatus) {
+		return taskDao.getTasksByNameAndStatus(taskNames, taskStatus);
+	}
 }
