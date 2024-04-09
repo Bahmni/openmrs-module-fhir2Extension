@@ -42,14 +42,19 @@ public class TaskServiceImpl implements TaskService {
 	public List<Task> getTasksByVisitFilteredByTimeFrame(String visitUuid, Date startTime, Date endTime) {
 		return taskDao.getTasksByVisitFilteredByTimeFrame(visitService.getVisitByUuid(visitUuid), startTime, endTime);
 	}
-
+	
 	@Override
 	public List<Task> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
 		return taskDao.getTasksByPatientUuidsFilteredByTimeFrame(patientUuids, startTime, endTime);
 	}
-
+	
 	@Override
 	public List<Task> getTasksByUuids(List<String> listOdUuids) {
 		return taskDao.getTasksByUuids(listOdUuids);
+	}
+	
+	@Override
+	public List<Task> getTasksByNameAndStatus(List<String> taskNames, String taskStatus) {
+		return taskDao.getTasksByNameAndStatus(taskNames, taskStatus);
 	}
 }

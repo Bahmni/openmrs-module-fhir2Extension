@@ -13,4 +13,6 @@ public interface TaskDao {
 	List<Task> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
 	
 	List<Task> getTasksByUuids(List<String> listOfUuids);
+	
+	List<Task> getTasksByNameAndStatus(List<String> taskNames, String taskStatus);
 }
