@@ -43,6 +43,7 @@ public class TaskMapper {
 		
 		fhirTask.setStatus(taskRequest.getStatus());
 		fhirTask.setIntent(taskRequest.getIntent());
+		fhirTask.setComment(taskRequest.getComment());
 		
 		if (taskRequest.getRequestedStartTime() != null || taskRequest.getRequestedEndTime() != null) {
 			FhirTaskRequestedPeriod fhirTaskRequestedPeriod = new FhirTaskRequestedPeriod();
@@ -68,6 +69,7 @@ public class TaskMapper {
 		response.setTaskType(ConversionUtil.convertToRepresentation(task.getFhirTask().getTaskCode(), Representation.REF));
 		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
 		response.setRequestedEndTime(task.getFhirTask().getExecutionEndTime());
+		response.setComment(task.getFhirTask().getComment());
 		return response;
 	}
 	
