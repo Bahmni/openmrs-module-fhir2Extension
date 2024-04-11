@@ -90,7 +90,7 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return new ArrayList<>();
 	}
-
+	
 	@Override
 	public List<Task> getTasksByUuids(List<String> listOfUuids) {
 		try {
@@ -129,5 +129,13 @@ public class TaskDaoImpl implements TaskDao {
 			System.out.println("Error " + e);
 		}
 		return null;
+	}
+	
+	public List<FhirTask> bulkSave(List<FhirTask> tasks) {
+		tasks.forEach(task -> {
+			sessionFactory.getCurrentSession().persist(task);
+		});
+		sessionFactory.getCurrentSession().flush();
+		return tasks;
 	}
 }

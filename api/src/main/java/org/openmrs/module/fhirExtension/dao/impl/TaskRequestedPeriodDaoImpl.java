@@ -1,5 +1,6 @@
 package org.openmrs.module.fhirExtension.dao.impl;
 
+import java.util.List;
 import org.hibernate.SessionFactory;
 import org.openmrs.module.fhirExtension.dao.TaskRequestedPeriodDao;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
@@ -23,5 +24,14 @@ public class TaskRequestedPeriodDaoImpl implements TaskRequestedPeriodDao {
 	public FhirTaskRequestedPeriod save(FhirTaskRequestedPeriod fhirTaskRequestedPeriod) {
 		sessionFactory.getCurrentSession().save(fhirTaskRequestedPeriod);
 		return fhirTaskRequestedPeriod;
+	}
+	
+	@Override
+	public List<FhirTaskRequestedPeriod> bulkSave(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods) {
+		fhirTaskRequestedPeriods.forEach(fhirTaskRequestedPeriod ->
+			sessionFactory.getCurrentSession().persist(fhirTaskRequestedPeriod)
+		);
+		sessionFactory.getCurrentSession().flush();
+		return fhirTaskRequestedPeriods;
 	}
 }

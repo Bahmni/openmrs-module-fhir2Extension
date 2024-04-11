@@ -13,6 +13,8 @@ public interface TaskService {
 	
 	Task saveTask(Task task);
 	
+	List<Task> bulkSaveTasks(List<Task> tasks);
+	
 	List<Task> getTasksByVisitFilteredByTimeFrame(String visitUuid, Date startTime, Date endTime);
 	
 	List<Task> getTasksByPatientUuidsByTimeFrame(List<String> patientUuids, Date startTime, Date endTime);
