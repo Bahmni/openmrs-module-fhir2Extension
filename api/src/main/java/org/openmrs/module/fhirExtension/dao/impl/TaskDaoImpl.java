@@ -128,4 +128,12 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return null;
 	}
+	
+	public List<FhirTask> bulkSave(List<FhirTask> tasks) {
+		tasks.forEach(task -> {
+			sessionFactory.getCurrentSession().persist(task);
+		});
+		sessionFactory.getCurrentSession().flush();
+		return tasks;
+	}
 }
