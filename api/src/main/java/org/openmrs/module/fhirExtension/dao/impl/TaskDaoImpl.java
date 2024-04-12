@@ -31,16 +31,10 @@ public class TaskDaoImpl implements TaskDao {
 			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
 			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
 
-			Subquery<Encounter> encounterSubQuery = criteriaQuery.subquery(Encounter.class);
-			Root<Encounter> encounter = encounterSubQuery.from(Encounter.class);
-			encounterSubQuery.select(encounter.get("uuid"));
-			encounterSubQuery.where(criteriaBuilder.equal(encounter.get("visit"), visit));
-
-
 			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod));
 			criteriaQuery.where(
 					criteriaBuilder.and(
-							criteriaBuilder.in(fhirTaskJoin.get("encounterReference").get("targetUuid")).value(encounterSubQuery),
+							criteriaBuilder.equal(fhirTaskJoin.get("forReference").get("targetUuid"),visit.getUuid()),
 							criteriaBuilder.between(fhirTaskRequestedPeriod.get("requestedStartTime"), startTime, endTime)
 					)
 			);
@@ -55,7 +49,7 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return new ArrayList<>();
 	}
-
+	
 	@Override
 	public List<Task> getTasksByPatientUuidsFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
 		try {
@@ -65,17 +59,21 @@ public class TaskDaoImpl implements TaskDao {
 			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
 			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
 
-			Subquery<String> encounterSubQuery = criteriaQuery.subquery(String.class);
-			Root<Encounter> encounterRoot = encounterSubQuery.from(Encounter.class);
-			Join<Encounter, Visit> visitJoin = encounterRoot.join("visit");
-			Join<Visit, Patient> patientJoin = visitJoin.join("patient");
-			encounterSubQuery.select(encounterRoot.get("uuid"));
-			encounterSubQuery.where(criteriaBuilder.in(patientJoin.get("uuid")).value(patientUuids));
+			Subquery<String> visitSubQuery = criteriaQuery.subquery(String.class);
+			Root<Visit> visitRoot = visitSubQuery.from(Visit.class);
+			Join<Visit, Patient> patientJoin = visitRoot.join("patient");
+			visitSubQuery.select(visitRoot.get("uuid"));
+			visitSubQuery.where(
+					criteriaBuilder.and(
+							criteriaBuilder.in(patientJoin.get("uuid")).value(patientUuids),
+							criteriaBuilder.isNull(visitRoot.get("stopDateTime"))
+					)
+			);
 
 			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod));
 			criteriaQuery.where(
 					criteriaBuilder.and(
-							criteriaBuilder.in(fhirTaskJoin.get("encounterReference").get("targetUuid")).value(encounterSubQuery),
+							criteriaBuilder.in(fhirTaskJoin.get("encounterReference").get("targetUuid")).value(visitSubQuery),
 							criteriaBuilder.between(fhirTaskRequestedPeriod.get("requestedStartTime"), startTime, endTime)
 					)
 			);
@@ -90,7 +88,7 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return new ArrayList<>();
 	}
-
+	
 	@Override
 	public List<Task> getTasksByUuids(List<String> listOfUuids) {
 		try {
@@ -98,11 +96,11 @@ public class TaskDaoImpl implements TaskDao {
 			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
 			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
 			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
-
+			
 			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(
-			fhirTaskJoin.get("uuid").in(listOfUuids));
+			    fhirTaskJoin.get("uuid").in(listOfUuids));
 			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
-
+			
 			return query.getResultList();
 		}
 		catch (Exception e) {

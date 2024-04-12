@@ -20,4 +20,6 @@ public class TaskUpdateRequest {
 	
 	private FhirTask.TaskStatus status;
 	
+	private String comment;
+	
 }

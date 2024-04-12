@@ -39,10 +39,10 @@ public class TaskController extends BaseRestController {
 	
 	@Autowired
 	private VisitService visitService;
-
+	
 	@Autowired
 	private PatientService patientService;
-
+	
 	@Autowired
 	private TaskMapper taskMapper;
 	
@@ -84,7 +84,7 @@ public class TaskController extends BaseRestController {
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
-
+	
 	@RequestMapping(method = RequestMethod.PUT)
 	@ResponseBody
 	public ResponseEntity<Object> updateTask(@Valid @RequestBody ArrayList<TaskUpdateRequest> taskUpdateRequests) throws IOException {
@@ -109,7 +109,7 @@ public class TaskController extends BaseRestController {
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
-
+	
 	private List<PatientTaskResponse> constructGroupedResponses(List<String> patientUuids, Date startTime, Date endTime) {
 		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, startTime, endTime);
 		Map<String, List<Task>> groupedResponses = response.stream()

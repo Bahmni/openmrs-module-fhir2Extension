@@ -16,6 +16,8 @@ public class TaskRequest {
 	
 	private String patientUuid;
 	
+	private String visitUuid;
+	
 	private String encounterUuid;
 	
 	private String taskType;
@@ -25,10 +27,9 @@ public class TaskRequest {
 	private Date requestedEndTime;
 	
 	private FhirTask.TaskStatus status;
-
+	
 	private FhirTask.TaskIntent intent;
-
+	
 	private String comment;
-
-
+	
 }
