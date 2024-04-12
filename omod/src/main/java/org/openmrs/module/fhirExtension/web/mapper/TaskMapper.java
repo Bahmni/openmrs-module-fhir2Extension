@@ -2,7 +2,11 @@ package org.openmrs.module.fhirExtension.web.mapper;
 
 import org.openmrs.Encounter;
 import org.openmrs.Patient;
+import org.openmrs.Visit;
 import org.openmrs.api.EncounterService;
+import org.openmrs.api.LocationService;
+import org.openmrs.api.PatientService;
+import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
@@ -13,6 +17,7 @@ import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
 import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
+import org.openmrs.parameter.EncounterSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +27,12 @@ public class TaskMapper {
 	@Autowired
 	private EncounterService encounterService;
 	
+	@Autowired
+	private VisitService visitService;
+	
+	@Autowired
+	private PatientService patientService;
+	
 	public Task fromRequest(TaskRequest taskRequest) {
 		
 		Task task = new Task();
@@ -29,17 +40,29 @@ public class TaskMapper {
 		fhirTask.setName(taskRequest.getName());
 		fhirTask.setTaskCode(Context.getConceptService().getConceptByName(taskRequest.getTaskType()));
 		
-		FhirReference forReference = new FhirReference();
-		forReference.setType(Patient.class.getTypeName());
-		forReference.setReference(Patient.class.getTypeName() + "/" + taskRequest.getPatientUuid());
-		forReference.setTargetUuid(taskRequest.getPatientUuid());
-		fhirTask.setForReference(forReference);
+		if (taskRequest.getPatientUuid() != null) {
+			Visit activeVisit = visitService.getActiveVisitsByPatient(
+			    patientService.getPatientByUuid(taskRequest.getPatientUuid())).get(0);
+			FhirReference forReference = new FhirReference();
+			forReference.setType(Visit.class.getTypeName());
+			forReference.setReference(Visit.class.getTypeName() + "/" + activeVisit.getUuid());
+			forReference.setTargetUuid(activeVisit.getUuid());
+			fhirTask.setForReference(forReference);
+		} else if (taskRequest.getVisitUuid() != null) {
+			FhirReference forReference = new FhirReference();
+			forReference.setType(Visit.class.getTypeName());
+			forReference.setReference(Visit.class.getTypeName() + "/" + taskRequest.getVisitUuid());
+			forReference.setTargetUuid(taskRequest.getVisitUuid());
+			fhirTask.setForReference(forReference);
+		}
 		
-		FhirReference encounterReference = new FhirReference();
-		encounterReference.setType(Encounter.class.getTypeName());
-		encounterReference.setReference(Encounter.class.getTypeName() + "/" + taskRequest.getEncounterUuid());
-		encounterReference.setTargetUuid(taskRequest.getEncounterUuid());
-		fhirTask.setEncounterReference(encounterReference);
+		if (taskRequest.getEncounterUuid() != null) {
+			FhirReference encounterReference = new FhirReference();
+			encounterReference.setType(Encounter.class.getTypeName());
+			encounterReference.setReference(Encounter.class.getTypeName() + "/" + taskRequest.getEncounterUuid());
+			encounterReference.setTargetUuid(taskRequest.getEncounterUuid());
+			fhirTask.setEncounterReference(encounterReference);
+		}
 		
 		fhirTask.setStatus(taskRequest.getStatus());
 		fhirTask.setIntent(taskRequest.getIntent());
@@ -79,6 +102,7 @@ public class TaskMapper {
 		fhirTask.setStatus(taskUpdateRequest.getStatus());
 		fhirTask.setExecutionStartTime(taskUpdateRequest.getExecutionStartTime());
 		fhirTask.setExecutionEndTime(taskUpdateRequest.getExecutionEndTime());
+		fhirTask.setComment(taskUpdateRequest.getComment());
 	}
 	
 }

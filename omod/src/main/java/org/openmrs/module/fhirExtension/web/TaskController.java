@@ -2,6 +2,7 @@ package org.openmrs.module.fhirExtension.web;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Visit;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.VisitService;
 import org.openmrs.module.fhirExtension.model.Task;
@@ -39,10 +40,10 @@ public class TaskController extends BaseRestController {
 	
 	@Autowired
 	private VisitService visitService;
-
+	
 	@Autowired
 	private PatientService patientService;
-
+	
 	@Autowired
 	private TaskMapper taskMapper;
 	
@@ -84,7 +85,7 @@ public class TaskController extends BaseRestController {
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
-
+	
 	@RequestMapping(method = RequestMethod.PUT)
 	@ResponseBody
 	public ResponseEntity<Object> updateTask(@Valid @RequestBody ArrayList<TaskUpdateRequest> taskUpdateRequests) throws IOException {
@@ -109,16 +110,20 @@ public class TaskController extends BaseRestController {
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 	}
-
+	
 	private List<PatientTaskResponse> constructGroupedResponses(List<String> patientUuids, Date startTime, Date endTime) {
 		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, startTime, endTime);
-		Map<String, List<Task>> groupedResponses = response.stream()
+		List<Visit> activeVisits= visitService.getVisits(null,null,null,null,null,null,null,null,null,false,false);
+		Map<String, Visit> visitPatientMap = activeVisits.stream()
+				.collect(Collectors.toMap(Visit::getUuid, visit -> visit));
+
+		Map<String, List<Task>> groupedByVisit = response.stream()
 				.collect(Collectors.groupingBy(task -> task.getFhirTask().getForReference().getTargetUuid()));
 
 		List<PatientTaskResponse> patientTaskResponses = new ArrayList<>();
-		groupedResponses.forEach((uuid, tasks) -> {
+		groupedByVisit.forEach((visitUUid, tasks) -> {
 			List<TaskResponse> taskResponses = tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList());
-			PatientTaskResponse patientTaskResponse = new PatientTaskResponse(uuid, taskResponses);
+			PatientTaskResponse patientTaskResponse = new PatientTaskResponse(visitPatientMap.get(visitUUid).getPatient().getUuid(),visitUUid, taskResponses);
 			patientTaskResponses.add(patientTaskResponse);
 		});
 		return patientTaskResponses;

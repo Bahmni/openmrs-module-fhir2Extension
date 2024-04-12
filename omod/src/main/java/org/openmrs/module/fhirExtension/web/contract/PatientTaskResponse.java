@@ -12,5 +12,7 @@ public class PatientTaskResponse {
 	
 	private String patientUuid;
 	
+	private String visitUuid;
+	
 	private List<TaskResponse> tasks;
 }
