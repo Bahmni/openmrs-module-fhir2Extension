@@ -15,7 +15,7 @@ public interface TaskDao {
 	
 	List<Task> getTasksByUuids(List<String> listOfUuids);
 	
-	List<Task> getTasksByNameAndStatus(List<String> taskNames, String taskStatus);
+	List<Task> getTasksByNameAndStatus(List<String> taskNames, FhirTask.TaskStatus taskStatus);
 	
 	List<FhirTask> bulkSave(List<FhirTask> tasks);
 }

@@ -34,4 +34,12 @@ public class TaskRequestedPeriodDaoImpl implements TaskRequestedPeriodDao {
 		sessionFactory.getCurrentSession().flush();
 		return fhirTaskRequestedPeriods;
 	}
+	
+	@Override
+	public List<FhirTaskRequestedPeriod> bulkUpdate(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods) {
+		fhirTaskRequestedPeriods.forEach((fhirTaskRequestedPeriod) -> {
+			sessionFactory.getCurrentSession().merge(fhirTaskRequestedPeriod);
+		});
+		return fhirTaskRequestedPeriods;
+	}
 }

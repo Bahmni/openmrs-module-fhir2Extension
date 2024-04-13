@@ -74,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 	
 	@Override
-	public List<Task> getTasksByNameAndStatus(List<String> taskNames, String taskStatus) {
+	public List<Task> getTasksByNameAndStatus(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
 		return taskDao.getTasksByNameAndStatus(taskNames, taskStatus);
 	}
 }
