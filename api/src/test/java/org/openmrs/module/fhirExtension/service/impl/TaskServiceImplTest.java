@@ -47,12 +47,12 @@ public class TaskServiceImplTest {
 		Task task = new Task(fhirTask, requestedPeriod);
 		
 		when(fhirTaskDao.createOrUpdate(any())).thenReturn(task.getFhirTask());
-		when(taskRequestedPeriodDao.save(any())).thenReturn(task.getFhirTaskRequestedPeriod());
+		when(taskRequestedPeriodDao.save((FhirTaskRequestedPeriod) any())).thenReturn(task.getFhirTaskRequestedPeriod());
 		
 		Task savedTask = taskService.saveTask(task);
 		
 		verify(fhirTaskDao, times(1)).createOrUpdate(any());
-		verify(taskRequestedPeriodDao, times(1)).save(any());
+		verify(taskRequestedPeriodDao, times(1)).save((FhirTaskRequestedPeriod) any());
 	}
 	
 	@Test

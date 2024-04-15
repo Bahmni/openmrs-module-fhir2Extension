@@ -108,4 +108,30 @@ public class TaskDaoImpl implements TaskDao {
 		}
 		return null;
 	}
+	
+	@Override
+	public List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
+		try {
+			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
+			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
+			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
+			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
+			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(
+			    fhirTaskJoin.get("name").in(taskNames), criteriaBuilder.equal(fhirTaskJoin.get("status"), taskStatus));
+			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
+			return query.getResultList();
+		}
+		catch (Exception e) {
+			System.out.println("Error " + e);
+		}
+		return null;
+	}
+	
+	public List<FhirTask> save(List<FhirTask> tasks) {
+		tasks.forEach(task -> {
+			sessionFactory.getCurrentSession().persist(task);
+		});
+		sessionFactory.getCurrentSession().flush();
+		return tasks;
+	}
 }

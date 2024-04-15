@@ -1,5 +1,6 @@
 package org.openmrs.module.fhirExtension.dao;
 
+import java.util.List;
 import org.openmrs.Visit;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
@@ -13,4 +14,7 @@ public interface TaskRequestedPeriodDao {
 	
 	FhirTaskRequestedPeriod save(FhirTaskRequestedPeriod fhirTaskRequestedPeriod);
 	
+	List<FhirTaskRequestedPeriod> save(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods);
+	
+	List<FhirTaskRequestedPeriod> update(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods);
 }
