@@ -42,7 +42,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 	
 	@Override
-	public List<Task> bulkSaveTasks(List<Task> tasks) {
+	public List<Task> saveTask(List<Task> tasks) {
 		
 		List<FhirTask> fhirTasks = new ArrayList<FhirTask>();
 		List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods = new ArrayList<FhirTaskRequestedPeriod>();
@@ -53,8 +53,8 @@ public class TaskServiceImpl implements TaskService {
 				fhirTaskRequestedPeriods.add(task.getFhirTaskRequestedPeriod());
 			}
 		}
-		taskDao.bulkSave(fhirTasks);
-		taskRequestedPeriodDao.bulkSave(fhirTaskRequestedPeriods);
+		taskDao.save(fhirTasks);
+		taskRequestedPeriodDao.save(fhirTaskRequestedPeriods);
 		return tasks;
 	}
 	
@@ -74,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 	
 	@Override
-	public List<Task> getTasksByNameAndStatus(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
-		return taskDao.getTasksByNameAndStatus(taskNames, taskStatus);
+	public List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
+		return taskDao.searchTasks(taskNames, taskStatus);
 	}
 }

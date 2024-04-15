@@ -27,7 +27,7 @@ public class TaskRequestedPeriodDaoImpl implements TaskRequestedPeriodDao {
 	}
 	
 	@Override
-	public List<FhirTaskRequestedPeriod> bulkSave(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods) {
+	public List<FhirTaskRequestedPeriod> save(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods) {
 		fhirTaskRequestedPeriods.forEach(fhirTaskRequestedPeriod ->
 			sessionFactory.getCurrentSession().persist(fhirTaskRequestedPeriod)
 		);
@@ -36,7 +36,7 @@ public class TaskRequestedPeriodDaoImpl implements TaskRequestedPeriodDao {
 	}
 	
 	@Override
-	public List<FhirTaskRequestedPeriod> bulkUpdate(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods) {
+	public List<FhirTaskRequestedPeriod> update(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods) {
 		fhirTaskRequestedPeriods.forEach((fhirTaskRequestedPeriod) -> {
 			sessionFactory.getCurrentSession().merge(fhirTaskRequestedPeriod);
 		});

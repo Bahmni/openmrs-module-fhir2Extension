@@ -14,7 +14,7 @@ public interface TaskService {
 	
 	Task saveTask(Task task);
 	
-	List<Task> bulkSaveTasks(List<Task> tasks);
+	List<Task> saveTask(List<Task> tasks);
 	
 	List<Task> getTasksByVisitFilteredByTimeFrame(String visitUuid, Date startTime, Date endTime);
 	
@@ -22,5 +22,5 @@ public interface TaskService {
 	
 	List<Task> getTasksByUuids(List<String> listOdUuids);
 	
-	List<Task> getTasksByNameAndStatus(List<String> taskNames, FhirTask.TaskStatus taskStatus);
+	List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus);
 }

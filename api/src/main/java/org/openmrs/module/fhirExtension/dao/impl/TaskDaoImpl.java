@@ -110,7 +110,7 @@ public class TaskDaoImpl implements TaskDao {
 	}
 	
 	@Override
-	public List<Task> getTasksByNameAndStatus(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
+	public List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
 		try {
 			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
 			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
@@ -127,7 +127,7 @@ public class TaskDaoImpl implements TaskDao {
 		return null;
 	}
 	
-	public List<FhirTask> bulkSave(List<FhirTask> tasks) {
+	public List<FhirTask> save(List<FhirTask> tasks) {
 		tasks.forEach(task -> {
 			sessionFactory.getCurrentSession().persist(task);
 		});

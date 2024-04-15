@@ -14,7 +14,7 @@ public interface TaskRequestedPeriodDao {
 	
 	FhirTaskRequestedPeriod save(FhirTaskRequestedPeriod fhirTaskRequestedPeriod);
 	
-	List<FhirTaskRequestedPeriod> bulkSave(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods);
+	List<FhirTaskRequestedPeriod> save(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods);
 	
-	List<FhirTaskRequestedPeriod> bulkUpdate(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods);
+	List<FhirTaskRequestedPeriod> update(List<FhirTaskRequestedPeriod> fhirTaskRequestedPeriods);
 }
