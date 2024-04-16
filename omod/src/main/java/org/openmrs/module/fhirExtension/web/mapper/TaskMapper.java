@@ -91,7 +91,7 @@ public class TaskMapper {
 		response.setCreator(ConversionUtil.convertToRepresentation(task.getFhirTask().getCreator(), Representation.REF));
 		response.setTaskType(ConversionUtil.convertToRepresentation(task.getFhirTask().getTaskCode(), Representation.REF));
 		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
-		response.setRequestedEndTime(task.getFhirTask().getExecutionEndTime());
+		response.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
 		response.setComment(task.getFhirTask().getComment());
 		return response;
 	}
