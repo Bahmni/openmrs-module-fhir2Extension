@@ -61,19 +61,17 @@ public class TaskDaoImpl implements TaskDao {
 
 			Subquery<String> visitSubQuery = criteriaQuery.subquery(String.class);
 			Root<Visit> visitRoot = visitSubQuery.from(Visit.class);
-			Join<Visit, Patient> patientJoin = visitRoot.join("patient");
-			visitSubQuery.select(visitRoot.get("uuid"));
-			visitSubQuery.where(
-					criteriaBuilder.and(
-							criteriaBuilder.in(patientJoin.get("uuid")).value(patientUuids),
-							criteriaBuilder.isNull(visitRoot.get("stopDateTime"))
-					)
+			Predicate activeVisits = criteriaBuilder.and(
+					criteriaBuilder.in(visitRoot.join("patient").get("uuid")).value(patientUuids),
+					criteriaBuilder.isNull(visitRoot.get("stopDatetime"))
 			);
+			visitSubQuery.where(activeVisits);
+			visitSubQuery.select(visitRoot.get("uuid"));
 
 			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod));
 			criteriaQuery.where(
 					criteriaBuilder.and(
-							criteriaBuilder.in(fhirTaskJoin.get("encounterReference").get("targetUuid")).value(visitSubQuery),
+							criteriaBuilder.in(fhirTaskJoin.get("forReference").get("targetUuid")).value(visitSubQuery),
 							criteriaBuilder.between(fhirTaskRequestedPeriod.get("requestedStartTime"), startTime, endTime)
 					)
 			);
