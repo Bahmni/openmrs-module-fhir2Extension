@@ -2,6 +2,7 @@ package org.openmrs.module.fhirExtension.service;
 
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.model.TaskSearchRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,5 +23,5 @@ public interface TaskService {
 	
 	List<Task> getTasksByUuids(List<String> listOdUuids);
 	
-	List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus);
+	List<Task> searchTasks(TaskSearchRequest taskSearchRequest);
 }

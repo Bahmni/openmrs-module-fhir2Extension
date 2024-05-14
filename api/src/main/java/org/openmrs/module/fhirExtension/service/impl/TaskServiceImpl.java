@@ -7,6 +7,7 @@ import org.openmrs.module.fhirExtension.dao.TaskDao;
 import org.openmrs.module.fhirExtension.dao.TaskRequestedPeriodDao;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.model.TaskSearchRequest;
 import org.openmrs.module.fhirExtension.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -74,7 +75,7 @@ public class TaskServiceImpl implements TaskService {
 	}
 	
 	@Override
-	public List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
-		return taskDao.searchTasks(taskNames, taskStatus);
+	public List<Task> searchTasks(TaskSearchRequest taskSearchRequest) {
+		return taskDao.searchTasks(taskSearchRequest);
 	}
 }

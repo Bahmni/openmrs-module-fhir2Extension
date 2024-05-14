@@ -3,6 +3,7 @@ package org.openmrs.module.fhirExtension.dao;
 import org.openmrs.Visit;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.model.TaskSearchRequest;
 
 import java.util.Date;
 import java.util.List;
@@ -15,7 +16,7 @@ public interface TaskDao {
 	
 	List<Task> getTasksByUuids(List<String> listOfUuids);
 	
-	List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus);
+	List<Task> searchTasks(TaskSearchRequest taskSearchRequest);
 	
 	List<FhirTask> save(List<FhirTask> tasks);
 }

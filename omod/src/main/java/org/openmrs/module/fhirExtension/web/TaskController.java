@@ -65,21 +65,20 @@ public class TaskController extends BaseRestController {
 	
 	@RequestMapping(method = RequestMethod.GET, params = {"startTime", "endTime"})
 	@ResponseBody
-	public ResponseEntity<Object> getSlotsForPatientsAndTime(@RequestParam(value = "startTime") Long startTime,
-															 @RequestParam(value = "endTime") Long endTime,
-															 @RequestParam(value = "visitUuid", required = false) String visitUuid,
-															 @RequestParam(value = "patientUuids", required = false) List<String> patientUuids) throws IOException {
+	public ResponseEntity<Object> getTasks(@RequestParam(value = "startTime") Long startTime,
+										   @RequestParam(value = "endTime") Long endTime,
+										   @RequestParam(value = "visitUuid", required = false) String visitUuid,
+										   @RequestParam(value = "patientUuids", required = false) List<String> patientUuids) throws IOException {
 		try {
-			if ((patientUuids == null || patientUuids.isEmpty()) && !(visitUuid == null || visitUuid.isEmpty())) {
+			if (visitUuid != null && !visitUuid.isEmpty()) {
 				List<Task> tasks = taskService.getTasksByVisitFilteredByTimeFrame(visitUuid, new Date(startTime), new Date(endTime));
 				return new ResponseEntity<>(tasks.stream().map(taskMapper::constructResponse).collect(Collectors.toList()), HttpStatus.OK);
-			} else if ((visitUuid == null || visitUuid.isEmpty()) && !(patientUuids == null || patientUuids.isEmpty())) {
-				List<PatientTaskResponse> groupedResponses = constructGroupedResponses(patientUuids, new Date(startTime), new Date(endTime));
+			}
+			if (patientUuids != null || !patientUuids.isEmpty()) {
+				List<PatientTaskResponse> groupedResponses = getTasksByPatientFilteredByTimeFrame(patientUuids, new Date(startTime), new Date(endTime));
 				return new ResponseEntity<>(groupedResponses, HttpStatus.OK);
 			}
-			else {
-				throw new Exception();
-			}
+			return new ResponseEntity<>("Error Processing Request. Either Visit or Patient UUID is mandatory", HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			log.error("Runtime error while fetching patient medication summaries", e);
 			return new ResponseEntity<>(RestUtil.wrapErrorResponse(e, e.getMessage()), HttpStatus.BAD_REQUEST);
@@ -111,7 +110,7 @@ public class TaskController extends BaseRestController {
 		}
 	}
 	
-	private List<PatientTaskResponse> constructGroupedResponses(List<String> patientUuids, Date startTime, Date endTime) {
+	private List<PatientTaskResponse> getTasksByPatientFilteredByTimeFrame(List<String> patientUuids, Date startTime, Date endTime) {
 		List<Task> response = taskService.getTasksByPatientUuidsByTimeFrame(patientUuids, startTime, endTime);
 		List<Visit> activeVisits= visitService.getVisits(null,null,null,null,null,null,null,null,null,false,false);
 		Map<String, Visit> visitPatientMap = activeVisits.stream()
