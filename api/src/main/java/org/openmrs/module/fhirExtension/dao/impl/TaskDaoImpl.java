@@ -1,5 +1,7 @@
 package org.openmrs.module.fhirExtension.dao.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.openmrs.Encounter;
 import org.openmrs.Patient;
@@ -8,6 +10,7 @@ import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.dao.TaskDao;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.model.TaskSearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -22,6 +25,8 @@ public class TaskDaoImpl implements TaskDao {
 	
 	@Autowired
 	private SessionFactory sessionFactory;
+	
+	private Log log = LogFactory.getLog(this.getClass());
 	
 	@Override
 	public List<Task> getTasksByVisitFilteredByTimeFrame(Visit visit, Date startTime, Date endTime) {
@@ -45,7 +50,7 @@ public class TaskDaoImpl implements TaskDao {
 
 		}
 		catch (Exception ex){
-			System.out.println("Error "+ ex);
+			log.error("Error while getTasksByVisitFilteredByTimeFrame ",ex);
 		}
 		return new ArrayList<>();
 	}
@@ -82,7 +87,7 @@ public class TaskDaoImpl implements TaskDao {
 
 		}
 		catch (Exception ex){
-			System.out.println("Error "+ ex);
+			log.error("Error while getTasksByPatientUuidsFilteredByTimeFrame ",ex);
 		}
 		return new ArrayList<>();
 	}
@@ -102,27 +107,38 @@ public class TaskDaoImpl implements TaskDao {
 			return query.getResultList();
 		}
 		catch (Exception e) {
-			System.out.println("Error " + e);
+			log.error("Error while getTasksByPatientUuidsFilteredByTimeFrame ",e);
 		}
-		return null;
+		return new ArrayList<>();
 	}
 	
 	@Override
-	public List<Task> searchTasks(List<String> taskNames, FhirTask.TaskStatus taskStatus) {
+	public List<Task> searchTasks(TaskSearchRequest taskSearchRequest) {
 		try {
 			CriteriaBuilder criteriaBuilder = sessionFactory.getCurrentSession().getCriteriaBuilder();
 			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
 			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
 			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
-			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(
-			    fhirTaskJoin.get("name").in(taskNames), criteriaBuilder.equal(fhirTaskJoin.get("status"), taskStatus));
+
+			Predicate searchCondition=null;
+
+			if (taskSearchRequest.getTaskName()!=null && !taskSearchRequest.getTaskName().isEmpty()){
+				searchCondition = fhirTaskJoin.get("name").in(taskSearchRequest.getTaskName());
+			}
+
+			if (taskSearchRequest.getTaskStatus()!=null && !taskSearchRequest.getTaskStatus().isEmpty()){
+				Predicate statusSearchCondition = fhirTaskJoin.get("status").in(taskSearchRequest.getTaskStatus());
+				searchCondition = searchCondition ==null ? statusSearchCondition : criteriaBuilder.and(searchCondition,statusSearchCondition);
+			}
+
+			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(searchCondition);
 			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
 			return query.getResultList();
 		}
 		catch (Exception e) {
-			System.out.println("Error " + e);
+			log.error("Error while searchTasks ",e);
 		}
-		return null;
+		return new ArrayList<>();
 	}
 	
 	public List<FhirTask> save(List<FhirTask> tasks) {
