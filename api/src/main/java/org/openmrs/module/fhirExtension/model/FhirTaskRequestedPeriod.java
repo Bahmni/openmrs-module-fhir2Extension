@@ -3,10 +3,6 @@ package org.openmrs.module.fhirExtension.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hl7.fhir.r4b.model.Task;
-import org.openmrs.Concept;
-import org.openmrs.Provider;
-import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 
 import javax.persistence.*;
