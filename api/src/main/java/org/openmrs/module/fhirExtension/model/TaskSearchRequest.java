@@ -1,9 +1,6 @@
 package org.openmrs.module.fhirExtension.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.openmrs.module.fhir2.model.FhirTask;
 
 import java.util.List;
@@ -12,6 +9,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TaskSearchRequest {
 	
 	private List<String> taskName;
