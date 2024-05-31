@@ -40,8 +40,7 @@ public class ConditionExportTest {
 	
 	@Test
 	public void shouldExportConditions_whenValidDateRangeProvided() {
-		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-		        .thenReturn(getMockConditionBundle(2));
+		when(fhirConditionService.searchConditions(any())).thenReturn(getMockConditionBundle(2));
 		
 		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", "2023-05-31");
 		
@@ -51,8 +50,7 @@ public class ConditionExportTest {
 	
 	@Test
 	public void shouldExportConditions_whenValidStartDateProvided() {
-		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-		        .thenReturn(getMockConditionBundle(1));
+		when(fhirConditionService.searchConditions(any())).thenReturn(getMockConditionBundle(1));
 		
 		List<IBaseResource> conditionResources = conditionExport.export("2023-05-01", null);
 		
@@ -62,8 +60,7 @@ public class ConditionExportTest {
 	
 	@Test
 	public void shouldExportConditions_whenValidEndDateProvided() {
-		when(fhirConditionService.searchConditions(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-		        .thenReturn(getMockConditionBundle(1));
+		when(fhirConditionService.searchConditions(any())).thenReturn(getMockConditionBundle(1));
 		
 		List<IBaseResource> conditionResources = conditionExport.export(null, "2023-05-31");
 		
