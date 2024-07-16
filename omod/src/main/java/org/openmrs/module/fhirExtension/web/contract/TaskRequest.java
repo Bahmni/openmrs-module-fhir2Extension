@@ -32,4 +32,6 @@ public class TaskRequest {
 	
 	private String comment;
 	
+	private Boolean isSystemGeneratedTask = false;
+	
 }
