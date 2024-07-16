@@ -8,6 +8,7 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
+import org.openmrs.api.context.Daemon;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
@@ -74,6 +75,10 @@ public class TaskMapper {
 			fhirTaskRequestedPeriod.setRequestedStartTime(taskRequest.getRequestedStartTime());
 			fhirTaskRequestedPeriod.setRequestedEndTime(taskRequest.getRequestedEndTime());
 			task.setFhirTaskRequestedPeriod(fhirTaskRequestedPeriod);
+		}
+		
+		if (taskRequest.getIsSystemGeneratedTask()) {
+			fhirTask.setCreator(Context.getUserService().getUserByUuid(Daemon.getDaemonUserUuid()));
 		}
 		task.setFhirTask(fhirTask);
 		return task;
