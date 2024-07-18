@@ -1,5 +1,7 @@
 package org.openmrs.module.fhirExtension.web.mapper;
 
+import lombok.extern.slf4j.Slf4j;
+import org.openmrs.Concept;
 import org.openmrs.Encounter;
 import org.openmrs.Patient;
 import org.openmrs.Visit;
@@ -18,29 +20,30 @@ import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
 import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
+import org.openmrs.module.webservices.validation.ValidationException;
 import org.openmrs.parameter.EncounterSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class TaskMapper {
-	
+
 	@Autowired
 	private EncounterService encounterService;
-	
+
 	@Autowired
 	private VisitService visitService;
-	
+
 	@Autowired
 	private PatientService patientService;
-	
+
 	public Task fromRequest(TaskRequest taskRequest) {
-		
+
 		Task task = new Task();
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setName(taskRequest.getName());
-		fhirTask.setTaskCode(Context.getConceptService().getConceptByName(taskRequest.getTaskType()));
-		
+		fhirTask.setTaskCode(getConceptForTaskType(taskRequest.getTaskType()));
 		if (taskRequest.getPatientUuid() != null) {
 			Visit activeVisit = visitService.getActiveVisitsByPatient(
 			    patientService.getPatientByUuid(taskRequest.getPatientUuid())).get(0);
@@ -56,7 +59,7 @@ public class TaskMapper {
 			forReference.setTargetUuid(taskRequest.getVisitUuid());
 			fhirTask.setForReference(forReference);
 		}
-		
+
 		if (taskRequest.getEncounterUuid() != null) {
 			FhirReference encounterReference = new FhirReference();
 			encounterReference.setType(Encounter.class.getTypeName());
@@ -64,11 +67,11 @@ public class TaskMapper {
 			encounterReference.setTargetUuid(taskRequest.getEncounterUuid());
 			fhirTask.setEncounterReference(encounterReference);
 		}
-		
+
 		fhirTask.setStatus(taskRequest.getStatus());
 		fhirTask.setIntent(taskRequest.getIntent());
 		fhirTask.setComment(taskRequest.getComment());
-		
+
 		if (taskRequest.getRequestedStartTime() != null || taskRequest.getRequestedEndTime() != null) {
 			FhirTaskRequestedPeriod fhirTaskRequestedPeriod = new FhirTaskRequestedPeriod();
 			fhirTaskRequestedPeriod.setTask(fhirTask);
@@ -76,14 +79,14 @@ public class TaskMapper {
 			fhirTaskRequestedPeriod.setRequestedEndTime(taskRequest.getRequestedEndTime());
 			task.setFhirTaskRequestedPeriod(fhirTaskRequestedPeriod);
 		}
-		
+
 		if (taskRequest.getIsSystemGeneratedTask()) {
 			fhirTask.setCreator(Context.getUserService().getUserByUuid(Daemon.getDaemonUserUuid()));
 		}
 		task.setFhirTask(fhirTask);
 		return task;
 	}
-	
+
 	public TaskResponse constructResponse(Task task) {
 		TaskResponse response = new TaskResponse();
 		response.setName(task.getFhirTask().getName());
@@ -100,14 +103,30 @@ public class TaskMapper {
 		response.setComment(task.getFhirTask().getComment());
 		return response;
 	}
-	
+
 	public void fromRequest(TaskUpdateRequest taskUpdateRequest, Task task) {
 		FhirTask fhirTask = task.getFhirTask();
-		
+
 		fhirTask.setStatus(taskUpdateRequest.getStatus());
 		fhirTask.setExecutionStartTime(taskUpdateRequest.getExecutionStartTime());
 		fhirTask.setExecutionEndTime(taskUpdateRequest.getExecutionEndTime());
 		fhirTask.setComment(taskUpdateRequest.getComment());
 	}
-	
+
+	private Concept getConceptForTaskType(String taskType) {
+		if (taskType == null || taskType.isEmpty()) {
+			log.warn("Task type is not passed. Setting as null");
+			return null;
+		}
+		Concept conceptForTaskType = Context.getConceptService().getConceptByName(taskType);
+		if (conceptForTaskType != null) {
+			return conceptForTaskType;
+		} else {
+			log.error(String.format("Unable to find a concept with name %s for mapping to task type.",
+					taskType));
+			throw new ValidationException(String.format("Unable to find a concept with name %s for mapping to task type.",
+			    taskType));
+		}
+	}
+
 }
