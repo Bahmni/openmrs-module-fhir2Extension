@@ -1,8 +1,7 @@
 package org.openmrs.module.fhirExtension.web.mapper;
 
-import org.openmrs.Encounter;
-import org.openmrs.Patient;
-import org.openmrs.Visit;
+import lombok.extern.slf4j.Slf4j;
+import org.openmrs.*;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
@@ -18,10 +17,18 @@ import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
 import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
+import org.openmrs.module.webservices.validation.ValidationException;
 import org.openmrs.parameter.EncounterSearchCriteria;
+import org.openmrs.util.LocaleUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Component
 public class TaskMapper {
 	
@@ -39,8 +46,7 @@ public class TaskMapper {
 		Task task = new Task();
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setName(taskRequest.getName());
-		fhirTask.setTaskCode(Context.getConceptService().getConceptByName(taskRequest.getTaskType()));
-		
+		fhirTask.setTaskCode(getConceptForTaskType(taskRequest.getTaskType()));
 		if (taskRequest.getPatientUuid() != null) {
 			Visit activeVisit = visitService.getActiveVisitsByPatient(
 			    patientService.getPatientByUuid(taskRequest.getPatientUuid())).get(0);
@@ -110,4 +116,32 @@ public class TaskMapper {
 		fhirTask.setComment(taskUpdateRequest.getComment());
 	}
 	
+	private Concept getConceptForTaskType(String taskType) {
+		if (taskType == null || taskType.isEmpty()) {
+			log.warn("Task type is not passed. Setting as null");
+			return null;
+		}
+		List<ConceptSearchResult> conceptsSearchResult = Context.getConceptService().getConcepts(taskType, getLocales(), false, null, null, null, null, null, 0, null);
+		List<Concept> conceptsByName = conceptsSearchResult.stream().map(ConceptSearchResult::getConcept).collect(Collectors.toList());
+		if (conceptsByName.size() == 1) {
+			return conceptsByName.get(0);
+		} else if (conceptsByName.size() == 0) {
+			log.error(String.format("Unable to find a concept with name %s for mapping to task type.",
+					taskType));
+			throw new ValidationException(String.format("Unable to find a concept with name [%s] for mapping to task type.",
+					taskType));
+		} else {
+			log.error(String.format("Multiple concepts found with name [%s]. ", taskType));
+			throw new ValidationException(String.format("Multiple concepts found with name [%s]. ", taskType));
+		}
+	}
+	
+	private List<Locale> getLocales() {
+		List<Locale> localeList = new ArrayList<>();
+		localeList.add(LocaleUtility.getDefaultLocale());
+		if (LocaleUtility.getDefaultLocale() != Context.getLocale()) {
+			localeList.add(Context.getLocale());
+		}
+		return localeList;
+	}
 }
