@@ -12,8 +12,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class TaskRequestedPeriodDaoImpl implements TaskRequestedPeriodDao {
 	
-	@Autowired
 	private SessionFactory sessionFactory;
+	
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 	
 	@Override
 	public FhirTaskRequestedPeriod getTaskRequestedPeriodByTaskId(Integer taskId) {

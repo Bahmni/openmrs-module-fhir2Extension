@@ -23,10 +23,13 @@ import java.util.List;
 @Repository
 public class TaskDaoImpl implements TaskDao {
 	
-	@Autowired
 	private SessionFactory sessionFactory;
 	
 	private Log log = LogFactory.getLog(this.getClass());
+	
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
 	
 	@Override
 	public List<Task> getTasksByVisitFilteredByTimeFrame(Visit visit, Date startTime, Date endTime) {
@@ -99,11 +102,11 @@ public class TaskDaoImpl implements TaskDao {
 			CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
 			Root<FhirTaskRequestedPeriod> fhirTaskRequestedPeriod = criteriaQuery.from(FhirTaskRequestedPeriod.class);
 			Join<FhirTask, FhirTaskRequestedPeriod> fhirTaskJoin = fhirTaskRequestedPeriod.join("task");
-			
+
 			criteriaQuery.select(criteriaBuilder.construct(Task.class, fhirTaskJoin, fhirTaskRequestedPeriod)).where(
 			    fhirTaskJoin.get("uuid").in(listOfUuids));
 			TypedQuery<Task> query = sessionFactory.getCurrentSession().createQuery(criteriaQuery);
-			
+
 			return query.getResultList();
 		}
 		catch (Exception e) {
