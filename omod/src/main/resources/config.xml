@@ -97,6 +97,18 @@
 		<name>Export Non Anonymised Patient Data</name>
 		<description>Ability to bulk-export patient data that has NOT been anonymised, in FHIR JSON format</description>
 	</privilege>
+	<privilege>
+		<name>Get Tasks</name>
+		<description>Ability to get FHIR Tasks</description>
+	</privilege>
+	<privilege>
+		<name>Add Tasks</name>
+		<description>Ability to create FHIR Tasks</description>
+	</privilege>
+	<privilege>
+		<name>Edit Tasks</name>
+		<description>Ability to edit FHIR Tasks</description>
+	</privilege>
 
 	<globalProperty>
 		<property>labEntry.visitType</property>
