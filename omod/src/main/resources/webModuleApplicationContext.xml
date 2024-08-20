@@ -29,13 +29,7 @@
 	<context:component-scan base-package="org.openmrs.module.fhirExtension" />
 	<bean id="taskServiceTarget" class="org.openmrs.module.fhirExtension.service.impl.TaskServiceImpl">
 		<property name="visitService" ref="visitService"/>
-		<property name="fhirTaskDao">
-			<bean class="org.openmrs.module.fhir2.api.dao.impl.FhirTaskDaoImpl">
-				<property name="sessionFactory">
-					<ref bean="sessionFactory" />
-				</property>
-			</bean>
-		</property>
+		<property name="fhirTaskDao" ref="fhirTaskDaoImpl"/>
 		<property name="taskDao">
 			<bean class="org.openmrs.module.fhirExtension.dao.impl.TaskDaoImpl">
 				<property name="sessionFactory">
