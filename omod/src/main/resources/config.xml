@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <module configVersion="1.2">
-	
+
 	<!-- Base Module Properties -->
 	<id>${project.parent.artifactId}</id>
 	<name>${project.parent.name}</name>
@@ -13,35 +13,35 @@
 	</description>
 
 	<activator>org.openmrs.module.fhirExtension.FhirExtensionModuleActivator</activator>
-	
+
 	<!-- <updateURL>https://modules.openmrs.org/modules/download/@MODULE_ID@/update.rdf</updateURL> -->
 	<!-- /Base Module Properties -->
-	
+
 	<require_version>${openmrsPlatformVersion}</require_version>
-	
+
 <!--	 Extensions -->
 <!--	<extension>-->
 <!--		<point>org.openmrs.admin.list</point>-->
 <!--		<class>${MODULE_PACKAGE}.extension.html.AdminList</class>-->
 <!--	</extension>-->
-	
-	
+
+
 	<!-- AOP
 	<advice>
 		<point>org.openmrs.api.FormService</point>
 		<class>@MODULE_PACKAGE@.advice.DuplicateFormAdvisor</class>
 	</advice>
 	 /AOP -->
-	
-	
-	<!-- Required Privileges 
+
+
+	<!-- Required Privileges
 	<privilege>
 		<name>Form Entry</name>
 		<description>Allows user to access Form Entry pages/functions</description>
 	</privilege>
 	 /Required Privileges -->
 
-	<!-- Required Global Properties 
+	<!-- Required Global Properties
 	<globalProperty>
 		<property>@MODULE_ID@.someProperty</property>
 		<defaultValue></defaultValue>
@@ -52,17 +52,17 @@
 		</description>
 	</globalProperty>
 	/Required Global Properties -->
-	
+
 	<!-- Servlets -->
-	<!-- Accessed through the url /pageContext()/moduleServlet/<moduleId>/<servlet-name> 
+	<!-- Accessed through the url /pageContext()/moduleServlet/<moduleId>/<servlet-name>
 	<servlet>
 		<servlet-name>formDownload</servlet-name>
 		<servlet-class>@MODULE_PACKAGE@.web.FormDownloadServlet</servlet-class>
 	</servlet>
 	-->
 	<!-- /Servlets -->
-	
-	
+
+
 	<!-- Internationalization -->
 	<!-- All message codes should start with @MODULE_ID@.* -->
 	<aware_of_modules>
@@ -96,6 +96,18 @@
 	<privilege>
 		<name>Export Non Anonymised Patient Data</name>
 		<description>Ability to bulk-export patient data that has NOT been anonymised, in FHIR JSON format</description>
+	</privilege>
+	<privilege>
+		<name>Get Tasks</name>
+		<description>Ability to get FHIR Tasks</description>
+	</privilege>
+	<privilege>
+		<name>Add Tasks</name>
+		<description>Ability to create FHIR Tasks</description>
+	</privilege>
+	<privilege>
+		<name>Edit Tasks</name>
+		<description>Ability to edit FHIR Tasks</description>
 	</privilege>
 
 	<globalProperty>

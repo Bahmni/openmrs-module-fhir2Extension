@@ -27,6 +27,42 @@
 	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
 
 	<context:component-scan base-package="org.openmrs.module.fhirExtension" />
+	<bean id="taskServiceTarget" class="org.openmrs.module.fhirExtension.service.impl.TaskServiceImpl">
+		<property name="visitService" ref="visitService"/>
+		<property name="fhirTaskDao" ref="fhirTaskDaoImpl"/>
+		<property name="taskDao">
+			<bean class="org.openmrs.module.fhirExtension.dao.impl.TaskDaoImpl">
+				<property name="sessionFactory">
+					<ref bean="sessionFactory" />
+				</property>
+			</bean>
+		</property>
+		<property name="taskRequestedPeriodDao">
+			<bean class="org.openmrs.module.fhirExtension.dao.impl.TaskRequestedPeriodDaoImpl">
+				<property name="sessionFactory">
+					<ref bean="sessionFactory" />
+				</property>
+			</bean>
+		</property>
+	</bean>
+	<bean id="taskService"
+		  class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="transactionManager" ref="transactionManager" />
+		<property name="target" ref="taskServiceTarget"/>
+		<property name="preInterceptors" ref="serviceInterceptors" />
+		<property name="transactionAttributeSource">
+			<bean
+					class="org.springframework.transaction.annotation.AnnotationTransactionAttributeSource" />
+		</property>
+	</bean>
+	<bean parent="serviceContext">
+		<property name="moduleService">
+			<list>
+				<value>org.openmrs.module.fhirExtension.service.TaskService</value>
+				<ref bean="taskService"/>
+			</list>
+		</property>
+	</bean>
 
 
 </beans>

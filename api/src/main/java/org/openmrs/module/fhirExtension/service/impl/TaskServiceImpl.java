@@ -9,8 +9,6 @@ import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.model.TaskSearchRequest;
 import org.openmrs.module.fhirExtension.service.TaskService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -18,19 +16,14 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Transactional
-@Component
 public class TaskServiceImpl implements TaskService {
 	
-	@Autowired
 	private FhirTaskDao fhirTaskDao;
 	
-	@Autowired
 	private VisitService visitService;
 	
-	@Autowired
 	private TaskDao taskDao;
 	
-	@Autowired
 	private TaskRequestedPeriodDao taskRequestedPeriodDao;
 	
 	@Override
@@ -77,5 +70,21 @@ public class TaskServiceImpl implements TaskService {
 	@Override
 	public List<Task> searchTasks(TaskSearchRequest taskSearchRequest) {
 		return taskDao.searchTasks(taskSearchRequest);
+	}
+	
+	public void setVisitService(VisitService visitService) {
+		this.visitService = visitService;
+	}
+	
+	public void setFhirTaskDao(FhirTaskDao fhirTaskDao) {
+		this.fhirTaskDao = fhirTaskDao;
+	}
+	
+	public void setTaskDao(TaskDao taskDao) {
+		this.taskDao = taskDao;
+	}
+	
+	public void setTaskRequestedPeriodDao(TaskRequestedPeriodDao taskRequestedPeriodDao) {
+		this.taskRequestedPeriodDao = taskRequestedPeriodDao;
 	}
 }
