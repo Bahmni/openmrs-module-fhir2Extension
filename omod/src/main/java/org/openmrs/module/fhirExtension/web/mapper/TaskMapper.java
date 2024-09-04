@@ -121,8 +121,19 @@ public class TaskMapper {
 			log.warn("Task type is not passed. Setting as null");
 			return null;
 		}
-		List<ConceptSearchResult> conceptsSearchResult = Context.getConceptService().getConcepts(taskType, getLocales(), false, null, null, null, null, null, 0, null);
-		List<Concept> conceptsByName = conceptsSearchResult.stream().map(ConceptSearchResult::getConcept).collect(Collectors.toList());
+		List<ConceptClass> parentConceptClasses = new ArrayList<ConceptClass>();
+		parentConceptClasses.add(Context.getConceptService().getConceptClassByName("ConvSet"));
+		List<ConceptSearchResult> conceptsSearchResult = Context.getConceptService().getConcepts("All Task Types", getLocales(), false, parentConceptClasses, null, null, null, null, 0, null);
+		if (conceptsSearchResult.size() == 0) {
+			log.warn("Unable to find concept with name 'All Task Types'.");
+			throw new ValidationException("Unable to find the concept with name 'All Task Types'.");
+		}
+		List<Concept> conceptsByName = conceptsSearchResult.stream()
+				.map(ConceptSearchResult::getConcept)
+				.filter(concept -> concept != null)
+				.flatMap(concept -> concept.getConceptSets().stream().map(ConceptSet::getConcept))
+				.filter(concept -> concept.getName() != null && concept.getName().getName().equals(taskType))
+				.collect(Collectors.toList());
 		if (conceptsByName.size() == 1) {
 			return conceptsByName.get(0);
 		} else if (conceptsByName.size() == 0) {
