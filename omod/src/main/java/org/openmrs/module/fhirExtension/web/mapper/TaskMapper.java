@@ -132,7 +132,8 @@ public class TaskMapper {
 				.map(ConceptSearchResult::getConcept)
 				.filter(concept -> concept != null)
 				.flatMap(concept -> concept.getConceptSets().stream().map(ConceptSet::getConcept))
-				.filter(concept -> concept.getName() != null && concept.getName().getName().equals(taskType))
+				.filter(concept -> concept.getNames(false) != null &&
+						concept.getNames(false).stream().anyMatch(name -> name.getName().equals(taskType)))
 				.collect(Collectors.toList());
 		if (conceptsByName.size() == 1) {
 			return conceptsByName.get(0);
