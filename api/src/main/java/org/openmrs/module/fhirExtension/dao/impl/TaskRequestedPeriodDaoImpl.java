@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 // TODO: This Dao is to be removed after support openmrs R5
 
-@Repository
 public class TaskRequestedPeriodDaoImpl implements TaskRequestedPeriodDao {
 	
 	private SessionFactory sessionFactory;
