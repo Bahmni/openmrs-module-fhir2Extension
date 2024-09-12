@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -40,6 +41,8 @@ public class TaskMapper {
 	
 	@Autowired
 	private PatientService patientService;
+
+	private static final String ALL_TASK_TYPE = "All Task Types";
 	
 	public Task fromRequest(TaskRequest taskRequest) {
 		
@@ -123,7 +126,8 @@ public class TaskMapper {
 		}
 		List<ConceptClass> parentConceptClasses = new ArrayList<ConceptClass>();
 		parentConceptClasses.add(Context.getConceptService().getConceptClassByName("ConvSet"));
-		List<ConceptSearchResult> conceptsSearchResult = Context.getConceptService().getConcepts("All Task Types", getLocales(), false, parentConceptClasses, null, null, null, null, 0, null);
+		List<Locale> locales = Arrays.asList(Locale.ENGLISH);
+		List<ConceptSearchResult> conceptsSearchResult = Context.getConceptService().getConcepts(ALL_TASK_TYPE, locales, false, parentConceptClasses, null, null, null, null, 0, null);
 		if (conceptsSearchResult.size() == 0) {
 			log.warn("Unable to find concept with name 'All Task Types'.");
 			throw new ValidationException("Unable to find the concept with name 'All Task Types'.");
@@ -147,13 +151,5 @@ public class TaskMapper {
 			throw new ValidationException(String.format("Multiple concepts found with name [%s]. ", taskType));
 		}
 	}
-	
-	private List<Locale> getLocales() {
-		List<Locale> localeList = new ArrayList<>();
-		localeList.add(LocaleUtility.getDefaultLocale());
-		if (LocaleUtility.getDefaultLocale() != Context.getLocale()) {
-			localeList.add(Context.getLocale());
-		}
-		return localeList;
-	}
+
 }
