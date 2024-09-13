@@ -41,7 +41,7 @@ public class TaskMapper {
 	
 	@Autowired
 	private PatientService patientService;
-
+	
 	private static final String ALL_TASK_TYPE = "All Task Types";
 	
 	public Task fromRequest(TaskRequest taskRequest) {
@@ -129,8 +129,10 @@ public class TaskMapper {
 		List<Locale> locales = Arrays.asList(Locale.ENGLISH);
 		List<ConceptSearchResult> conceptsSearchResult = Context.getConceptService().getConcepts(ALL_TASK_TYPE, locales, false, parentConceptClasses, null, null, null, null, 0, null);
 		if (conceptsSearchResult.size() == 0) {
-			log.warn("Unable to find concept with name 'All Task Types'.");
-			throw new ValidationException("Unable to find the concept with name 'All Task Types'.");
+			log.warn(String.format("Unable to find a concept set with name %s for mapping task types.",
+					ALL_TASK_TYPE));
+			throw new ValidationException(String.format("Unable to find a concept set with name [%s] for mapping task types.",
+					ALL_TASK_TYPE));
 		}
 		List<Concept> conceptsByName = conceptsSearchResult.stream()
 				.map(ConceptSearchResult::getConcept)
@@ -142,14 +144,13 @@ public class TaskMapper {
 		if (conceptsByName.size() == 1) {
 			return conceptsByName.get(0);
 		} else if (conceptsByName.size() == 0) {
-			log.error(String.format("Unable to find a concept with name %s for mapping to task type.",
-					taskType));
-			throw new ValidationException(String.format("Unable to find a concept with name [%s] for mapping to task type.",
-					taskType));
+			log.error(String.format("Unable to find a concept member with name %s in %s concept for mapping to task type.",
+					taskType, ALL_TASK_TYPE));
+			throw new ValidationException(String.format("Unable to find a concept member with name %s in %s concept for mapping to task type.",
+					taskType, ALL_TASK_TYPE));
 		} else {
 			log.error(String.format("Multiple concepts found with name [%s]. ", taskType));
 			throw new ValidationException(String.format("Multiple concepts found with name [%s]. ", taskType));
 		}
 	}
-
 }
