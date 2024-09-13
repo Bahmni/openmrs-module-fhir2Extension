@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Repository
 public class TaskDaoImpl implements TaskDao {
 	
 	private SessionFactory sessionFactory;
