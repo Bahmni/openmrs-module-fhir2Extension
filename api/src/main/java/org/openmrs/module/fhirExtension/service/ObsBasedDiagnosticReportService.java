@@ -1,6 +1,8 @@
 package org.openmrs.module.fhirExtension.service;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.Include;
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.SortSpec;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.param.DateRangeParam;
@@ -22,6 +24,7 @@ import org.openmrs.Order;
 import org.openmrs.OrderType;
 import org.openmrs.Patient;
 import org.openmrs.Provider;
+import org.openmrs.TestOrder;
 import org.openmrs.User;
 import org.openmrs.Visit;
 import org.openmrs.VisitType;
@@ -66,6 +69,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -147,24 +151,45 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 		try {
 			diagnosticReportRequestValidator.validate(diagnosticReport);
 
-			List<Obs> reportResults = diagnosticReport.getResult().stream().map(reference -> {
-				IBaseResource obsResource = reference.getResource();
+			List<Obs> reportResults = diagnosticReport.getResult().stream().map(result -> {
+				IBaseResource obsResource = result.getResource();
 				if ((obsResource != null) && (obsResource instanceof Observation)) {
 					return observationTranslator.toOpenmrsType((Observation) obsResource);
 				} else {
 					return null;
 				}
 			}).filter(Objects::nonNull).collect(Collectors.toList());
-			diagnosticReport.setResult(Collections.emptyList());
+
+			List<Obs> existingResults = new ArrayList<>();
+			if (reportResults.isEmpty()) {
+				existingResults = diagnosticReport.getResult().stream().map(result -> {
+					Obs obs = obsService.getObsByUuid(result.getReference().substring(result.getReference().lastIndexOf("/") + 1));
+					if (obs != null) {
+						return obs;
+					}
+					return null;
+				}).filter(Objects::nonNull).collect(Collectors.toList());
+			}
+
+			boolean existingResultsEmpty = existingResults.isEmpty();
 
 			FhirDiagnosticReport fhirDiagnosticReport = obsBasedDiagnosticReportTranslator.toOpenmrsType(diagnosticReport);
-			boolean hasResults = fhirDiagnosticReport.getResults().isEmpty();
+
+			boolean presentedFormIsAbsent = fhirDiagnosticReport.getResults().isEmpty();
 
 			Order order = getOrder(diagnosticReport, fhirDiagnosticReport);
-			Encounter encounter = createNewEncounterForReport(fhirDiagnosticReport, order);
+			Encounter encounter = null;
+			if (diagnosticReport.getEncounter() != null && diagnosticReport.getEncounter().getReference() != null) {
+				String reference = diagnosticReport.getEncounter().getReference();
+				String encounterUuid = reference.substring(reference.lastIndexOf("/") + 1);
+				encounter = encounterService.getEncounterByUuid(encounterUuid);
+			}
+			if (encounter == null) {
+				encounter = createNewEncounterForReport(fhirDiagnosticReport, order);
+			}
 
 			fhirDiagnosticReport.setEncounter(encounter);
-			if (hasResults) {
+			if (existingResultsEmpty && presentedFormIsAbsent) {
 				LabResult labResult = LabResult.builder()
 						.setLabResultValues(reportResults)
 						.concept(fhirDiagnosticReport.getCode())
@@ -178,15 +203,19 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 
 			diagnosticReportObsValidator.validate(fhirDiagnosticReport);
 
-			Set<Obs> reportObs = saveReportObs(fhirDiagnosticReport, order, encounter);
-
-			fhirDiagnosticReport.setResults(reportObs);
+			if (existingResultsEmpty) {
+				Set<Obs> reportObs = saveReportObs(fhirDiagnosticReport, order, encounter);
+				fhirDiagnosticReport.setResults(reportObs);
+			} else {
+				fhirDiagnosticReport.setResults(new HashSet<>(existingResults));
+			}
 
 			FhirDiagnosticReport createdFhirDiagnosticReport = fhirDiagnosticReportDao.createOrUpdate(fhirDiagnosticReport);
 			updateFulFillerStatus(order);
 			return obsBasedDiagnosticReportTranslator.toFhirResource(createdFhirDiagnosticReport);
 		} catch (Exception exception) {
-			log.error("Exception while saving diagnostic report: " + exception.getMessage());
+			log.error("Exception while saving diagnostic report: " + exception.toString());
+			exception.printStackTrace();
 			throw exception;
 		}
 	}
