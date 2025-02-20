@@ -175,8 +175,6 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 
 			FhirDiagnosticReport fhirDiagnosticReport = obsBasedDiagnosticReportTranslator.toOpenmrsType(diagnosticReport);
 
-			boolean presentedFormIsAbsent = fhirDiagnosticReport.getResults().isEmpty();
-
 			Order order = getOrder(diagnosticReport, fhirDiagnosticReport);
 			Encounter encounter = null;
 			if (diagnosticReport.getEncounter() != null && diagnosticReport.getEncounter().getReference() != null) {
@@ -189,7 +187,7 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			}
 
 			fhirDiagnosticReport.setEncounter(encounter);
-			if (existingResultsEmpty && presentedFormIsAbsent) {
+			if (existingResultsEmpty && (fhirDiagnosticReport.getResults() == null || fhirDiagnosticReport.getResults().isEmpty())) {
 				LabResult labResult = LabResult.builder()
 						.setLabResultValues(reportResults)
 						.concept(fhirDiagnosticReport.getCode())
@@ -215,7 +213,6 @@ public class ObsBasedDiagnosticReportService extends BaseFhirService<DiagnosticR
 			return obsBasedDiagnosticReportTranslator.toFhirResource(createdFhirDiagnosticReport);
 		} catch (Exception exception) {
 			log.error("Exception while saving diagnostic report: " + exception.toString());
-			exception.printStackTrace();
 			throw exception;
 		}
 	}

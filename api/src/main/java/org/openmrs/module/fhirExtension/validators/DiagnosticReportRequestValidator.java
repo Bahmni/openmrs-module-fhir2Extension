@@ -47,7 +47,7 @@ public class DiagnosticReportRequestValidator {
 	}
 	
 	private void validateReferencesHaveRespectiveResources(DiagnosticReport diagnosticReport) {
-		if (diagnosticReport.getResult().size() != 0) {
+		if (diagnosticReport.getResult() != null) {
 			diagnosticReport.getResult().forEach(reference -> {
 				IBaseResource resource = reference.getResource();
 				if (resource == null)
