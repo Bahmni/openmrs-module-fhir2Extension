@@ -30,7 +30,7 @@ public class PatientExport implements Exporter {
 	public List<IBaseResource> export(String startDate, String endDate) {
 		DateRangeParam lastUpdated = getLastUpdated(startDate, endDate);
 		PatientSearchParams patientSearchParams = new PatientSearchParams(null, null, null, null, null, null, null, null,
-		        null, null, null, null, null, lastUpdated, null, null);
+		        null, null, null, null, null, null, lastUpdated, null, null);
 		IBundleProvider iBundleProvider = fhirPatientService.searchForPatients(patientSearchParams);
 		return iBundleProvider.getAllResources();
 	}
