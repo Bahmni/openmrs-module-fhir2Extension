@@ -9,7 +9,7 @@ import org.mockito.Mock;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.fhir2.model.FhirTask;
-import org.openmrs.module.fhirExtension.service.ExportAsyncService;
+import org.openmrs.module.fhirExtension.service.impl.ExportAsyncServiceImpl;
 import org.openmrs.module.fhirExtension.service.ExportTask;
 import org.openmrs.module.webservices.rest.SimpleObject;
 import org.powermock.api.mockito.PowerMockito;
@@ -44,7 +44,7 @@ public class ExportControllerTest {
 	private ExportTask exportTask;
 	
 	@Mock
-	private ExportAsyncService exportAsyncService;
+	private ExportAsyncServiceImpl exportAsyncServiceImpl;
 	
 	@InjectMocks
 	private ExportController exportController;
@@ -60,7 +60,7 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
-		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), anyBoolean());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
 		when(exportTask.validateParams("2023-05-01", "2023-05-31")).thenReturn(null);
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", true);
@@ -73,7 +73,7 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldGetBadRequest_whenFhirExportCalledWithInvalidDateFormat() {
-		doNothing().when(exportAsyncService).export(any(), any(), any(), any(), anyBoolean());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
 		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn("Invalid Date Format [yyyy-mm-dd]");
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-AB", "2023-05-31", true);

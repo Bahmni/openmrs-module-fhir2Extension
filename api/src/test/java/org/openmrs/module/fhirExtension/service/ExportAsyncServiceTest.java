@@ -24,6 +24,7 @@ import org.openmrs.module.fhirExtension.export.Exporter;
 import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandler;
 import org.openmrs.module.fhirExtension.export.anonymise.impl.CorrelationCache;
 import org.openmrs.module.fhirExtension.export.impl.ConditionExport;
+import org.openmrs.module.fhirExtension.service.impl.ExportAsyncServiceImpl;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -62,7 +63,7 @@ public class ExportAsyncServiceTest {
 	private CorrelationCache correlationCache;
 	
 	@InjectMocks
-	private ExportAsyncService exportAsyncService;
+	private ExportAsyncServiceImpl exportAsyncServiceImpl;
 	
 	@Before
 	public void setUp() {
@@ -77,7 +78,7 @@ public class ExportAsyncServiceTest {
 	public void shouldExportPatientDataAndUpdateFhirTaskStatusToCompleted_whenValidDateRangeProvided() {
 		FhirTask fhirTask = mockFhirTask();
 		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
-		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), false);
+		exportAsyncServiceImpl.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), false);
 		
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
 		assertEquals(4, fhirTask.getInput().size());
@@ -92,7 +93,7 @@ public class ExportAsyncServiceTest {
 
 		FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), false);
+		exportAsyncServiceImpl.export(fhirTask, "2023-AB-CD", "2023-12-31", Context.getUserContext(), false);
 
 		assertEquals(FhirTask.TaskStatus.REJECTED, fhirTask.getStatus());
 		verify(fhirTaskDao, times(1)).createOrUpdate(any(FhirTask.class));
@@ -108,7 +109,7 @@ public class ExportAsyncServiceTest {
 
 		FhirTask fhirTask = mockFhirTask();
 
-		exportAsyncService.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), true);
+		exportAsyncServiceImpl.export(fhirTask, "2023-01-01", "2023-12-31", Context.getUserContext(), true);
 
 		assertEquals(FhirTask.TaskStatus.COMPLETED, fhirTask.getStatus());
 		verify(anonymiseHandler, times(1)).anonymise(any(IBaseResource.class), eq("condition"));
