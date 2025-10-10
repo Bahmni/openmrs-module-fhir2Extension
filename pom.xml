@@ -17,6 +17,15 @@
 
 	<url>https://wiki.openmrs.org/x/FQ4z</url>
 
+	<developers>
+        <developer>
+            <name>Bahmni</name>
+            <email>info@bahmni.org</email>
+            <organization>Bahmni</organization>
+            <organizationUrl>https://github.com/Bahmni</organizationUrl>
+        </developer>
+    </developers>
+
 	<scm>
 		<connection>scm:git:git@github.com:openmrs/openmrs-module-basicmodule.git</connection>
 		<developerConnection>scm:git:git@github.com:openmrs/openmrs-module-basicmodule.git</developerConnection>
