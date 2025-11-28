@@ -57,13 +57,24 @@ public class DiagnosticReportRequestValidatorTest {
 		DiagnosticReport diagnosticReport = new DiagnosticReport();
 		Observation observation = new Observation();
 		observation.setId("test");
-		Reference reference = new Reference("#test");
+		Reference reference = new Reference();
 		reference.setType("Observation");
 		diagnosticReport.setResult(Collections.singletonList(reference));
 		diagnosticReport.setPresentedForm(Collections.singletonList(new Attachment()));
 		
 		thrown.expect(UnprocessableEntityException.class);
 		thrown.expectMessage(RESOURCE_NOT_PRESENT_FOR_GIVEN_REFERENCE_ERROR_MESSAGE);
+		
+		diagnosticReportRequestValidator.validate(diagnosticReport);
+	}
+	
+	@Test
+	public void shouldNotThrowExpectedExceptionWhenStringReferencesIsProvided() {
+		DiagnosticReport diagnosticReport = new DiagnosticReport();
+		Reference reference = new Reference("Observation/some-test-uuid");
+		reference.setType("Observation");
+		diagnosticReport.setResult(Collections.singletonList(reference));
+		diagnosticReport.setPresentedForm(Collections.singletonList(new Attachment()));
 		
 		diagnosticReportRequestValidator.validate(diagnosticReport);
 	}
