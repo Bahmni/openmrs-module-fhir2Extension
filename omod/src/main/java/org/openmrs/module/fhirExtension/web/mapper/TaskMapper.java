@@ -8,6 +8,7 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.Daemon;
+import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskInput;
@@ -117,7 +118,7 @@ public class TaskMapper {
 
 		if (taskRequest.getObservationUuid() != null) {
 			FhirReference focusReference = new FhirReference();
-			focusReference.setType(Obs.class.getTypeName());
+			focusReference.setType(FhirConstants.OBSERVATION);
 			focusReference.setReference(taskRequest.getObservationUuid());
 			focusReference.setTargetUuid(taskRequest.getObservationUuid());
 			fhirTask.setFocusReference(focusReference);
