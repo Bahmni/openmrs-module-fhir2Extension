@@ -40,7 +40,7 @@ public class TaskResponse {
 
 	private String comment;
 
-	private List<TaskInputResponseDTO> input = new ArrayList<>();
+	private TaskFhirReference focus;
 
-	private String observationUuid;
+	private List<TaskInputResponseDTO> input = new ArrayList<>();
 }

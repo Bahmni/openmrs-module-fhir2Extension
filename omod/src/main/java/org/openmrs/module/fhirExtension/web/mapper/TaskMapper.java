@@ -8,13 +8,14 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.VisitService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.Daemon;
-import org.openmrs.module.fhir2.FhirConstants;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.web.contract.TaskFhirReference;
 import org.openmrs.module.fhirExtension.web.contract.TaskInputRequestDTO;
+import org.openmrs.module.fhirExtension.web.contract.TaskInputResponseDTO;
 import org.openmrs.module.fhirExtension.web.contract.TaskInputResponseDTO;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
@@ -116,23 +117,23 @@ public class TaskMapper {
 			task.setFhirTaskRequestedPeriod(fhirTaskRequestedPeriod);
 		}
 
-		if (taskRequest.getObservationUuid() != null) {
+		if (taskRequest.getFocus() != null) {
 			FhirReference focusReference = new FhirReference();
-			focusReference.setType(FhirConstants.OBSERVATION);
-			focusReference.setReference(taskRequest.getObservationUuid());
-			focusReference.setTargetUuid(taskRequest.getObservationUuid());
+			focusReference.setType(taskRequest.getFocus().getType());
+			focusReference.setReference(taskRequest.getFocus().getReference());
+			focusReference.setTargetUuid(taskRequest.getFocus().getReference());
 			fhirTask.setFocusReference(focusReference);
 		}
 
-		if (taskRequest.getOrderUuid() != null) {
-			FhirReference orderReference = new FhirReference();
-			orderReference.setType(Order.class.getTypeName());
-			orderReference.setReference(taskRequest.getOrderUuid());
-			orderReference.setTargetUuid(taskRequest.getOrderUuid());
+		if (taskRequest.getBasedOn() != null) {
+			FhirReference basedOnReference = new FhirReference();
+			basedOnReference.setType(taskRequest.getBasedOn().getType());
+			basedOnReference.setReference(taskRequest.getBasedOn().getReference());
+			basedOnReference.setTargetUuid(taskRequest.getBasedOn().getReference());
 			Set<FhirReference> basedOnRefs = fhirTask.getBasedOnReferences() != null
 			        ? fhirTask.getBasedOnReferences()
 			        : new HashSet<>();
-			basedOnRefs.add(orderReference);
+			basedOnRefs.add(basedOnReference);
 			fhirTask.setBasedOnReferences(basedOnRefs);
 		}
 
@@ -159,25 +160,28 @@ public class TaskMapper {
 		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
 		response.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
 		response.setComment(task.getFhirTask().getComment());
-        if (task.getFhirTask().getFocusReference() != null) {
-            response.setObservationUuid(task.getFhirTask().getFocusReference().getTargetUuid());
-        }
-
-		// Map input field
-		if (task.getFhirTask().getInput() != null && !task.getFhirTask().getInput().isEmpty()) {
-			response.setInput(
-				task.getFhirTask().getInput().stream()
-					.map(input -> {
-						TaskInputResponseDTO dto = new TaskInputResponseDTO();
-						dto.setType(input.getType() != null
-							? ConversionUtil.convertToRepresentation(input.getType(), Representation.REF)
-							: null);
-						dto.setValueText(input.getValueText());
-						return dto;
-					})
-					.collect(Collectors.toList())
-			);
+		if (task.getFhirTask().getFocusReference() != null) {
+			TaskFhirReference focus = new TaskFhirReference();
+			focus.setReference(task.getFhirTask().getFocusReference().getTargetUuid());
+			focus.setType(task.getFhirTask().getFocusReference().getType());
+			response.setFocus(focus);
 		}
+
+        // Map input field
+        if (task.getFhirTask().getInput() != null && !task.getFhirTask().getInput().isEmpty()) {
+            response.setInput(
+                    task.getFhirTask().getInput().stream()
+                            .map(input -> {
+                                TaskInputResponseDTO dto = new TaskInputResponseDTO();
+                                dto.setType(input.getType() != null
+                                        ? ConversionUtil.convertToRepresentation(input.getType(), Representation.REF)
+                                        : null);
+                                dto.setValueText(input.getValueText());
+                                return dto;
+                            })
+                            .collect(Collectors.toList())
+            );
+        }
 
 		return response;
 	}

@@ -36,10 +36,10 @@ public class TaskRequest {
 
 	private Boolean isSystemGeneratedTask = false;
 
-	private List<TaskInputRequestDTO> input = new ArrayList<>();
+	private TaskFhirReference focus;
 
-	private String observationUuid;
+	private TaskFhirReference basedOn;
 
-	private String orderUuid;
+    private List<TaskInputRequestDTO> input = new ArrayList<>();
 
 }
