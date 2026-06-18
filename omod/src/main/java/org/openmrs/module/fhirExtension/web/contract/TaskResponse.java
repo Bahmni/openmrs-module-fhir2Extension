@@ -42,5 +42,7 @@ public class TaskResponse {
 
 	private TaskFhirReference focus;
 
+	private TaskFhirReference basedOn;
+
 	private List<TaskInputResponseDTO> input = new ArrayList<>();
 }
