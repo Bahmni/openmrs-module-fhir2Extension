@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.openmrs.module.fhir2.model.FhirTask;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -34,19 +35,6 @@ public class TaskRequest {
 	private String comment;
 	
 	private Boolean isSystemGeneratedTask = false;
-
-	private TaskFhirReference focus;
-
-	private TaskFhirReference basedOn;
-
-	private List<TaskInputDTO> input;
-
-	@Getter
-	@Setter
-	public static class TaskInputDTO {
-
-		private String type;
-
-		private String valueText;
-	}
+	
+	private List<TaskInputDTO> input = new ArrayList<>();
 }
