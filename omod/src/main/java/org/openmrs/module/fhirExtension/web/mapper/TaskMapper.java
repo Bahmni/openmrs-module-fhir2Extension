@@ -10,6 +10,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.api.context.Daemon;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
+import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
@@ -77,7 +78,27 @@ public class TaskMapper {
 		fhirTask.setStatus(taskRequest.getStatus());
 		fhirTask.setIntent(taskRequest.getIntent());
 		fhirTask.setComment(taskRequest.getComment());
-		
+
+		// Map input field
+		if (taskRequest.getInput() != null && !taskRequest.getInput().isEmpty()) {
+			Set<FhirTaskInput> fhirInputs = new HashSet<>();
+
+			for (TaskRequest.TaskInputDTO inputDto : taskRequest.getInput()) {
+				FhirTaskInput fhirInput = new FhirTaskInput();
+
+				// Resolve input type as Concept
+				fhirInput.setType(getConceptForInputType(inputDto.getType()));
+
+				// Store the form key directly
+				fhirInput.setValueText(inputDto.getValueText());
+
+				fhirInput.setTask(fhirTask);
+				fhirInputs.add(fhirInput);
+			}
+
+			fhirTask.setInput(fhirInputs);
+		}
+
 		if (taskRequest.getRequestedStartTime() != null || taskRequest.getRequestedEndTime() != null) {
 			FhirTaskRequestedPeriod fhirTaskRequestedPeriod = new FhirTaskRequestedPeriod();
 			fhirTaskRequestedPeriod.setTask(fhirTask);
@@ -107,6 +128,34 @@ public class TaskMapper {
 		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
 		response.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
 		response.setComment(task.getFhirTask().getComment());
+		if (task.getFhirTask().getFocusReference() != null) {
+			TaskFhirReference focus = new TaskFhirReference();
+			focus.setReference(task.getFhirTask().getFocusReference().getReference());
+			focus.setType(task.getFhirTask().getFocusReference().getType());
+			response.setFocus(focus);
+		}
+		if (task.getFhirTask().getBasedOnReferences() != null && !task.getFhirTask().getBasedOnReferences().isEmpty()) {
+			FhirReference basedOnRef = task.getFhirTask().getBasedOnReferences().iterator().next();
+			TaskFhirReference basedOn = new TaskFhirReference();
+			basedOn.setReference(basedOnRef.getReference());
+			basedOn.setType(basedOnRef.getType());
+			response.setBasedOn(basedOn);
+		}
+
+		// Map input field
+		if (task.getFhirTask().getInput() != null && !task.getFhirTask().getInput().isEmpty()) {
+			response.setInput(
+				task.getFhirTask().getInput().stream()
+					.map(input -> {
+						TaskResponse.TaskInputDTO dto = new TaskResponse.TaskInputDTO();
+						dto.setType(input.getType() != null ? input.getType().getName() : null);
+						dto.setValueText(input.getValueText());
+						return dto;
+					})
+					.collect(Collectors.toList())
+			);
+		}
+
 		return response;
 	}
 	
@@ -152,5 +201,18 @@ public class TaskMapper {
 			log.error(String.format("Multiple concepts found with name [%s]. ", taskType));
 			throw new ValidationException(String.format("Multiple concepts found with name [%s]. ", taskType));
 		}
+	}
+	
+	private Concept getConceptForInputType(String inputType) {
+		if (inputType == null || inputType.isEmpty()) {
+			log.warn("Input type is not passed. Setting as null");
+			return null;
+		}
+		// Lookup concept by name (e.g., "bahmni-task-form-key")
+		Concept concept = Context.getConceptService().getConceptByName(inputType);
+		if (concept == null) {
+			log.warn(String.format("Unable to find concept with name: %s", inputType));
+		}
+		return concept;
 	}
 }
