@@ -13,7 +13,8 @@ import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
-import org.openmrs.module.fhirExtension.web.contract.TaskInputDTO;
+import org.openmrs.module.fhirExtension.web.contract.TaskInputRequestDTO;
+import org.openmrs.module.fhirExtension.web.contract.TaskInputResponseDTO;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
@@ -85,7 +86,7 @@ public class TaskMapper {
 		if (taskRequest.getInput() != null && !taskRequest.getInput().isEmpty()) {
 			Set<FhirTaskInput> fhirInputs = new HashSet<>();
 
-			for (TaskInputDTO inputDto : taskRequest.getInput()) {
+			for (TaskInputRequestDTO inputDto : taskRequest.getInput()) {
 				FhirTaskInput fhirInput = new FhirTaskInput();
 
 				// FhirTaskInput is metadata, so both name and its Concept-backed type are required.
@@ -137,8 +138,10 @@ public class TaskMapper {
 			response.setInput(
 				task.getFhirTask().getInput().stream()
 					.map(input -> {
-						TaskInputDTO dto = new TaskInputDTO();
-						dto.setType(input.getType() != null ? input.getType().getName().getName() : null);
+						TaskInputResponseDTO dto = new TaskInputResponseDTO();
+						dto.setType(input.getType() != null
+							? ConversionUtil.convertToRepresentation(input.getType(), Representation.REF)
+							: null);
 						dto.setValueText(input.getValueText());
 						return dto;
 					})

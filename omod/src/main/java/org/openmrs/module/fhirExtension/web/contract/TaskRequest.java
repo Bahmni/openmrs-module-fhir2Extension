@@ -36,5 +36,5 @@ public class TaskRequest {
 	
 	private Boolean isSystemGeneratedTask = false;
 	
-	private List<TaskInputDTO> input = new ArrayList<>();
+	private List<TaskInputRequestDTO> input = new ArrayList<>();
 }

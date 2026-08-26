@@ -40,5 +40,5 @@ public class TaskResponse {
 	
 	private String comment;
 	
-	private List<TaskInputDTO> input = new ArrayList<>();
+	private List<TaskInputResponseDTO> input = new ArrayList<>();
 }

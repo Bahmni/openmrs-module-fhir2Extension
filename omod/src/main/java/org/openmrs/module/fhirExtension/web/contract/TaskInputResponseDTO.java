@@ -5,9 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TaskInputDTO {
+public class TaskInputResponseDTO {
 	
-	private String type;
+	private Object type;
 	
 	private String valueText;
 }
