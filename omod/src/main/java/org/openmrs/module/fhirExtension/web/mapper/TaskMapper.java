@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -84,14 +84,17 @@ public class TaskMapper {
 
 		// Map input field
 		if (taskRequest.getInput() != null && !taskRequest.getInput().isEmpty()) {
-			Set<FhirTaskInput> fhirInputs = new HashSet<>();
+			// FhirTaskInput equality is id-based; before persist, all new instances have id==null so they collide in Sets.
+			// Currently only single input per Task is supported. If multiple inputs are needed, switch to List<FhirTaskInput>.
+			Set<FhirTaskInput> fhirInputs = new LinkedHashSet<>();
 
 			for (TaskInputRequestDTO inputDto : taskRequest.getInput()) {
 				FhirTaskInput fhirInput = new FhirTaskInput();
 
 				// FhirTaskInput is metadata, so both name and its Concept-backed type are required.
-				fhirInput.setName(inputDto.getType());
-				fhirInput.setType(getConceptForInputType(inputDto.getType()));
+				Concept inputType = getConceptForInputTypeUuid(inputDto.getTypeUuid());
+				fhirInput.setName(inputType.getName().getName());
+				fhirInput.setType(inputType);
 
 				// Store the form key/value in valueText field
 				fhirInput.setValueText(inputDto.getValueText());
@@ -196,15 +199,14 @@ public class TaskMapper {
 		}
 	}
 	
-	private Concept getConceptForInputType(String inputType) {
-		if (inputType == null || inputType.isEmpty()) {
-			log.warn("Input type is not passed. Setting as null");
-			return null;
+	private Concept getConceptForInputTypeUuid(String inputTypeUuid) {
+		if (inputTypeUuid == null || inputTypeUuid.isEmpty()) {
+			throw new ValidationException("Task input type UUID is required.");
 		}
-		// Lookup concept by name (e.g., "bahmni-task-form-key")
-		Concept concept = Context.getConceptService().getConceptByName(inputType);
+		Concept concept = Context.getConceptService().getConceptByUuid(inputTypeUuid);
 		if (concept == null) {
-			throw new ValidationException(String.format("Unable to find a concept for task input type [%s].", inputType));
+			throw new ValidationException(String.format("Unable to find a concept for task input type UUID [%s].",
+			    inputTypeUuid));
 		}
 		return concept;
 	}

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class TaskInputRequestDTO {
 	
-	private String type;
+	private String typeUuid;
 	
 	private String valueText;
 }
