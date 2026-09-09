@@ -12,6 +12,7 @@ import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.web.contract.TaskFhirReference;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
@@ -25,8 +26,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,7 +48,7 @@ public class TaskMapper {
 	private static final String ALL_TASK_TYPE = "All Task Types";
 	
 	public Task fromRequest(TaskRequest taskRequest) {
-		
+
 		Task task = new Task();
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setName(taskRequest.getName());
@@ -65,7 +68,7 @@ public class TaskMapper {
 			forReference.setTargetUuid(taskRequest.getVisitUuid());
 			fhirTask.setForReference(forReference);
 		}
-		
+
 		if (taskRequest.getEncounterUuid() != null) {
 			FhirReference encounterReference = new FhirReference();
 			encounterReference.setType(Encounter.class.getTypeName());
@@ -73,11 +76,11 @@ public class TaskMapper {
 			encounterReference.setTargetUuid(taskRequest.getEncounterUuid());
 			fhirTask.setEncounterReference(encounterReference);
 		}
-		
+
 		fhirTask.setStatus(taskRequest.getStatus());
 		fhirTask.setIntent(taskRequest.getIntent());
 		fhirTask.setComment(taskRequest.getComment());
-		
+
 		if (taskRequest.getRequestedStartTime() != null || taskRequest.getRequestedEndTime() != null) {
 			FhirTaskRequestedPeriod fhirTaskRequestedPeriod = new FhirTaskRequestedPeriod();
 			fhirTaskRequestedPeriod.setTask(fhirTask);
@@ -85,7 +88,25 @@ public class TaskMapper {
 			fhirTaskRequestedPeriod.setRequestedEndTime(taskRequest.getRequestedEndTime());
 			task.setFhirTaskRequestedPeriod(fhirTaskRequestedPeriod);
 		}
-		
+
+		if (taskRequest.getFocus() != null) {
+			FhirReference focusReference = new FhirReference();
+			focusReference.setType(taskRequest.getFocus().getType());
+			focusReference.setReference(taskRequest.getFocus().getReference());
+			fhirTask.setFocusReference(focusReference);
+		}
+
+		if (taskRequest.getBasedOn() != null) {
+			FhirReference basedOnReference = new FhirReference();
+			basedOnReference.setType(taskRequest.getBasedOn().getType());
+			basedOnReference.setReference(taskRequest.getBasedOn().getReference());
+			Set<FhirReference> basedOnRefs = fhirTask.getBasedOnReferences() != null
+			        ? fhirTask.getBasedOnReferences()
+			        : new HashSet<>();
+			basedOnRefs.add(basedOnReference);
+			fhirTask.setBasedOnReferences(basedOnRefs);
+		}
+
 		if (taskRequest.getIsSystemGeneratedTask()) {
 			fhirTask.setCreator(Context.getUserService().getUserByUuid(Daemon.getDaemonUserUuid()));
 		}
@@ -99,14 +120,35 @@ public class TaskMapper {
 		response.setUuid(task.getFhirTask().getUuid());
 		response.setStatus(task.getFhirTask().getStatus());
 		response.setIntent(task.getFhirTask().getIntent());
-		response.setPatientUuid(task.getFhirTask().getForReference().getTargetUuid());
-		response.setRequestedStartTime(task.getFhirTaskRequestedPeriod().getRequestedStartTime());
-		response.setRequestedEndTime(task.getFhirTaskRequestedPeriod().getRequestedEndTime());
+		FhirReference forReference = task.getFhirTask().getForReference();
+		if (forReference != null) {
+			TaskFhirReference forRef = new TaskFhirReference();
+			forRef.setReference(forReference.getReference());
+			forRef.setType(forReference.getType());
+			response.setForReference(forRef);
+		}
+		if (task.getFhirTaskRequestedPeriod() != null) {
+			response.setRequestedStartTime(task.getFhirTaskRequestedPeriod().getRequestedStartTime());
+			response.setRequestedEndTime(task.getFhirTaskRequestedPeriod().getRequestedEndTime());
+		}
 		response.setCreator(ConversionUtil.convertToRepresentation(task.getFhirTask().getCreator(), Representation.REF));
 		response.setTaskType(ConversionUtil.convertToRepresentation(task.getFhirTask().getTaskCode(), Representation.REF));
 		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
 		response.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
 		response.setComment(task.getFhirTask().getComment());
+		if (task.getFhirTask().getFocusReference() != null) {
+			TaskFhirReference focus = new TaskFhirReference();
+			focus.setReference(task.getFhirTask().getFocusReference().getReference());
+			focus.setType(task.getFhirTask().getFocusReference().getType());
+			response.setFocus(focus);
+		}
+		if (task.getFhirTask().getBasedOnReferences() != null && !task.getFhirTask().getBasedOnReferences().isEmpty()) {
+			FhirReference basedOnRef = task.getFhirTask().getBasedOnReferences().iterator().next();
+			TaskFhirReference basedOn = new TaskFhirReference();
+			basedOn.setReference(basedOnRef.getReference());
+			basedOn.setType(basedOnRef.getType());
+			response.setBasedOn(basedOn);
+		}
 		return response;
 	}
 	
