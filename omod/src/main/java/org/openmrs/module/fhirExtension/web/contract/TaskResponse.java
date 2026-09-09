@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.openmrs.module.fhir2.model.FhirTask;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -38,4 +39,6 @@ public class TaskResponse {
 	private Date executionEndTime;
 	
 	private String comment;
+	
+	private List<TaskInputResponseDTO> input = new ArrayList<>();
 }
