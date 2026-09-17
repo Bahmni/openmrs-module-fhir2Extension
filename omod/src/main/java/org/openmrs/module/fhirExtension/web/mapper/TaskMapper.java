@@ -10,8 +10,11 @@ import org.openmrs.api.context.Context;
 import org.openmrs.api.context.Daemon;
 import org.openmrs.module.fhir2.model.FhirReference;
 import org.openmrs.module.fhir2.model.FhirTask;
+import org.openmrs.module.fhir2.model.FhirTaskInput;
 import org.openmrs.module.fhirExtension.model.FhirTaskRequestedPeriod;
 import org.openmrs.module.fhirExtension.model.Task;
+import org.openmrs.module.fhirExtension.web.contract.TaskInputRequestDTO;
+import org.openmrs.module.fhirExtension.web.contract.TaskInputResponseDTO;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.contract.TaskUpdateRequest;
@@ -25,8 +28,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,7 +50,6 @@ public class TaskMapper {
 	private static final String ALL_TASK_TYPE = "All Task Types";
 	
 	public Task fromRequest(TaskRequest taskRequest) {
-		
 		Task task = new Task();
 		FhirTask fhirTask = new FhirTask();
 		fhirTask.setName(taskRequest.getName());
@@ -77,7 +81,31 @@ public class TaskMapper {
 		fhirTask.setStatus(taskRequest.getStatus());
 		fhirTask.setIntent(taskRequest.getIntent());
 		fhirTask.setComment(taskRequest.getComment());
-		
+
+		// Map input field
+		if (taskRequest.getInput() != null && !taskRequest.getInput().isEmpty()) {
+			// FhirTaskInput equality is id-based; before persist, all new instances have id==null so they collide in Sets.
+			// Currently only single input per Task is supported. If multiple inputs are needed, switch to List<FhirTaskInput>.
+			Set<FhirTaskInput> fhirInputs = new LinkedHashSet<>();
+
+			for (TaskInputRequestDTO inputDto : taskRequest.getInput()) {
+				FhirTaskInput fhirInput = new FhirTaskInput();
+
+				// FhirTaskInput is metadata, so both name and its Concept-backed type are required.
+				Concept inputType = getConceptForInputTypeUuid(inputDto.getTypeUuid());
+				fhirInput.setName(inputType.getName().getName());
+				fhirInput.setType(inputType);
+
+				// Store the form key/value in valueText field
+				fhirInput.setValueText(inputDto.getValueText());
+
+				fhirInput.setTask(fhirTask);
+				fhirInputs.add(fhirInput);
+			}
+
+			fhirTask.setInput(fhirInputs);
+		}
+
 		if (taskRequest.getRequestedStartTime() != null || taskRequest.getRequestedEndTime() != null) {
 			FhirTaskRequestedPeriod fhirTaskRequestedPeriod = new FhirTaskRequestedPeriod();
 			fhirTaskRequestedPeriod.setTask(fhirTask);
@@ -107,6 +135,23 @@ public class TaskMapper {
 		response.setExecutionStartTime(task.getFhirTask().getExecutionStartTime());
 		response.setExecutionEndTime(task.getFhirTask().getExecutionEndTime());
 		response.setComment(task.getFhirTask().getComment());
+
+		// Map input field
+		if (task.getFhirTask().getInput() != null && !task.getFhirTask().getInput().isEmpty()) {
+			response.setInput(
+				task.getFhirTask().getInput().stream()
+					.map(input -> {
+						TaskInputResponseDTO dto = new TaskInputResponseDTO();
+						dto.setType(input.getType() != null
+							? ConversionUtil.convertToRepresentation(input.getType(), Representation.REF)
+							: null);
+						dto.setValueText(input.getValueText());
+						return dto;
+					})
+					.collect(Collectors.toList())
+			);
+		}
+
 		return response;
 	}
 	
@@ -152,5 +197,17 @@ public class TaskMapper {
 			log.error(String.format("Multiple concepts found with name [%s]. ", taskType));
 			throw new ValidationException(String.format("Multiple concepts found with name [%s]. ", taskType));
 		}
+	}
+	
+	private Concept getConceptForInputTypeUuid(String inputTypeUuid) {
+		if (inputTypeUuid == null || inputTypeUuid.isEmpty()) {
+			throw new ValidationException("Task input type UUID is required.");
+		}
+		Concept concept = Context.getConceptService().getConceptByUuid(inputTypeUuid);
+		if (concept == null) {
+			throw new ValidationException(String.format("Unable to find a concept for task input type UUID [%s].",
+			    inputTypeUuid));
+		}
+		return concept;
 	}
 }
