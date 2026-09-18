@@ -11,30 +11,35 @@ import java.util.List;
 @Getter
 @Setter
 public class TaskRequest {
-	
+
 	private String uuid;
-	
+
 	private String name;
-	
+
 	private String patientUuid;
-	
+
 	private String visitUuid;
-	
+
 	private String encounterUuid;
-	
+
 	private String taskType;
-	
+
 	private Date requestedStartTime;
-	
+
 	private Date requestedEndTime;
-	
+
 	private FhirTask.TaskStatus status;
-	
+
 	private FhirTask.TaskIntent intent;
-	
+
 	private String comment;
-	
+
 	private Boolean isSystemGeneratedTask = false;
-	
-	private List<TaskInputRequestDTO> input = new ArrayList<>();
+
+	private TaskFhirReference focus;
+
+	private TaskFhirReference basedOn;
+
+    private List<TaskInputRequestDTO> input = new ArrayList<>();
+
 }
