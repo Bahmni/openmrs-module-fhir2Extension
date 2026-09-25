@@ -1,5 +1,7 @@
 package org.openmrs.module.fhirExtension.validators;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.DiagnosticReport;
@@ -45,14 +47,16 @@ public class DiagnosticReportRequestValidator {
 	}
 	
 	private void validateReferencesHaveRespectiveResources(DiagnosticReport diagnosticReport) {
-		if (diagnosticReport.getResult().size() != 0) {
+		if (diagnosticReport.getResult() != null) {
 			diagnosticReport.getResult().forEach(reference -> {
 				IBaseResource resource = reference.getResource();
 				if (resource == null)
-					throw new UnprocessableEntityException(
+					if (reference.getReference() == null) {
+						throw new UnprocessableEntityException(
 							RESOURCE_NOT_PRESENT_FOR_GIVEN_REFERENCE_ERROR_MESSAGE,
 							createExceptionErrorOperationOutcome(
 									RESOURCE_NOT_PRESENT_FOR_GIVEN_REFERENCE_ERROR_MESSAGE));
+					}
 			});
 		}
 	}
