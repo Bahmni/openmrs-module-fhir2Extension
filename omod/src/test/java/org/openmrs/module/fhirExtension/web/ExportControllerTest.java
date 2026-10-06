@@ -153,7 +153,7 @@ public class ExportControllerTest {
 		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "");
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 	}
-
+	
 	@Test
 	public void shouldAcceptRequest_whenAnonymiseIsMixedCase() {
 		when(exportTask.validateParams("2023-05-01", "2023-05-31", "True")).thenReturn(null);
@@ -164,7 +164,7 @@ public class ExportControllerTest {
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
 	}
-
+	
 	@Test
 	public void shouldAcceptRequest_whenStartDateIsMissing() {
 		when(exportTask.validateParams(null, "2023-05-31", "true")).thenReturn(null);
