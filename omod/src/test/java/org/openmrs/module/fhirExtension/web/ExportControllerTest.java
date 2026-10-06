@@ -29,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -143,6 +144,27 @@ public class ExportControllerTest {
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 	}
 	
+	@Test
+	public void shouldReturnBadRequest_whenAnonymiseIsEmpty() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "")).thenReturn("Anonymise must be either true or false");
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "");
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
+		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "");
+		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
+	}
+
+	@Test
+	public void shouldAcceptRequest_whenAnonymiseIsMixedCase() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "True")).thenReturn(null);
+		when(exportTask.getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true))).thenReturn(
+		    mockFhirTask());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "True");
+		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
+		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
+	}
+
 	@Test
 	public void shouldAcceptRequest_whenStartDateIsMissing() {
 		when(exportTask.validateParams(null, "2023-05-31", "true")).thenReturn(null);
