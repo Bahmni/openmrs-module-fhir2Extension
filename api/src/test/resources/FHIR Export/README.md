@@ -11,16 +11,17 @@ Export patient data in [NDJSON](http://ndjson.org/) format per resource type.
 | Procedure Record Template  (Form)        | Procedure          |
 | Medication Request                       | Medication Request |   
 
-- Rest End Point (Http Post API) `<HOST>/openmrs/ws/rest/v1/fhirexport?startDate=<yyyy-mm-dd>&endDate=<yyyy-mm-dd>` used to export patient data.
-- Params `startDate` and `endDate` are optional. if unspecified, then entire patient data will be exported.
+- REST endpoint (HTTP POST): `<HOST>/openmrs/ws/rest/v1/fhirexport?anonymise=true&startDate=<yyyy-mm-dd>&endDate=<yyyy-mm-dd>`.
+- `anonymise` is required and must be `true` or `false`. `startDate` and `endDate` are optional; when provided, dates must use `yyyy-mm-dd`. If omitted, the export uses an unbounded date range.
 - This end point gives FHIR task as response. 
 - Exporting patient data is asynchronous job and the corresponding FHIR task is updated after completion of job.
 - Privilege Required : `Export Patient Data`
+- Non-anonymised exports additionally require `Export Non Anonymised Patient Data`. Requests with a missing or invalid `anonymise` value, invalid date, or start date after end date return HTTP 400; requests without the required privilege return HTTP 403.
 - File export asynchronous job creates zip file in the directory specified in the global property `fhir.export.files.directory`
 
 Sample Outputs
 --------------
-POST API Call : `localhost/openmrs/ws/rest/v1/export?startDate=2023-07-01&endDate=2023-07-31`
+POST API Call : `localhost/openmrs/ws/rest/v1/fhirexport?anonymise=true&startDate=2023-07-01&endDate=2023-07-31`
 
 Response :
 ```

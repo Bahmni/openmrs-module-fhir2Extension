@@ -65,8 +65,14 @@ public class ExportTaskTest {
 	}
 	
 	@Test
-	public void shouldNotReturnErrorMessage_whenNoDateRangeProvided() {
+	public void shouldNotReturnErrorMessage_whenDateRangeIsMissing() {
 		String errorMessage = exportTask.validateParams(null, null);
+		assertNull(errorMessage);
+	}
+	
+	@Test
+	public void shouldNotReturnErrorMessage_whenEndDateIsMissing() {
+		String errorMessage = exportTask.validateParams("2023-05-01", null);
 		assertNull(errorMessage);
 	}
 	
