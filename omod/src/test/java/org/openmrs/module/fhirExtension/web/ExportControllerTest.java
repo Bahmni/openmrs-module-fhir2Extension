@@ -64,7 +64,7 @@ public class ExportControllerTest {
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
-		when(exportTask.validateParams("2023-05-01", "2023-05-31")).thenReturn(null);
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenReturn(null);
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "true");
 		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
@@ -77,7 +77,7 @@ public class ExportControllerTest {
 	public void shouldGetBadRequest_whenFhirExportCalledWithInvalidDateFormat() {
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
-		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn("Invalid Date Format [yyyy-mm-dd]");
+		when(exportTask.validateParams("2023-05-AB", "2023-05-31", "true")).thenReturn("Invalid Date Format [yyyy-mm-dd]");
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-AB", "2023-05-31", "true");
 		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -87,7 +87,7 @@ public class ExportControllerTest {
 	@Test
 	public void shouldGetBadRequest_whenEndDateIsBeforeStartDate() {
 		String validationError = "End date [2023-05-31] should be on or after start date [2023-06-01]";
-		when(exportTask.validateParams("2023-06-01", "2023-05-31")).thenReturn(validationError);
+		when(exportTask.validateParams("2023-06-01", "2023-05-31", "true")).thenReturn(validationError);
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-06-01", "2023-05-31", "true");
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals(validationError, responseEntity.getBody().get("error"));
@@ -100,7 +100,7 @@ public class ExportControllerTest {
 		ContextAuthenticationException exception = new ContextAuthenticationException(
 				"Privileges required: Export Non Anonymised Patient Data");
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenThrow(exception);
-		when(exportTask.validateParams("2023-05-01", "2023-05-31")).thenReturn(null);
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "false")).thenReturn(null);
 		assertThrows(ContextAuthenticationException.class,
 				() -> exportController.export("2023-05-01", "2023-05-31", "false"));
 		ResponseEntity<SimpleObject> responseEntity = exportController.handleContextAuthenticationException(exception);
@@ -113,7 +113,7 @@ public class ExportControllerTest {
 	public void shouldReturnForbidden_whenLoggedInUserDoesNotHaveExportPrivilege() {
 		ContextAuthenticationException exception = new ContextAuthenticationException(
 				"Privileges required: Export Patient Data");
-		when(exportTask.validateParams("2023-05-01", "2023-05-31")).thenThrow(exception);
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenThrow(exception);
 		assertThrows(ContextAuthenticationException.class,
 				() -> exportController.export("2023-05-01", "2023-05-31", "true"));
 		ResponseEntity<SimpleObject> responseEntity = exportController.handleContextAuthenticationException(exception);
@@ -125,23 +125,29 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldReturnBadRequest_whenAnonymiseIsMissing() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", null)).thenReturn(
+		    "Anonymise must be either true or false");
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", null);
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
-		verify(exportTask, never()).validateParams(any(), any());
+		verify(exportTask).validateParams("2023-05-01", "2023-05-31", null);
+		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 	}
 	
 	@Test
 	public void shouldReturnBadRequest_whenAnonymiseIsInvalid() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "yes")).thenReturn(
+		    "Anonymise must be either true or false");
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "yes");
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
-		verify(exportTask, never()).validateParams(any(), any());
+		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "yes");
+		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 	}
 	
 	@Test
 	public void shouldAcceptRequest_whenStartDateIsMissing() {
-		when(exportTask.validateParams(null, "2023-05-31")).thenReturn(null);
+		when(exportTask.validateParams(null, "2023-05-31", "true")).thenReturn(null);
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		ResponseEntity<SimpleObject> responseEntity = exportController.export(null, "2023-05-31", "true");
@@ -150,7 +156,7 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldAcceptRequest_whenEndDateIsMissing() {
-		when(exportTask.validateParams("2023-05-01", null)).thenReturn(null);
+		when(exportTask.validateParams("2023-05-01", null, "true")).thenReturn(null);
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", null, "true");

@@ -83,6 +83,14 @@ public class ExportTaskImpl implements ExportTask {
 		return validationErrorMessage;
 	}
 	
+	@Override
+	public String validateParams(String startDateStr, String endDateStr, String anonymise) {
+		if (!"true".equalsIgnoreCase(anonymise) && !"false".equalsIgnoreCase(anonymise)) {
+			return "Anonymise must be either true or false";
+		}
+		return validateParams(startDateStr, endDateStr);
+	}
+	
 	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
 		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, USER_NAME_CONCEPT,	Context.getAuthenticatedUser().getUsername());
 		FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, START_DATE_CONCEPT, startDate);

@@ -42,10 +42,7 @@ public class ExportController extends BaseRestController {
 	public ResponseEntity<SimpleObject> export(@RequestParam(value = "startDate", required = false) String startDate,
 											   @RequestParam(value = "endDate", required = false) String endDate,
 											   @RequestParam(value = "anonymise", required = false) String anonymise) {
-		if (!"true".equalsIgnoreCase(anonymise) && !"false".equalsIgnoreCase(anonymise)) {
-			return errorResponse("Anonymise must be either true or false", HttpStatus.BAD_REQUEST);
-		}
-		String validationErrorMessage = exportTask.validateParams(startDate, endDate);
+		String validationErrorMessage = exportTask.validateParams(startDate, endDate, anonymise);
 		if (validationErrorMessage != null) {
 			return errorResponse(validationErrorMessage, HttpStatus.BAD_REQUEST);
 		}
