@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.fhir2.model.FhirTask;
@@ -110,15 +111,12 @@ public class ExportControllerTest {
 	}
 	
 	@Test
-	public void shouldReturnForbidden_whenLoggedInUserDoesNotHaveExportPrivilege() {
-		ContextAuthenticationException exception = new ContextAuthenticationException(
+	public void shouldPropagateApiAuthenticationException_whenUserLacksExportPrivilege() {
+		APIAuthenticationException exception = new APIAuthenticationException(
 				"Privileges required: Export Patient Data");
 		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenThrow(exception);
-		assertThrows(ContextAuthenticationException.class,
+		assertThrows(APIAuthenticationException.class,
 				() -> exportController.export("2023-05-01", "2023-05-31", "true"));
-		ResponseEntity<SimpleObject> responseEntity = exportController.handleContextAuthenticationException(exception);
-		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
-		assertEquals("Privileges required: Export Patient Data", responseEntity.getBody().get("error"));
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
 	}
