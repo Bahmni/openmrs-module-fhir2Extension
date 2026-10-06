@@ -56,7 +56,7 @@ public class ExportController extends BaseRestController {
 	@ExceptionHandler(ContextAuthenticationException.class)
 	@ResponseBody
 	public ResponseEntity<SimpleObject> handleContextAuthenticationException(ContextAuthenticationException e) {
-		return errorResponse(e.getMessage(), HttpStatus.FORBIDDEN);
+		return errorResponse("You are not authorized to perform this export.", HttpStatus.FORBIDDEN);
 	}
 	
 	private ResponseEntity<SimpleObject> errorResponse(String message, HttpStatus status) {

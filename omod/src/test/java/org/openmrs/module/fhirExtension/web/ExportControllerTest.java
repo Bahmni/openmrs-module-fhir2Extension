@@ -107,7 +107,7 @@ public class ExportControllerTest {
 				() -> exportController.export("2023-05-01", "2023-05-31", "false"));
 		ResponseEntity<SimpleObject> responseEntity = exportController.handleContextAuthenticationException(exception);
 		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
-		assertEquals("Privileges required: Export Non Anonymised Patient Data", responseEntity.getBody().get("error"));
+		assertEquals("You are not authorized to perform this export.", responseEntity.getBody().get("error"));
 		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
 	}
 	
