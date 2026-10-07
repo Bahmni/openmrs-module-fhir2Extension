@@ -40,18 +40,18 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class TaskMapper {
-
+	
 	@Autowired
 	private EncounterService encounterService;
-
+	
 	@Autowired
 	private VisitService visitService;
-
+	
 	@Autowired
 	private PatientService patientService;
-
+	
 	private static final String ALL_TASK_TYPE = "All Task Types";
-
+	
 	public Task fromRequest(TaskRequest taskRequest) {
 		Task task = new Task();
 		FhirTask fhirTask = new FhirTask();
@@ -141,7 +141,7 @@ public class TaskMapper {
 		task.setFhirTask(fhirTask);
 		return task;
 	}
-
+	
 	public TaskResponse constructResponse(Task task) {
 		TaskResponse response = new TaskResponse();
 		response.setName(task.getFhirTask().getName());
@@ -197,16 +197,16 @@ public class TaskMapper {
 
 		return response;
 	}
-
+	
 	public void fromRequest(TaskUpdateRequest taskUpdateRequest, Task task) {
 		FhirTask fhirTask = task.getFhirTask();
-
+		
 		fhirTask.setStatus(taskUpdateRequest.getStatus());
 		fhirTask.setExecutionStartTime(taskUpdateRequest.getExecutionStartTime());
 		fhirTask.setExecutionEndTime(taskUpdateRequest.getExecutionEndTime());
 		fhirTask.setComment(taskUpdateRequest.getComment());
 	}
-
+	
 	private Concept getConceptForTaskType(String taskType) {
 		if (taskType == null || taskType.isEmpty()) {
 			log.warn("Task type is not passed. Setting as null");
@@ -241,7 +241,7 @@ public class TaskMapper {
 			throw new ValidationException(String.format("Multiple concepts found with name [%s]. ", taskType));
 		}
 	}
-
+	
 	private Concept getConceptForInputTypeUuid(String inputTypeUuid) {
 		if (inputTypeUuid == null || inputTypeUuid.isEmpty()) {
 			throw new ValidationException("Task input type UUID is required.");

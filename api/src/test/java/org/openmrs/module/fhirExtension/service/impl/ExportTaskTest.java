@@ -65,8 +65,14 @@ public class ExportTaskTest {
 	}
 	
 	@Test
-	public void shouldNotReturnErrorMessage_whenNoDateRangeProvided() {
+	public void shouldNotReturnErrorMessage_whenDateRangeIsMissing() {
 		String errorMessage = exportTask.validateParams(null, null);
+		assertNull(errorMessage);
+	}
+	
+	@Test
+	public void shouldNotReturnErrorMessage_whenEndDateIsMissing() {
+		String errorMessage = exportTask.validateParams("2023-05-01", null);
 		assertNull(errorMessage);
 	}
 	
@@ -95,6 +101,30 @@ public class ExportTaskTest {
 		String errorMessage = exportTask.validateParams("2023-05-01", "2023-05-AB");
 		assertNotNull(errorMessage);
 		assertEquals("Invalid Date Format [yyyy-mm-dd]", errorMessage);
+	}
+	
+	@Test
+	public void shouldNotReturnErrorMessage_whenAnonymiseIsMissing() {
+		String errorMessage = exportTask.validateParams("2023-05-01", "2023-05-31", null);
+		assertNull(errorMessage);
+	}
+	
+	@Test
+	public void shouldReturnErrorMessage_whenAnonymiseIsEmpty() {
+		String errorMessage = exportTask.validateParams("2023-05-01", "2023-05-31", "");
+		assertEquals("Anonymise must be either true or false", errorMessage);
+	}
+	
+	@Test
+	public void shouldReturnErrorMessage_whenAnonymiseIsInvalid() {
+		String errorMessage = exportTask.validateParams("2023-05-01", "2023-05-31", "yes");
+		assertEquals("Anonymise must be either true or false", errorMessage);
+	}
+	
+	@Test
+	public void shouldNotReturnErrorMessage_whenAnonymiseIsValid() {
+		assertNull(exportTask.validateParams("2023-05-01", "2023-05-31", "true"));
+		assertNull(exportTask.validateParams("2023-05-01", "2023-05-31", "FALSE"));
 	}
 	
 	private FhirTask mockFhirTask() {

@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.fhir2.model.FhirTask;
@@ -18,6 +19,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -25,10 +27,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
@@ -62,8 +68,8 @@ public class ExportControllerTest {
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
-		when(exportTask.validateParams("2023-05-01", "2023-05-31")).thenReturn(null);
-		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", true);
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenReturn(null);
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "true");
 		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 		assertEquals("ACCEPTED", simpleObject.get("status"));
@@ -75,18 +81,104 @@ public class ExportControllerTest {
 	public void shouldGetBadRequest_whenFhirExportCalledWithInvalidDateFormat() {
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
-		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn("Invalid Date Format [yyyy-mm-dd]");
-		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-AB", "2023-05-31", true);
+		when(exportTask.validateParams("2023-05-AB", "2023-05-31", "true")).thenReturn("Invalid Date Format [yyyy-mm-dd]");
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-AB", "2023-05-31", "true");
 		SimpleObject simpleObject = responseEntity.getBody();
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Invalid Date Format [yyyy-mm-dd]", simpleObject.get("error"));
 	}
 	
 	@Test
-	public void shouldThrowException_whenLoggedInUserDoesNotHavePrivilegeToExportNonAnonymisedData() {
-		when(exportTask.getInitialTaskResponse(any(), any(), any(),anyBoolean())).thenThrow( new ContextAuthenticationException( "Privileges required: Export Non Anonymised Patient Data"));
-		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn(null);
-		assertThrows(ContextAuthenticationException.class, () -> exportController.export("2023-05-AB", "2023-05-31", false));
+	public void shouldGetBadRequest_whenEndDateIsBeforeStartDate() {
+		String validationError = "End date [2023-05-31] should be on or after start date [2023-06-01]";
+		when(exportTask.validateParams("2023-06-01", "2023-05-31", "true")).thenReturn(validationError);
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-06-01", "2023-05-31", "true");
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(validationError, responseEntity.getBody().get("error"));
+		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
+		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
+	}
+	
+	@Test
+	public void shouldReturnForbidden_whenLoggedInUserDoesNotHavePrivilegeToExportNonAnonymisedData() {
+		ContextAuthenticationException exception = new ContextAuthenticationException(
+				"Privileges required: Export Non Anonymised Patient Data");
+		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenThrow(exception);
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "false")).thenReturn(null);
+		assertThrows(ContextAuthenticationException.class,
+				() -> exportController.export("2023-05-01", "2023-05-31", "false"));
+		ResponseEntity<SimpleObject> responseEntity = exportController.handleContextAuthenticationException(exception);
+		assertEquals(HttpStatus.FORBIDDEN, responseEntity.getStatusCode());
+		assertEquals("You are not authorized to perform this export.", responseEntity.getBody().get("error"));
+		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
+	}
+	
+	@Test
+	public void shouldPropagateApiAuthenticationException_whenUserLacksExportPrivilege() {
+		APIAuthenticationException exception = new APIAuthenticationException(
+				"Privileges required: Export Patient Data");
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenThrow(exception);
+		assertThrows(APIAuthenticationException.class,
+				() -> exportController.export("2023-05-01", "2023-05-31", "true"));
+		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
+		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
+	}
+	
+	@Test
+	public void shouldUseAnonymisedExport_whenAnonymiseIsOmitted() throws NoSuchMethodException {
+		RequestParam anonymiseParam = (RequestParam) ExportController.class.getMethod("export", String.class, String.class,
+		    String.class).getParameterAnnotations()[2][0];
+		assertFalse(anonymiseParam.required());
+		assertEquals("true", anonymiseParam.defaultValue());
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenReturn(null);
+		when(exportTask.getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true))).thenReturn(
+		    mockFhirTask());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "true");
+		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
+		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "true");
+		verify(exportTask).getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true));
+		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
+	}
+	
+	@Test
+	public void shouldReturnBadRequest_whenAnonymiseIsInvalid() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "yes")).thenReturn(
+		    "Anonymise must be either true or false");
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "yes");
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
+		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "yes");
+		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
+	}
+	
+	@Test
+	public void shouldAcceptRequest_whenAnonymiseIsMixedCase() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "True")).thenReturn(null);
+		when(exportTask.getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true))).thenReturn(
+		    mockFhirTask());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "True");
+		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
+		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
+	}
+	
+	@Test
+	public void shouldAcceptRequest_whenStartDateIsMissing() {
+		when(exportTask.validateParams(null, "2023-05-31", "true")).thenReturn(null);
+		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
+		ResponseEntity<SimpleObject> responseEntity = exportController.export(null, "2023-05-31", "true");
+		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
+	}
+	
+	@Test
+	public void shouldAcceptRequest_whenEndDateIsMissing() {
+		when(exportTask.validateParams("2023-05-01", null, "true")).thenReturn(null);
+		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenReturn(mockFhirTask());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", null, "true");
+		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 	}
 	
 	private FhirTask mockFhirTask() {
