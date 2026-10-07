@@ -41,12 +41,12 @@ public class ExportController extends BaseRestController {
 	@ResponseBody
 	public ResponseEntity<SimpleObject> export(@RequestParam(value = "startDate", required = false) String startDate,
 											   @RequestParam(value = "endDate", required = false) String endDate,
-											   @RequestParam(value = "anonymise", required = false) String anonymise) {
+											   @RequestParam(value = "anonymise", required = false, defaultValue = "true") String anonymise) {
 		String validationErrorMessage = exportTask.validateParams(startDate, endDate, anonymise);
 		if (validationErrorMessage != null) {
 			return errorResponse(validationErrorMessage, HttpStatus.BAD_REQUEST);
 		}
-		boolean isAnonymise = anonymise == null ? true : Boolean.parseBoolean(anonymise);
+		boolean isAnonymise = Boolean.parseBoolean(anonymise);
 		FhirTask fhirTask = exportTask.getInitialTaskResponse(startDate, endDate,
 				ServletUriComponentsBuilder.fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI, isAnonymise);
 		exportAsyncService.export(fhirTask, startDate, endDate, Context.getUserContext(), isAnonymise);

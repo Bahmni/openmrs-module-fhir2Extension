@@ -19,6 +19,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -26,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -123,14 +125,18 @@ public class ExportControllerTest {
 	}
 	
 	@Test
-	public void shouldUseAnonymisedExport_whenAnonymiseIsMissing() {
-		when(exportTask.validateParams("2023-05-01", "2023-05-31", null)).thenReturn(null);
+	public void shouldUseAnonymisedExport_whenAnonymiseIsOmitted() throws NoSuchMethodException {
+		RequestParam anonymiseParam = (RequestParam) ExportController.class.getMethod("export", String.class, String.class,
+		    String.class).getParameterAnnotations()[2][0];
+		assertFalse(anonymiseParam.required());
+		assertEquals("true", anonymiseParam.defaultValue());
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", "true")).thenReturn(null);
 		when(exportTask.getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true))).thenReturn(
 		    mockFhirTask());
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
-		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", null);
+		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "true");
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
-		verify(exportTask).validateParams("2023-05-01", "2023-05-31", null);
+		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "true");
 		verify(exportTask).getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true));
 		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
 	}
@@ -143,16 +149,6 @@ public class ExportControllerTest {
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
 		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "yes");
-		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
-	}
-	
-	@Test
-	public void shouldReturnBadRequest_whenAnonymiseIsEmpty() {
-		when(exportTask.validateParams("2023-05-01", "2023-05-31", "")).thenReturn("Anonymise must be either true or false");
-		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", "");
-		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
-		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "");
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 	}
 	
