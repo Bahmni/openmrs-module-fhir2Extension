@@ -46,7 +46,7 @@ public class ExportController extends BaseRestController {
 		if (validationErrorMessage != null) {
 			return errorResponse(validationErrorMessage, HttpStatus.BAD_REQUEST);
 		}
-		boolean isAnonymise = Boolean.parseBoolean(anonymise);
+		boolean isAnonymise = anonymise == null ? true : Boolean.parseBoolean(anonymise);
 		FhirTask fhirTask = exportTask.getInitialTaskResponse(startDate, endDate,
 				ServletUriComponentsBuilder.fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI, isAnonymise);
 		exportAsyncService.export(fhirTask, startDate, endDate, Context.getUserContext(), isAnonymise);

@@ -85,7 +85,7 @@ public class ExportTaskImpl implements ExportTask {
 	
 	@Override
 	public String validateParams(String startDateStr, String endDateStr, String anonymise) {
-		if (!"true".equalsIgnoreCase(anonymise) && !"false".equalsIgnoreCase(anonymise)) {
+		if (anonymise != null && !"true".equalsIgnoreCase(anonymise) && !"false".equalsIgnoreCase(anonymise)) {
 			return "Anonymise must be either true or false";
 		}
 		return validateParams(startDateStr, endDateStr);

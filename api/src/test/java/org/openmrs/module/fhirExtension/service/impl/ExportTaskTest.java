@@ -104,8 +104,14 @@ public class ExportTaskTest {
 	}
 	
 	@Test
-	public void shouldReturnErrorMessage_whenAnonymiseIsMissing() {
+	public void shouldNotReturnErrorMessage_whenAnonymiseIsMissing() {
 		String errorMessage = exportTask.validateParams("2023-05-01", "2023-05-31", null);
+		assertNull(errorMessage);
+	}
+	
+	@Test
+	public void shouldReturnErrorMessage_whenAnonymiseIsEmpty() {
+		String errorMessage = exportTask.validateParams("2023-05-01", "2023-05-31", "");
 		assertEquals("Anonymise must be either true or false", errorMessage);
 	}
 	

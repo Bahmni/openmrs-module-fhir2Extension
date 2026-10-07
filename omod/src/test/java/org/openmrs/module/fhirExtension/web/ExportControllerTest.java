@@ -123,14 +123,16 @@ public class ExportControllerTest {
 	}
 	
 	@Test
-	public void shouldReturnBadRequest_whenAnonymiseIsMissing() {
-		when(exportTask.validateParams("2023-05-01", "2023-05-31", null)).thenReturn(
-		    "Anonymise must be either true or false");
+	public void shouldUseAnonymisedExport_whenAnonymiseIsMissing() {
+		when(exportTask.validateParams("2023-05-01", "2023-05-31", null)).thenReturn(null);
+		when(exportTask.getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true))).thenReturn(
+		    mockFhirTask());
+		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
 		ResponseEntity<SimpleObject> responseEntity = exportController.export("2023-05-01", "2023-05-31", null);
-		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-		assertEquals("Anonymise must be either true or false", responseEntity.getBody().get("error"));
+		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 		verify(exportTask).validateParams("2023-05-01", "2023-05-31", null);
-		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
+		verify(exportTask).getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true));
+		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
 	}
 	
 	@Test
