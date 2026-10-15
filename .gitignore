@@ -5,7 +5,7 @@
 .classpath
 .DS_Store
 .idea
-
+.vscode
 target
 
 # Package Files #
