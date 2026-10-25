@@ -50,7 +50,7 @@
 			<web.services.version>2.49.0</web.services.version>
 			<junitVersion>4.13.1</junitVersion>
 			<lombokVersion>1.18.32</lombokVersion>
-			<mockitoVersion>3.5.11</mockitoVersion>
+			<mockitoVersion>4.11.0</mockitoVersion>
 	    </properties>
 
 	<repositories>
@@ -221,8 +221,8 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<configuration>
-						<target>1.8</target>
-						<source>1.8</source>
+						<target>17</target>
+						<source>17</source>
 					</configuration>
 				</plugin>
 				<plugin>

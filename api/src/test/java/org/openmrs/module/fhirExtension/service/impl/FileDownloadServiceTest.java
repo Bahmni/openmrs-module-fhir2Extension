@@ -66,6 +66,7 @@ public class FileDownloadServiceTest {
 	
 	@Test
     public void shouldThrowErrorWhenFileToDownloadDoesNotExist() {
+        when(administrationService.getGlobalProperty(FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP)).thenReturn(basePath);
         Assert.assertThrows(IOException.class, () -> fileDownloadService.getFile("nonExistingFile"));
     }
 	
