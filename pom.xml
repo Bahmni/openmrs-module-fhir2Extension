@@ -38,14 +38,13 @@
 	</modules>
 
     <properties>
-			<openmrsPlatformVersion>2.6.15</openmrsPlatformVersion>
-			<openmrs.fhir2.version>2.5.0</openmrs.fhir2.version>
+			<openmrsPlatformVersion>2.8.10</openmrsPlatformVersion>
+			<openmrs.fhir2.version>4.3.0</openmrs.fhir2.version>
 			<web.services.version>2.49.0</web.services.version>
 			<junitVersion>4.13.1</junitVersion>
 			<lombokVersion>1.18.32</lombokVersion>
 			<mockitoVersion>3.5.11</mockitoVersion>
-			<powerMockVersion>2.0.9</powerMockVersion>
-    </properties>
+	    </properties>
 
 	<repositories>
 		<repository>
@@ -139,15 +138,9 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-module-junit4</artifactId>
-				<version>${powerMockVersion}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-api-mockito2</artifactId>
-				<version>${powerMockVersion}</version>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-inline</artifactId>
+				<version>${mockitoVersion}</version>
 				<scope>test</scope>
 			</dependency>
 		</dependencies>
@@ -233,7 +226,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-dependency-plugin</artifactId>
-					<version>2.4</version>
+					<version>3.6.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>

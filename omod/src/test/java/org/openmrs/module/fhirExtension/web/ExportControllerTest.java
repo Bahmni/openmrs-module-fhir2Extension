@@ -1,21 +1,21 @@
 package org.openmrs.module.fhirExtension.web;
 
 import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.service.impl.ExportAsyncServiceImpl;
 import org.openmrs.module.fhirExtension.service.ExportTask;
 import org.openmrs.module.webservices.rest.SimpleObject;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -31,9 +31,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class })
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ExportControllerTest {
 	
 	public static final String FHIR2_R4_TASK_URI = "/ws/fhir2/R4/Task/";
@@ -52,10 +50,17 @@ public class ExportControllerTest {
 	@Mock
 	HttpServletRequest request;
 	
+	private MockedStatic<Context> mockedContext;
+	
 	@Before
 	public void setUp() {
-		PowerMockito.mockStatic(Context.class);
+		mockedContext = Mockito.mockStatic(Context.class);
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+	}
+	
+	@After
+	public void tearDown() {
+		mockedContext.close();
 	}
 	
 	@Test
@@ -84,7 +89,7 @@ public class ExportControllerTest {
 	
 	@Test
 	public void shouldThrowException_whenLoggedInUserDoesNotHavePrivilegeToExportNonAnonymisedData() {
-		when(exportTask.getInitialTaskResponse(any(), any(), any(),anyBoolean())).thenThrow( new ContextAuthenticationException( "Privileges required: Export Non Anonymised Patient Data"));
+		when(exportTask.getInitialTaskResponse(any(), any(), any(), anyBoolean())).thenThrow(new ContextAuthenticationException("Privileges required: Export Non Anonymised Patient Data"));
 		when(exportTask.validateParams("2023-05-AB", "2023-05-31")).thenReturn(null);
 		assertThrows(ContextAuthenticationException.class, () -> exportController.export("2023-05-AB", "2023-05-31", false));
 	}

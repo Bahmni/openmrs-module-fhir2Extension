@@ -7,13 +7,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.UserContext;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.io.IOException;
@@ -25,9 +24,7 @@ import java.nio.file.Paths;
 import static org.mockito.Mockito.when;
 import static org.openmrs.module.fhirExtension.service.FileExportService.FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class })
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.class)
 public class FileDownloadServiceTest {
 	
 	@Mock
@@ -40,16 +37,19 @@ public class FileDownloadServiceTest {
 	@InjectMocks
 	private FileDownloadServiceImpl fileDownloadService;
 	
+	private MockedStatic<Context> mockedContext;
+	
 	String basePath = System.getProperty("java.io.tmpdir");
 	
 	@Before
 	public void setup() {
-		PowerMockito.mockStatic(Context.class);
-		when(Context.getAdministrationService()).thenReturn(administrationService);
+		mockedContext = Mockito.mockStatic(Context.class);
+		mockedContext.when(Context::getAdministrationService).thenReturn(administrationService);
 	}
 	
 	@After
 	public void tearDown() throws IOException {
+		mockedContext.close();
 		Path newFilePath = Paths.get(basePath, "dummy.zip");
 		Files.deleteIfExists(newFilePath);
 	}

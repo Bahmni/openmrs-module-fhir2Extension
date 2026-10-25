@@ -17,7 +17,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 @Component
 public class DiagnosticReportObsValidator {
 	
-	static final String INVALID_STATUS_ERROR_MESSAGE = "Invalid status: Should be one from [REGISTERED,PARTIAL,PRELIMINARY,FINAL,UNKNOWN]";
+	static final String INVALID_STATUS_ERROR_MESSAGE = "Invalid status: Should be one from [REGISTERED,PARTIAL,PRELIMINARY,FINAL,AMENDED,CANCELLED,UNKNOWN]";
 	
 	static final String INVALID_CODE_ERROR_MESSAGE = "Invalid test Code";
 	
