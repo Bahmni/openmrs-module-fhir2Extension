@@ -57,7 +57,7 @@ public class ExportControllerTest {
 	HttpServletRequest request;
 	
 	private MockedStatic<Context> mockedContext;
-
+	
 	@Before
 	public void setUp() {
 		mockedContext = Mockito.mockStatic(Context.class);
@@ -68,7 +68,7 @@ public class ExportControllerTest {
 	public void tearDown() {
 		mockedContext.close();
 	}
-
+	
 	@Test
 	public void shouldGetFhirTaskUrl_whenFhirExportCalled() {
 		doNothing().when(exportAsyncServiceImpl).export(any(), any(), any(), any(), anyBoolean());
@@ -103,7 +103,7 @@ public class ExportControllerTest {
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
 	}
-
+	
 	@Test
 	public void shouldReturnForbidden_whenLoggedInUserDoesNotHavePrivilegeToExportNonAnonymisedData() {
 		ContextAuthenticationException exception =new ContextAuthenticationException("Privileges required: Export Non Anonymised Patient Data");
@@ -116,7 +116,7 @@ public class ExportControllerTest {
 		assertEquals("You are not authorized to perform this export.", responseEntity.getBody().get("error"));
 		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
 	}
-
+	
 	@Test
 	public void shouldPropagateApiAuthenticationException_whenUserLacksExportPrivilege() {
 		APIAuthenticationException exception = new APIAuthenticationException(
@@ -127,7 +127,7 @@ public class ExportControllerTest {
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 		verify(exportAsyncServiceImpl, never()).export(any(), any(), any(), any(), anyBoolean());
 	}
-
+	
 	@Test
 	public void shouldUseAnonymisedExport_whenAnonymiseIsOmitted() throws NoSuchMethodException {
 		RequestParam anonymiseParam = (RequestParam) ExportController.class.getMethod("export", String.class, String.class,
@@ -144,7 +144,7 @@ public class ExportControllerTest {
 		verify(exportTask).getInitialTaskResponse(eq("2023-05-01"), eq("2023-05-31"), any(), eq(true));
 		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
 	}
-
+	
 	@Test
 	public void shouldReturnBadRequest_whenAnonymiseIsInvalid() {
 		when(exportTask.validateParams("2023-05-01", "2023-05-31", "yes")).thenReturn(
@@ -155,7 +155,7 @@ public class ExportControllerTest {
 		verify(exportTask).validateParams("2023-05-01", "2023-05-31", "yes");
 		verify(exportTask, never()).getInitialTaskResponse(any(), any(), any(), anyBoolean());
 	}
-
+	
 	@Test
 	public void shouldAcceptRequest_whenAnonymiseIsMixedCase() {
 		when(exportTask.validateParams("2023-05-01", "2023-05-31", "True")).thenReturn(null);
@@ -166,7 +166,7 @@ public class ExportControllerTest {
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 		verify(exportAsyncServiceImpl).export(any(), any(), any(), any(), eq(true));
 	}
-
+	
 	@Test
 	public void shouldAcceptRequest_whenStartDateIsMissing() {
 		when(exportTask.validateParams(null, "2023-05-31", "true")).thenReturn(null);
@@ -175,7 +175,7 @@ public class ExportControllerTest {
 		ResponseEntity<SimpleObject> responseEntity = exportController.export(null, "2023-05-31", "true");
 		assertEquals(HttpStatus.ACCEPTED, responseEntity.getStatusCode());
 	}
-
+	
 	@Test
 	public void shouldAcceptRequest_whenEndDateIsMissing() {
 		when(exportTask.validateParams("2023-05-01", null, "true")).thenReturn(null);

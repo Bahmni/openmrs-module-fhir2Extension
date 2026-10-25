@@ -1,11 +1,14 @@
 package org.openmrs.module.fhirExtension.web;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.openmrs.api.context.Context;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.webservices.rest.SimpleObject;
 import org.openmrs.module.webservices.rest.web.RestUtil;
@@ -14,10 +17,6 @@ import org.openmrs.module.fhirExtension.service.TaskService;
 import org.openmrs.module.fhirExtension.web.contract.TaskRequest;
 import org.openmrs.module.fhirExtension.web.contract.TaskResponse;
 import org.openmrs.module.fhirExtension.web.mapper.TaskMapper;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -31,9 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class, RestUtil.class })
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class TaskControllerTest {
 	
 	@Mock
@@ -45,11 +42,17 @@ public class TaskControllerTest {
 	@InjectMocks
 	private TaskController taskController;
 	
+	private MockedStatic<RestUtil> mockedRestUtil;
+	
 	@Before
 	public void setUp() {
-		PowerMockito.mockStatic(Context.class);
-		PowerMockito.mockStatic(RestUtil.class);
-		when(RestUtil.wrapErrorResponse(any(Exception.class), any())).thenReturn(new SimpleObject());
+		mockedRestUtil = Mockito.mockStatic(RestUtil.class);
+		mockedRestUtil.when(() -> RestUtil.wrapErrorResponse(any(Exception.class), any())).thenReturn(new SimpleObject());
+	}
+	
+	@After
+	public void tearDown() {
+		mockedRestUtil.close();
 	}
 	
 	@Test
