@@ -20,4 +20,7 @@ public interface ExportTask {
 	
 	@Authorized(value = { "Export Patient Data" })
 	String validateParams(String startDate, String endDate);
+	
+	@Authorized(value = { "Export Patient Data" })
+	String validateParams(String startDate, String endDate, String anonymise);
 }

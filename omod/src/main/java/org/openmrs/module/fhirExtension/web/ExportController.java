@@ -1,6 +1,7 @@
 package org.openmrs.module.fhirExtension.web;
 
 import org.openmrs.api.context.Context;
+import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.fhir2.model.FhirTask;
 import org.openmrs.module.fhirExtension.service.ExportAsyncService;
 import org.openmrs.module.fhirExtension.service.ExportTask;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,16 +41,28 @@ public class ExportController extends BaseRestController {
 	@ResponseBody
 	public ResponseEntity<SimpleObject> export(@RequestParam(value = "startDate", required = false) String startDate,
 											   @RequestParam(value = "endDate", required = false) String endDate,
-											   @RequestParam(value = "anonymise", required = false, defaultValue = "true") boolean isAnonymise) {
-        String validationErrorMessage = exportTask.validateParams(startDate, endDate);
-        if (validationErrorMessage != null) {
-			SimpleObject response = new SimpleObject();
-			response.add("error", validationErrorMessage);
-			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+											   @RequestParam(value = "anonymise", required = false, defaultValue = "true") String anonymise) {
+		String validationErrorMessage = exportTask.validateParams(startDate, endDate, anonymise);
+		if (validationErrorMessage != null) {
+			return errorResponse(validationErrorMessage, HttpStatus.BAD_REQUEST);
 		}
-		FhirTask fhirTask = exportTask.getInitialTaskResponse(startDate, endDate, ServletUriComponentsBuilder.fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI, isAnonymise);
+		boolean isAnonymise = Boolean.parseBoolean(anonymise);
+		FhirTask fhirTask = exportTask.getInitialTaskResponse(startDate, endDate,
+				ServletUriComponentsBuilder.fromCurrentContextPath().toUriString() + FILE_DOWNLOAD_URI, isAnonymise);
 		exportAsyncService.export(fhirTask, startDate, endDate, Context.getUserContext(), isAnonymise);
 		return new ResponseEntity<>(getFhirTaskUri(fhirTask), HttpStatus.ACCEPTED);
+	}
+	
+	@ExceptionHandler(ContextAuthenticationException.class)
+	@ResponseBody
+	public ResponseEntity<SimpleObject> handleContextAuthenticationException(ContextAuthenticationException e) {
+		return errorResponse("You are not authorized to perform this export.", HttpStatus.FORBIDDEN);
+	}
+	
+	private ResponseEntity<SimpleObject> errorResponse(String message, HttpStatus status) {
+		SimpleObject response = new SimpleObject();
+		response.add("error", message);
+		return new ResponseEntity<>(response, status);
 	}
 	
 	private SimpleObject getFhirTaskUri(FhirTask task) {
