@@ -6,11 +6,15 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Condition;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.Concept;
 import org.openmrs.Person;
 import org.openmrs.User;
@@ -25,23 +29,17 @@ import org.openmrs.module.fhirExtension.export.anonymise.handler.AnonymiseHandle
 import org.openmrs.module.fhirExtension.export.anonymise.impl.CorrelationCache;
 import org.openmrs.module.fhirExtension.export.impl.ConditionExport;
 import org.openmrs.module.fhirExtension.service.impl.ExportAsyncServiceImpl;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Context.class)
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ExportAsyncServiceTest {
 	
 	@Mock
@@ -65,13 +63,20 @@ public class ExportAsyncServiceTest {
 	@InjectMocks
 	private ExportAsyncServiceImpl exportAsyncServiceImpl;
 	
+	private MockedStatic<Context> mockedContext;
+	
 	@Before
 	public void setUp() {
-		PowerMockito.mockStatic(Context.class);
+		mockedContext = Mockito.mockStatic(Context.class);
 		User authenticatedUser = new User();
 		authenticatedUser.setPerson(new Person());
 		authenticatedUser.setUsername("dummy");
-		when(Context.getAuthenticatedUser()).thenReturn(authenticatedUser);
+		mockedContext.when(Context::getAuthenticatedUser).thenReturn(authenticatedUser);
+	}
+	
+	@After
+	public void tearDown() {
+		mockedContext.close();
 	}
 	
 	@Test
@@ -89,7 +94,7 @@ public class ExportAsyncServiceTest {
 	public void shouldChangeFhirTaskStatusToRejected_whenInvalidDateRangeProvided() {
 		List<Exporter> exporters = new ArrayList<>();
 		exporters.add(new ConditionExport(fhirConditionService));
-		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
+		mockedContext.when(() -> Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 
 		FhirTask fhirTask = mockFhirTask();
 
@@ -103,7 +108,7 @@ public class ExportAsyncServiceTest {
 	public void shouldCallAnonymiseHandler_whenValidDateRangeProvided() {
 		List<Exporter> exporters = new ArrayList<>();
 		exporters.add(new ConditionExport(fhirConditionService));
-		when(Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
+		mockedContext.when(() -> Context.getRegisteredComponents(Exporter.class)).thenReturn(exporters);
 		when(fhirConditionService.searchConditions(any())).thenReturn(getMockConditionBundle(1));
 		when(conceptService.getConceptByName(any())).thenReturn(new Concept());
 
@@ -124,7 +129,7 @@ public class ExportAsyncServiceTest {
 	}
 	
 	private Set<FhirTaskInput> getFhirTaskInputs(FhirTask fhirTask, String startDate, String endDate, boolean isAnonymise) {
-		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.USER_NAME_CONCEPT,	"dummy");
+		FhirTaskInput userNameFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.USER_NAME_CONCEPT, "dummy");
 		FhirTaskInput startDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.START_DATE_CONCEPT, startDate);
 		FhirTaskInput endDateFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.END_DATE_CONCEPT, endDate);
 		FhirTaskInput anonymiseFhirTaskInput = createFHIRTaskInput(fhirTask, ExportTask.ANONYMISE_CONCEPT, Boolean.toString(isAnonymise));

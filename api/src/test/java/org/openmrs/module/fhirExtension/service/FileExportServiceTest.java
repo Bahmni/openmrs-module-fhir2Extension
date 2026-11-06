@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -11,14 +12,13 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.UserContext;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.io.File;
@@ -36,9 +36,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.openmrs.module.fhirExtension.service.FileExportService.FHIR_EXPORT_FILES_DIRECTORY_GLOBAL_PROP;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class })
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.class)
 public class FileExportServiceTest {
 	
 	@InjectMocks
@@ -54,11 +52,18 @@ public class FileExportServiceTest {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 	
+	private MockedStatic<Context> mockedContext;
+	
 	@Before
 	public void setUp() {
 		fileExportService = new FileExportService(administrationService, FhirContext.forR4().newJsonParser());
-		PowerMockito.mockStatic(Context.class);
-		when(Context.getAdministrationService()).thenReturn(administrationService);
+		mockedContext = Mockito.mockStatic(Context.class);
+		mockedContext.when(Context::getAdministrationService).thenReturn(administrationService);
+	}
+	
+	@After
+	public void tearDown() {
+		mockedContext.close();
 	}
 	
 	@Test

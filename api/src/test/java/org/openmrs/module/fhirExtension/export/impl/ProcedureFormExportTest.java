@@ -2,6 +2,7 @@ package org.openmrs.module.fhirExtension.export.impl;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,6 +10,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.Encounter;
@@ -20,10 +24,6 @@ import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.api.translators.ConceptTranslator;
 import org.openmrs.util.LocaleUtility;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.time.LocalDate;
@@ -42,9 +42,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class, LocaleUtility.class })
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ProcedureFormExportTest {
 	
 	private static final String PROCEDURE_RECORD = "Procedure Record";
@@ -70,15 +68,25 @@ public class ProcedureFormExportTest {
 	
 	private List<Obs> procedureRecordObs;
 	
+	private MockedStatic<Context> mockedContext;
+	
+	private MockedStatic<LocaleUtility> mockedLocaleUtility;
+	
 	@Before
 	public void setUp() {
-		PowerMockito.mockStatic(Context.class);
-		PowerMockito.mockStatic(LocaleUtility.class);
-		when(Context.getAdministrationService()).thenReturn(administrationService);
-		when(LocaleUtility.getLocalesInOrder()).thenReturn(Collections.singleton(Locale.getDefault()));
-		when(Context.getLocale()).thenReturn(Locale.getDefault());
+		mockedContext = Mockito.mockStatic(Context.class);
+		mockedLocaleUtility = Mockito.mockStatic(LocaleUtility.class);
+		mockedContext.when(Context::getAdministrationService).thenReturn(administrationService);
+		mockedLocaleUtility.when(LocaleUtility::getLocalesInOrder).thenReturn(Collections.singleton(Locale.getDefault()));
+		mockedContext.when(Context::getLocale).thenReturn(Locale.getDefault());
 		when(administrationService.getGlobalProperty("fhir.export.procedure.template")).thenReturn(
 		    "src/test/resources/procedure-template.properties");
+	}
+	
+	@After
+	public void tearDown() {
+		mockedContext.close();
+		mockedLocaleUtility.close();
 	}
 	
 	@Test

@@ -1,10 +1,14 @@
 package org.openmrs.module.fhirExtension.service.impl;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.Concept;
 import org.openmrs.Person;
 import org.openmrs.User;
@@ -12,22 +16,16 @@ import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhir2.api.dao.FhirTaskDao;
 import org.openmrs.module.fhir2.model.FhirTask;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Context.class)
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class ExportTaskTest {
 	
 	@Mock
@@ -39,12 +37,19 @@ public class ExportTaskTest {
 	@InjectMocks
 	private ExportTaskImpl exportTask;
 	
+	private MockedStatic<Context> mockedContext;
+	
 	@Before
 	public void setUp() {
-		PowerMockito.mockStatic(Context.class);
+		mockedContext = Mockito.mockStatic(Context.class);
 		User authenticatedUser = new User();
 		authenticatedUser.setPerson(new Person());
-		when(Context.getAuthenticatedUser()).thenReturn(authenticatedUser);
+		mockedContext.when(Context::getAuthenticatedUser).thenReturn(authenticatedUser);
+	}
+	
+	@After
+	public void tearDown() {
+		mockedContext.close();
 	}
 	
 	@Test

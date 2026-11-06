@@ -1,17 +1,17 @@
 package org.openmrs.module.fhirExtension.web;
 
 import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.fhirExtension.service.FileDownloadService;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -26,9 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ Context.class })
-@PowerMockIgnore("javax.management.*")
+@RunWith(MockitoJUnitRunner.class)
 public class FileDownloadControllerTest {
 	
 	@InjectMocks
@@ -37,13 +35,20 @@ public class FileDownloadControllerTest {
 	@Mock
 	private FileDownloadService fileDownloadService;
 	
+	private MockedStatic<Context> mockedContext;
+	
 	@Before
 	public void setup() {
-		PowerMockito.mockStatic(Context.class);
-		when(Context.getRegisteredComponent("fileDownloadService", FileDownloadService.class)).thenReturn(
-		    fileDownloadService);
-		HttpServletRequest request = PowerMockito.mock(HttpServletRequest.class);
+		mockedContext = Mockito.mockStatic(Context.class);
+		mockedContext.when(() -> Context.getRegisteredComponent("fileDownloadService", FileDownloadService.class))
+		        .thenReturn(fileDownloadService);
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+	}
+	
+	@After
+	public void tearDown() {
+		mockedContext.close();
 	}
 	
 	@Test
